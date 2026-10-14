@@ -1,7 +1,7 @@
 # omts-mobile
 
 Mobile app for **OMTS — Oyster Management and Traceability System** for Trung Nam Aquaculture Cooperative (SEP490_G83):
-field records for Managers and workers (cultivation, environment readings, harvest, attendance).
+field workflows for Staff and Zone Managers within their permitted farming-zone scope (cultivation, environment readings, harvest, and attendance).
 Sibling repos: [omts-backend](https://github.com/thaideptrai218/omts-backend) · [omts-web](https://github.com/thaideptrai218/omts-web)
 
 ## Stack
@@ -28,3 +28,8 @@ Add dependencies with `npx expo install <package>` (picks SDK-compatible version
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) — branches, Jira keys, commit/PR rules, releases.
+
+## Project guidance
+
+- [Current project context](docs/PROJECT_CONTEXT.md)
+- [Learning and defense notes](docs/learning/README.md)
