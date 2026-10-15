@@ -39,3 +39,48 @@ Docs: https://docs.expo.dev/eas/index.md
 - If `ios/` and `android/` directories do not exist, they are generated (Continuous Native Generation). Never create or edit them by hand — configure native behavior in `app.json` and config plugins.
 - Expo Go only includes its bundled native modules. After adding a library with native code, the app needs a development build: `npx expo run:ios|android` locally, or `eas build --profile development`.
 - Prefer recommended Expo modules over third-party libraries, and check your available skills before adding dependencies. Docs: https://docs.expo.dev/versions/latest/index.md
+
+# OMTS Mobile working rules
+
+## Project context
+
+- Before starting a new task, read `docs/PROJECT_CONTEXT.md` and the relevant Jira issue, SRS use case, and Figma frame.
+- The canonical repositories are `thaideptrai218/omts-web`, `thaideptrai218/omts-mobile`, and `thaideptrai218/omts-backend`. This repository contains Mobile only.
+- Current SRS actors are System Administrator, Cooperative Owner, Staff, Zone Manager, Accountant, Trader, and QR Viewer. Do not introduce Household/Farmer actors from historical reports unless current requirements add them again.
+- Jira defines sprint scope and dependencies; the current SRS defines business rules; Figma illustrates layout and flow but does not override either source.
+
+## Mobile UX and architecture
+
+- Optimize for field use: touch targets, sunlight-readable contrast, intermittent connectivity, clear pending/sync states, and one-handed interaction where practical.
+- Do not assume every Web feature belongs in Mobile. Check Jira and the screen strategy before adding a screen.
+- Keep route files in `src/app/`; keep components, services, repositories, hooks, schemas, and domain contracts outside the route directory.
+- UI components must not call SecureStore, mock storage, or HTTP directly. Use service/repository contracts so mock and API adapters can share behavior.
+- Use skeletons for initial content loading and local pending/disabled/progress feedback for mutations.
+
+## Decisions that require confirmation
+
+Ask the user before implementing a change that adds/removes a business step, changes actors or zone scope, changes a status transition, changes required fields/validation, changes public QR data, changes offline queue/sync/conflict behavior, changes the Web/Mobile boundary, or resolves an open SRS question.
+
+Session bootstrap, access/refresh token lifetime, refresh concurrency, permission payloads, and protected cache cleanup affect security or backend contracts. Present the design and obtain confirmation before choosing one.
+
+## Authentication, permissions, and offline behavior
+
+- Store real Mobile tokens only through `expo-secure-store`; never use AsyncStorage, source files, or committed environment files for credentials.
+- Separate `(auth)` and `(app)` navigation once the session bootstrap design is confirmed. Do not flash a protected screen before bootstrap finishes.
+- Internal Staff accounts can have multiple zone-role grants. Build navigation from effective permission and scope, not one role label.
+- Frontend gates improve navigation; the backend remains the final authorization boundary.
+- Connectivity loss must produce the approved `MSG07` experience. Do not invent an offline mutation queue, merge rule, or conflict policy without SRS/Jira confirmation.
+
+## Learning and review workflow
+
+- Work in small reviewable tasks. Before code, explain: what it is, why it is needed, how data/control flows, and likely defense questions.
+- Explain concepts from the underlying problem to the concrete OMTS code; avoid definition-only summaries.
+- When an error occurs, record the command, important output, root cause, cascading errors, diagnosis, fix, and verification in `docs/learning/`.
+- Do not ask the learner to answer a concept that has not been explained first.
+- Run `npm run lint`, `npm run typecheck`, and `npx expo-doctor` as proportionate checks before declaring foundation changes complete.
+
+## Git workflow
+
+- Branch from `develop`; use Jira-linked `feature/OMTS-<n>-<slug>` or `fix/OMTS-<n>-<slug>` branches for implementation work.
+- Use `chore/<slug>` or `docs/<slug>` only when no Jira implementation issue applies.
+- Push a branch and open a PR into `develop`; do not push directly to protected `develop` or `main`.
