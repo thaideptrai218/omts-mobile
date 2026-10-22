@@ -4,16 +4,19 @@ import { useAppTheme } from "@/shared/theme/use-app-theme";
 import { ContentState } from "@/shared/ui/content-state";
 import { ScreenContainer } from "@/shared/ui/screen-container";
 import { Skeleton, SkeletonGroup } from "@/shared/ui/skeleton";
+import { AppButton } from "@/shared/ui/app-button";
 
-type ProfileLoadStateProps =
-  | Readonly<{ status: "loading" }>
-  | Readonly<{
-      message: string;
-      onRetry: () => void;
-      retrying: boolean;
-      status: "error";
-    }>
-  | Readonly<{ message: string; status: "session-expired" }>;
+type ProfileLoadStateProps = Readonly<{ onLogout?: () => void }> &
+  (
+    | Readonly<{ status: "loading" }>
+    | Readonly<{
+        message: string;
+        onRetry: () => void;
+        retrying: boolean;
+        status: "error";
+      }>
+    | Readonly<{ message: string; status: "session-expired" }>
+  );
 
 export function ProfileLoadState(props: ProfileLoadStateProps) {
   const theme = useAppTheme();
@@ -21,7 +24,10 @@ export function ProfileLoadState(props: ProfileLoadStateProps) {
   if (props.status === "loading") {
     return (
       <ScreenContainer>
-        <SkeletonGroup label="Đang tải hồ sơ cá nhân" style={{ gap: theme.spacing.lg }}>
+        <SkeletonGroup
+          label="Đang tải hồ sơ cá nhân"
+          style={{ gap: theme.spacing.lg }}
+        >
           <Skeleton height={32} width="65%" />
           {[0, 1, 2].map((index) => (
             <View key={index} style={{ gap: theme.spacing.sm }}>
@@ -31,6 +37,13 @@ export function ProfileLoadState(props: ProfileLoadStateProps) {
             </View>
           ))}
         </SkeletonGroup>
+        {props.onLogout ? (
+          <AppButton
+            label="Đăng xuất"
+            variant="ghost"
+            onPress={props.onLogout}
+          />
+        ) : null}
       </ScreenContainer>
     );
   }
@@ -46,6 +59,13 @@ export function ProfileLoadState(props: ProfileLoadStateProps) {
           title="Chưa tải được hồ sơ"
           variant="error"
         />
+        {props.onLogout ? (
+          <AppButton
+            label="Đăng xuất"
+            variant="ghost"
+            onPress={props.onLogout}
+          />
+        ) : null}
       </ScreenContainer>
     );
   }

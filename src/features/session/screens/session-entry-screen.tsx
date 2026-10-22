@@ -34,15 +34,7 @@ export function SessionEntryScreen() {
             variant="error"
           />
           {store ? (
-            <AppButton
-              label="Thử lại"
-              onPress={() =>
-                void (snapshot.status === "error" &&
-                snapshot.operation === "logout"
-                  ? store.logout()
-                  : store.bootstrap())
-              }
-            />
+            <AppButton label="Thử lại" onPress={() => void store.bootstrap()} />
           ) : null}
           {store ? (
             <AppButton

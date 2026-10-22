@@ -1,4 +1,10 @@
-import { useCallback, useEffect, useEffectEvent, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useEffectEvent,
+  useRef,
+  useState,
+} from "react";
 
 import {
   validateProfileForm,
@@ -53,12 +59,17 @@ function serviceFailure() {
   return resolveKnownMessage("MSG04", { serviceName: "Dịch vụ hồ sơ cá nhân" });
 }
 
-export function useProfileController({ service, onSessionExpired }: Dependencies) {
+export function useProfileController({
+  service,
+  onSessionExpired,
+}: Dependencies) {
   const requestInFlight = useRef(true);
   const generation = useRef(0);
   const serviceScope = useRef(service);
   const [loadAttempt, setLoadAttempt] = useState(0);
-  const [state, setState] = useState<ProfileControllerState>({ status: "loading" });
+  const [state, setState] = useState<ProfileControllerState>({
+    status: "loading",
+  });
   const notifyLoadSessionExpired = useEffectEvent(onSessionExpired);
 
   useEffect(() => {
@@ -69,32 +80,55 @@ export function useProfileController({ service, onSessionExpired }: Dependencies
     requestInFlight.current = true;
 
     // Normalize synchronous adapter failures to the same safe load error path.
-    Promise.resolve().then(() => {
-      if (cancelled) return null;
-      if (replacingService) setState({ status: "loading" });
-      return service.load();
-    }).then(
-      (result) => {
-        if (cancelled || !result) return;
-        requestInFlight.current = false;
-        if (result.status === "session-expired") {
-          setState({ status: "session-expired" });
-          notifyLoadSessionExpired();
-          return;
-        }
-        setState(readyState(result.profile));
-      },
-      () => {
-        if (cancelled) return;
-        requestInFlight.current = false;
-        setState((current) => {
-          if (current.status === "ready") {
-            return { ...current, feedback: serviceFailure(), reloading: false };
+    Promise.resolve()
+      .then(() => {
+        if (cancelled) return null;
+        if (replacingService) setState({ status: "loading" });
+        return service.load();
+      })
+      .then(
+        (result) => {
+          if (cancelled || !result) return;
+          requestInFlight.current = false;
+          if (result.status === "offline") {
+            const message = resolveKnownMessage("MSG07");
+            setState((current) =>
+              current.status === "ready"
+                ? { ...current, feedback: message, reloading: false }
+                : {
+                    status: "error",
+                    message: message.message,
+                    retrying: false,
+                  },
+            );
+            return;
           }
-          return { message: serviceFailure().message, retrying: false, status: "error" };
-        });
-      },
-    );
+          if (result.status === "session-expired") {
+            setState({ status: "session-expired" });
+            notifyLoadSessionExpired();
+            return;
+          }
+          setState(readyState(result.profile));
+        },
+        () => {
+          if (cancelled) return;
+          requestInFlight.current = false;
+          setState((current) => {
+            if (current.status === "ready") {
+              return {
+                ...current,
+                feedback: serviceFailure(),
+                reloading: false,
+              };
+            }
+            return {
+              message: serviceFailure().message,
+              retrying: false,
+              status: "error",
+            };
+          });
+        },
+      );
 
     return () => {
       cancelled = true;
@@ -127,7 +161,8 @@ export function useProfileController({ service, onSessionExpired }: Dependencies
   }, []);
 
   const save = useCallback(async () => {
-    if (requestInFlight.current || state.status !== "ready" || state.conflict) return;
+    if (requestInFlight.current || state.status !== "ready" || state.conflict)
+      return;
     const validation = validateProfileForm(state.values);
     if (!validation.isValid) {
       setState({ ...state, errors: validation.errors, feedback: null });
@@ -148,7 +183,8 @@ export function useProfileController({ service, onSessionExpired }: Dependencies
       setState({ ...state, feedback: serviceFailure(), saving: false });
       return;
     } finally {
-      if (generation.current === activeGeneration) requestInFlight.current = false;
+      if (generation.current === activeGeneration)
+        requestInFlight.current = false;
     }
     if (generation.current !== activeGeneration) return;
 
@@ -170,8 +206,18 @@ export function useProfileController({ service, onSessionExpired }: Dependencies
         }),
         saving: false,
       });
+    } else if (result.status === "offline") {
+      setState({
+        ...state,
+        feedback: resolveKnownMessage("MSG07"),
+        saving: false,
+      });
     } else {
-      setState({ ...state, feedback: resolveKnownMessage("MSG20"), saving: false });
+      setState({
+        ...state,
+        feedback: resolveKnownMessage("MSG20"),
+        saving: false,
+      });
     }
   }, [onSessionExpired, service, state]);
 

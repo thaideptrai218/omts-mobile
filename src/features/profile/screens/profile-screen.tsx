@@ -17,14 +17,15 @@ import { TextField } from "@/shared/ui/text-field";
 
 type ProfileScreenProps = Readonly<{
   account: ProfileAccountSummary;
+  displayName?: string;
   conflict?: Readonly<{ onReload: () => void; reloading: boolean }>;
   errors?: ProfileFormErrors;
   feedback?: ResolvedMessage | null;
   onChangeDisplayName: (value: string) => void;
-  onChangeEmail: () => void;
-  onChangePhone: () => void;
+  onChangeEmail?: () => void;
+  onChangePhone?: () => void;
   onLogout: () => void;
-  onOpenNotifications: () => void;
+  onOpenNotifications?: () => void;
   onOpenPasswordChange: () => void;
   onSaveProfile: () => void;
   pending?: boolean;
@@ -35,15 +36,10 @@ type ContactCardProps = Readonly<{
   contact: ProfileContact;
   disabled: boolean;
   label: string;
-  onChange: () => void;
+  onChange?: () => void;
 }>;
 
-function ContactCard({
-  contact,
-  disabled,
-  label,
-  onChange,
-}: ContactCardProps) {
+function ContactCard({ contact, disabled, label, onChange }: ContactCardProps) {
   const theme = useAppTheme();
   const statusLabel = !contact.value
     ? "Chưa cập nhật"
@@ -86,19 +82,22 @@ function ContactCard({
         </View>
         <InlineStatus label={statusLabel} variant={statusVariant} />
       </View>
-      <AppButton
-        disabled={disabled}
-        fullWidth={false}
-        label={`Thay đổi ${label.toLocaleLowerCase("vi-VN")}`}
-        onPress={onChange}
-        variant="secondary"
-      />
+      {onChange ? (
+        <AppButton
+          disabled={disabled}
+          fullWidth={false}
+          label={`Thay đổi ${label.toLocaleLowerCase("vi-VN")}`}
+          onPress={onChange}
+          variant="secondary"
+        />
+      ) : null}
     </View>
   );
 }
 
 export function ProfileScreen({
   account,
+  displayName,
   conflict,
   errors = {},
   feedback,
@@ -126,7 +125,7 @@ export function ProfileScreen({
                 { color: theme.colors.textPrimary },
               ]}
             >
-              Tài khoản của tôi
+              {displayName ?? "Tài khoản của tôi"}
             </Text>
             <Text
               style={[
@@ -162,13 +161,28 @@ export function ProfileScreen({
               Thông tin tài khoản
             </Text>
             <View style={{ gap: theme.spacing.xs }}>
-              <Text style={[theme.typography.body, { color: theme.colors.textSecondary }]}>
+              <Text
+                style={[
+                  theme.typography.body,
+                  { color: theme.colors.textSecondary },
+                ]}
+              >
                 Mã tài khoản: {account.accountCode}
               </Text>
-              <Text style={[theme.typography.body, { color: theme.colors.textSecondary }]}>
+              <Text
+                style={[
+                  theme.typography.body,
+                  { color: theme.colors.textSecondary },
+                ]}
+              >
                 Tên đăng nhập: {account.username}
               </Text>
-              <Text style={[theme.typography.body, { color: theme.colors.textSecondary }]}>
+              <Text
+                style={[
+                  theme.typography.body,
+                  { color: theme.colors.textSecondary },
+                ]}
+              >
                 Loại tài khoản: {account.accountTypeLabel}
               </Text>
             </View>
@@ -243,10 +257,14 @@ export function ProfileScreen({
             {conflict ? (
               <View style={{ gap: theme.spacing.sm }}>
                 <Text
-                  style={[theme.typography.body, { color: theme.colors.textSecondary }]}
+                  style={[
+                    theme.typography.body,
+                    { color: theme.colors.textSecondary },
+                  ]}
                 >
-                  Tên bạn đang nhập được giữ lại để đối chiếu. Tải lại thành công
-                  sẽ thay thế tên này bằng thông tin đang lưu trên hệ thống.
+                  Tên bạn đang nhập được giữ lại để đối chiếu. Tải lại thành
+                  công sẽ thay thế tên này bằng thông tin đang lưu trên hệ
+                  thống.
                 </Text>
                 <AppButton
                   label="Tải lại và bỏ thay đổi"
@@ -275,8 +293,9 @@ export function ProfileScreen({
                 { color: theme.colors.textSecondary },
               ]}
             >
-              Thông tin hiện tại vẫn được sử dụng cho đến khi thông tin mới xác
-              minh thành công.
+              {onChangeEmail || onChangePhone
+                ? "Thông tin hiện tại vẫn được sử dụng cho đến khi thông tin mới xác minh thành công."
+                : "Email và số điện thoại đã khai báo cho tài khoản."}
             </Text>
             <ContactCard
               contact={account.email}
@@ -319,12 +338,14 @@ export function ProfileScreen({
               onPress={onOpenPasswordChange}
               variant="secondary"
             />
-            <AppButton
-              disabled={pending}
-              label="Tùy chọn thông báo"
-              onPress={onOpenNotifications}
-              variant="secondary"
-            />
+            {onOpenNotifications ? (
+              <AppButton
+                disabled={pending}
+                label="Tùy chọn thông báo"
+                onPress={onOpenNotifications}
+                variant="secondary"
+              />
+            ) : null}
             <AppButton
               disabled={pending}
               label="Đăng xuất"

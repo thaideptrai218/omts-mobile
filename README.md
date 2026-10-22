@@ -40,9 +40,18 @@ không tự chuyển sang mock khi API lỗi.
   Logout rồi login lại trong cùng lần chạy dùng mật khẩu mới; reload toàn bộ app
   sẽ khởi tạo lại fixture, trở về mật khẩu mẫu và yêu cầu đăng nhập.
 - Chạy xem bằng trình duyệt: `npx expo start --web --port 8082`.
+- `/account` đã ghép hồ sơ mock: sửa tên hiển thị, xem tài khoản/liên hệ/phân công
+  chỉ đọc, mở đổi mật khẩu và đăng xuất. Tên đã lưu còn sau logout/login trong cùng
+  tiến trình; reload toàn bộ app reset fixture. Offline không tự lưu hoặc xếp hàng.
+- Hết phiên về login có MSG19; logout chủ động không hiện lỗi hết phiên.
+- Hồ sơ có nút **Tùy chọn thông báo** → `/notification-preferences`: lưu/hủy
+  riêng từng tài khoản, có khóa mục bắt buộc và email chưa xác minh. Catalog chỉ
+  là ví dụ mock; không gửi thông báo, đăng ký push token hay xin quyền thiết bị.
 
 Chi tiết phạm vi, bằng chứng và phần chưa hoàn thành:
 [báo cáo ghép luồng](docs/reports/MOBILE_SESSION_ASSEMBLY_2026-10-22.md).
+Lát tiếp theo: [MSG19 và hồ sơ mock](docs/reports/MOBILE_MSG19_PROFILE_ASSEMBLY_2026-10-22.md).
+Lát thông báo: [báo cáo ghép mock](docs/reports/MOBILE_NOTIFICATION_ASSEMBLY_2026-10-22.md).
 
 | Script | Purpose |
 |---|---|

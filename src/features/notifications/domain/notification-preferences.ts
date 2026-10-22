@@ -15,17 +15,16 @@ export type NotificationPreferenceCell = Readonly<
   {
     channelId: string;
     enabled: boolean;
-  } &
-    (
-      | Readonly<{
-          editable: true;
-          reason?: never;
-        }>
-      | Readonly<{
-          editable: false;
-          reason: LockedNotificationPreferenceReason;
-        }>
-    )
+  } & (
+    | Readonly<{
+        editable: true;
+        reason?: never;
+      }>
+    | Readonly<{
+        editable: false;
+        reason: LockedNotificationPreferenceReason;
+      }>
+  )
 >;
 
 export type NotificationPreferenceItem = Readonly<{
@@ -52,6 +51,7 @@ export type SaveNotificationPreferencesInput = Readonly<{
 }>;
 
 export type LoadNotificationPreferencesResult =
+  | Readonly<{ status: "offline" }>
   | Readonly<{
       settings: NotificationPreferenceSettings;
       status: "loaded";
@@ -62,6 +62,7 @@ export type LoadNotificationPreferencesResult =
     }>;
 
 export type SaveNotificationPreferencesResult =
+  | Readonly<{ status: "offline" }>
   | Readonly<{
       message: Readonly<{
         code: "MSG10";

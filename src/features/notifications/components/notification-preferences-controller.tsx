@@ -26,7 +26,7 @@ export function NotificationPreferencesController({
   });
 
   if (controller.state.status === "loading") {
-    return <NotificationPreferencesScreen status="loading" />;
+    return <NotificationPreferencesScreen status="loading" onClose={onClose} />;
   }
 
   if (controller.state.status === "session-expired") {
@@ -48,6 +48,7 @@ export function NotificationPreferencesController({
         onRetry={() => void controller.load()}
         retrying={controller.state.retrying}
         status="error"
+        onClose={onClose}
       />
     );
   }
@@ -55,6 +56,9 @@ export function NotificationPreferencesController({
   return (
     <NotificationPreferencesScreen
       feedback={controller.state.feedback}
+      onClose={() => {
+        if (controller.cancel()) onClose();
+      }}
       onCancel={() => {
         if (controller.cancel()) onClose();
       }}

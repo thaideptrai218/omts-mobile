@@ -1,4 +1,10 @@
-import { useCallback, useEffect, useEffectEvent, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useEffectEvent,
+  useRef,
+  useState,
+} from "react";
 
 import {
   applyNotificationPreferenceSelection,
@@ -58,8 +64,14 @@ export function useNotificationPreferencesController({
   pushPermissionRepository,
 }: ControllerDependencies) {
   const canonicalSettings = useRef<NotificationPreferenceSettings | null>(null);
-  const saveScope = useRequestScope(preferencesService, pushPermissionRepository);
-  const permissionScope = useRequestScope(preferencesService, pushPermissionRepository);
+  const saveScope = useRequestScope(
+    preferencesService,
+    pushPermissionRepository,
+  );
+  const permissionScope = useRequestScope(
+    preferencesService,
+    pushPermissionRepository,
+  );
   const notifyLoadSessionExpired = useEffectEvent(onSessionExpired);
   const [loadAttempt, setLoadAttempt] = useState(0);
   const [state, setState] = useState<NotificationPreferencesControllerState>({
@@ -71,46 +83,57 @@ export function useNotificationPreferencesController({
     let cancelled = false;
     canonicalSettings.current = null;
 
-    Promise.resolve().then(() => {
-      if (cancelled) return null;
-      setState({ retrying: false, status: "loading" });
-      return Promise.all([
-        preferencesService.load(),
-        pushPermissionRepository.read(),
-      ]);
-    }).then(
-      (result) => {
-        if (cancelled || !result) return;
-        const [preferences, pushPermission] = result;
+    Promise.resolve()
+      .then(() => {
+        if (cancelled) return null;
+        setState({ retrying: false, status: "loading" });
+        return Promise.all([
+          preferencesService.load(),
+          pushPermissionRepository.read(),
+        ]);
+      })
+      .then(
+        (result) => {
+          if (cancelled || !result) return;
+          const [preferences, pushPermission] = result;
 
-        if (preferences.status === "session-expired") {
-          canonicalSettings.current = null;
-          setState({ status: "session-expired" });
-          notifyLoadSessionExpired();
-          return;
-        }
+          if (preferences.status === "session-expired") {
+            canonicalSettings.current = null;
+            setState({ status: "session-expired" });
+            notifyLoadSessionExpired();
+            return;
+          }
 
-        canonicalSettings.current = preferences.settings;
-        setState({
-          feedback: null,
-          pushPermission,
-          requestingPushPermission: false,
-          saving: false,
-          settings: preferences.settings,
-          status: "ready",
-        });
-      },
-      () => {
-        if (cancelled) return;
-        setState({
-          message: resolveKnownMessage("MSG04", {
-            serviceName: "Dịch vụ tùy chọn thông báo",
-          }).message,
-          retrying: false,
-          status: "error",
-        });
-      },
-    );
+          if (preferences.status === "offline") {
+            setState({
+              status: "error",
+              retrying: false,
+              message: resolveKnownMessage("MSG07").message,
+            });
+            return;
+          }
+
+          canonicalSettings.current = preferences.settings;
+          setState({
+            feedback: null,
+            pushPermission,
+            requestingPushPermission: false,
+            saving: false,
+            settings: preferences.settings,
+            status: "ready",
+          });
+        },
+        () => {
+          if (cancelled) return;
+          setState({
+            message: resolveKnownMessage("MSG04", {
+              serviceName: "Dịch vụ tùy chọn thông báo",
+            }).message,
+            retrying: false,
+            status: "error",
+          });
+        },
+      );
 
     return () => {
       cancelled = true;
@@ -120,28 +143,29 @@ export function useNotificationPreferencesController({
   const load = useCallback(() => {
     if (state.status !== "error" || state.retrying) return;
     setState((current) =>
-      current.status === "error"
-        ? { ...current, retrying: true }
-        : current,
+      current.status === "error" ? { ...current, retrying: true } : current,
     );
     setLoadAttempt((current) => current + 1);
   }, [state]);
 
-  const change = useCallback((selection: NotificationPreferenceSelection) => {
-    if (saveScope.isBlocked()) return;
-    setState((current) =>
-      current.status !== "ready"
-        ? current
-        : {
-            ...current,
-            feedback: null,
-            settings: applyNotificationPreferenceSelection(
-              current.settings,
-              selection,
-            ),
-          },
-    );
-  }, [saveScope]);
+  const change = useCallback(
+    (selection: NotificationPreferenceSelection) => {
+      if (saveScope.isBlocked()) return;
+      setState((current) =>
+        current.status !== "ready"
+          ? current
+          : {
+              ...current,
+              feedback: null,
+              settings: applyNotificationPreferenceSelection(
+                current.settings,
+                selection,
+              ),
+            },
+      );
+    },
+    [saveScope],
+  );
 
   const cancel = useCallback(() => {
     if (saveScope.isBlocked()) return false;
@@ -162,9 +186,11 @@ export function useNotificationPreferencesController({
     const request = saveScope.begin();
     if (!request) return;
     const settingsBeingSaved = state.settings;
-    setState((current) => current.status === "ready"
-      ? { ...current, feedback: null, saving: true }
-      : current);
+    setState((current) =>
+      current.status === "ready"
+        ? { ...current, feedback: null, saving: true }
+        : current,
+    );
 
     let result: SaveNotificationPreferencesResult;
     try {
@@ -194,6 +220,19 @@ export function useNotificationPreferencesController({
       canonicalSettings.current = null;
       setState({ status: "session-expired" });
       onSessionExpired();
+      return;
+    }
+
+    if (result.status === "offline") {
+      setState((current) =>
+        current.status === "ready"
+          ? {
+              ...current,
+              feedback: resolveKnownMessage("MSG07"),
+              saving: false,
+            }
+          : current,
+      );
       return;
     }
 
@@ -229,9 +268,11 @@ export function useNotificationPreferencesController({
     if (state.status !== "ready") return;
     const request = permissionScope.begin();
     if (!request) return;
-    setState((current) => current.status === "ready"
-      ? { ...current, feedback: null, requestingPushPermission: true }
-      : current);
+    setState((current) =>
+      current.status === "ready"
+        ? { ...current, feedback: null, requestingPushPermission: true }
+        : current,
+    );
 
     try {
       const pushPermission = await pushPermissionRepository.request();

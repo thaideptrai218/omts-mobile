@@ -171,8 +171,33 @@ test("revoked credential ends bootstrap without pretending a network failure is 
   await store.login("tran.thu.ha", MOCK_PASSWORD);
   await gateway.revoke((await repository.read())!);
   await store.bootstrap();
-  expect(store.getSnapshot()).toEqual({ status: "signedOut" });
+  expect(store.getSnapshot()).toEqual({
+    status: "signedOut",
+    reason: "sessionExpired",
+  });
   expect(await repository.read()).toBeNull();
+});
+
+test("expired-session cleanup retry retains MSG19 instead of silently becoming explicit logout", async () => {
+  const { store, repository, gateway } = setup();
+  await store.login("tran.thu.ha", MOCK_PASSWORD);
+  await gateway.revoke((await repository.read())!);
+  jest
+    .spyOn(repository, "clear")
+    .mockRejectedValueOnce(new Error("storage unavailable"));
+  await store.bootstrap();
+  expect(store.getSnapshot()).toMatchObject({
+    status: "error",
+    operation: "logout",
+    signOutReason: "sessionExpired",
+  });
+  await store.bootstrap();
+  expect(store.getSnapshot()).toEqual({
+    status: "signedOut",
+    reason: "sessionExpired",
+  });
+  await store.login("tran.thu.ha", MOCK_PASSWORD);
+  expect(store.getSnapshot()).toMatchObject({ status: "active" });
 });
 
 test("transient gateway failure retains credential and hides protected content until retry", async () => {

@@ -4,10 +4,13 @@ import { validateLoginForm, type LoginFormErrors } from "../domain/login-form";
 import { useMobileSession } from "@/features/session/state/mobile-session-provider";
 import { sessionFeedback } from "@/features/session/services/session-feedback";
 import { useRequestScope } from "@/shared/hooks/use-request-scope";
-import type { ResolvedMessage } from "@/shared/messages/message-catalog";
+import {
+  resolveKnownMessage,
+  type ResolvedMessage,
+} from "@/shared/messages/message-catalog";
 
 export function SessionLoginController() {
-  const { store } = useMobileSession();
+  const { store, snapshot } = useMobileSession();
   const scope = useRequestScope(store ?? {});
   const [values, setValues] = useState({ identifier: "", password: "" });
   const [errors, setErrors] = useState<LoginFormErrors>({});
@@ -44,6 +47,7 @@ export function SessionLoginController() {
 
   function change(field: "identifier" | "password", value: string) {
     if (scope.isBlocked()) return;
+    store?.acknowledgeSignOutReason();
     setValues((current) => ({ ...current, [field]: value }));
     setErrors((current) => ({ ...current, [field]: undefined }));
     setFeedback(null);
@@ -52,7 +56,12 @@ export function SessionLoginController() {
     <LoginScreen
       values={values}
       errors={errors}
-      feedback={feedback}
+      feedback={
+        feedback ??
+        (snapshot.status === "signedOut" && snapshot.reason === "sessionExpired"
+          ? resolveKnownMessage("MSG19")
+          : null)
+      }
       pending={pending}
       onChangeIdentifier={(value) => change("identifier", value)}
       onChangePassword={(value) => change("password", value)}

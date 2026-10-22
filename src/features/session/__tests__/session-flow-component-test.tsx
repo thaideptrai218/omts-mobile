@@ -1,5 +1,6 @@
 import {
   render,
+  act,
   screen,
   userEvent,
   within,
@@ -21,6 +22,8 @@ import {
 import { createMobileSessionStore } from "../state/mobile-session-store";
 import { OnboardingScreen } from "../screens/onboarding-screen";
 import { SessionAccountScreen } from "../screens/session-account-screen";
+import { SessionFailure } from "../domain/mobile-session";
+import { resolveKnownMessage } from "@/shared/messages/message-catalog";
 
 jest.mock("expo-router", () => ({
   router: { replace: jest.fn(), push: jest.fn() },
@@ -52,7 +55,7 @@ async function renderFlow(
   ) => Promise<void>,
 ) {
   let offline = false;
-  const { gateway } = createMockSessionGateway();
+  const { gateway, profileGateway } = createMockSessionGateway();
   const store = createMobileSessionStore({
     gateway,
     repository: createMemorySessionCredentials(),
@@ -65,6 +68,7 @@ async function renderFlow(
   };
   const runtimeFactory = () => ({
     store,
+    profileGateway,
     setOffline: (value: boolean) => {
       offline = value;
     },
@@ -83,7 +87,7 @@ async function renderFlow(
       </ConnectivityProvider>
     </SafeAreaProvider>,
   );
-  return { store };
+  return { store, gateway };
 }
 
 test("real controlled forms complete Staff onboarding and logout without retaining secrets", async () => {
@@ -146,6 +150,43 @@ test("real controlled forms complete Staff onboarding and logout without retaini
   );
   await screen.findByRole("button", { name: "Đăng nhập" });
   expect(screen.getByLabelText("Mật khẩu")).toHaveDisplayValue("");
+  expect(
+    screen.queryByText(resolveKnownMessage("MSG19").message),
+  ).not.toBeOnTheScreen();
+});
+
+test("expired session carries MSG19 to login and clears it when the user starts again", async () => {
+  const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+  const { store, gateway } = await renderFlow(async (current) => {
+    await current.login("tran.thu.ha", MOCK_PASSWORD);
+  });
+  await screen.findByRole("header", { name: "Trần Thu Hà" });
+  jest
+    .spyOn(gateway, "inspect")
+    .mockRejectedValue(new SessionFailure("expired"));
+  jest
+    .spyOn(gateway, "refresh")
+    .mockRejectedValue(new SessionFailure("expired"));
+  await act(async () => {
+    await expect(store.reloadSession()).rejects.toMatchObject({
+      code: "expired",
+    });
+  });
+  expect(
+    await screen.findByText(resolveKnownMessage("MSG19").message),
+  ).toBeOnTheScreen();
+  expect(
+    screen.queryByRole("header", { name: "Trần Thu Hà" }),
+  ).not.toBeOnTheScreen();
+  expect(screen.getByLabelText("Mật khẩu")).toHaveDisplayValue("");
+  await user.type(
+    screen.getByLabelText("Tên đăng nhập, số điện thoại hoặc email"),
+    "tran",
+  );
+  expect(
+    screen.queryByText(resolveKnownMessage("MSG19").message),
+  ).not.toBeOnTheScreen();
+  expect(store.getSnapshot()).toEqual({ status: "signedOut" });
 });
 
 test("choosing phone is sufficient; email verification is not a second mandatory gate", async () => {

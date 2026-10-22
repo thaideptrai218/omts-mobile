@@ -10,6 +10,7 @@ export type ProfileSnapshot = Readonly<{
 
 export type ProfileLoadResult =
   | Readonly<{ profile: ProfileSnapshot; status: "loaded" }>
+  | Readonly<{ status: "offline" }>
   | Readonly<{ status: "session-expired" }>;
 
 export type ProfileSaveResult =
@@ -19,12 +20,14 @@ export type ProfileSaveResult =
       updatedBy: string | null;
       updatedAt: string | null;
     }>
-  | Readonly<{ status: "username-readonly" | "session-expired" }>;
+  | Readonly<{ status: "username-readonly" | "session-expired" | "offline" }>;
 
 export type ProfileService = Readonly<{
   load: () => Promise<ProfileLoadResult>;
-  save: (input: Readonly<{
-    displayName: string;
-    expectedRevision: string;
-  }>) => Promise<ProfileSaveResult>;
+  save: (
+    input: Readonly<{
+      displayName: string;
+      expectedRevision: string;
+    }>,
+  ) => Promise<ProfileSaveResult>;
 }>;

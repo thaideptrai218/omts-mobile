@@ -7,8 +7,14 @@ import {
 import { validateNewPassword } from "@/shared/security/new-password-policy";
 import { createMockOnboardingCodes } from "./mock-onboarding-codes";
 import { mockSessionFixtures, MOCK_PASSWORD } from "./mock-session-fixtures";
+import { createMockProfileGateway } from "@/features/profile/adapters/mock-profile-gateway";
+import { createMockSessionNotificationGateway } from "@/features/notifications/adapters/mock-session-notification-gateway";
 
-type MockAccount = { session: MobileSession; password: string };
+type MockAccount = {
+  session: MobileSession;
+  password: string;
+  profileRevision: number;
+};
 type MockLease = { account: MockAccount; accessExpires: number };
 
 export function createMockSessionGateway(now: () => number = Date.now) {
@@ -19,6 +25,7 @@ export function createMockSessionGateway(now: () => number = Date.now) {
         contacts: session.contacts.map((contact) => ({ ...contact })),
       },
       password: MOCK_PASSWORD,
+      profileRevision: 1,
     }),
   );
   const leases = new Map<string, MockLease>();
@@ -114,5 +121,16 @@ export function createMockSessionGateway(now: () => number = Date.now) {
       leases.delete(credential.handle);
     },
   };
-  return { gateway, currentChallenge: codes.current };
+  const profileGateway = createMockProfileGateway(
+    (credential) => lease(credential).account,
+  );
+  const notificationGateway = createMockSessionNotificationGateway(
+    (credential) => lease(credential).account.session,
+  );
+  return {
+    gateway,
+    profileGateway,
+    notificationGateway,
+    currentChallenge: codes.current,
+  };
 }

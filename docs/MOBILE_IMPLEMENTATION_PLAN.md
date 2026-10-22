@@ -7,6 +7,34 @@
 
 ## Execution log
 
+### 23/10/2026 — combined MSG19/profile/preferences review and feature delivery
+
+- R1/R2: reviewed shared session lifetime, cleanup/MSG19 transport, profile revision/draft behavior, preferences canonical/draft and mandatory/eligibility locks; no new P1/P2 finding reproduced in the checked mock scope.
+- R3: added seven cross-feature regressions in `account-services-integration-test.ts`; no runtime, business flow or new adapter changes in the review itself.
+- R4: 50 suites / 292 tests, lint/typecheck/export and Doctor 21/21 pass. Browser/device checks were not rerun; earlier browser evidence is explicitly dated in the report.
+- R5: report `docs/reports/MOBILE_ACCOUNT_ASSEMBLY_REVIEW_2026-10-23.md`, local-only learning note 46. Delivery requested on current feature branch, no merge/PR/Jira changes. Real API/native/catalog acceptance remains pending.
+
+### 22/10/2026 — approved notification preferences mock assembly
+
+- N1: re-read UC06/SCR-06 and current source; OMTS-124 remains To Do and now calls this ACS-07. OMTS-176/174 returned 404. Mock examples are not a canonical BA/API catalog.
+- N2: account-scoped notification gateway plus session-generation-bound service; per-account process-memory repository, no storage/credential changes. Mandatory/email eligibility checked by mock repository; offline outcome does not queue or auto-save.
+- N3: `/account` → `/notification-preferences` inside existing app guard. Real save/cancel/retry/back actions; loading/error have an exit. Push device state is unavailable with honest copy and no permission prompt; no fake push token/delivery or inbox.
+- N4: self-review and two new suites (9 service + 8 component/flow tests): account isolation/relogin, mandatory/eligibility, offline, duplicate saves, expired load/save, stale service and late successful response.
+- N5: 49 suites / 285 tests, lint/typecheck/web export, Expo Doctor 21/21 pass; browser save/cancel/direct protected URL and 360 CSS px checks. Report: `docs/reports/MOBILE_NOTIFICATION_ASSEMBLY_2026-10-22.md`; local lesson 45 stays ignored.
+- No commit/push/merge or Jira/SRS/backend changes. Catalog, real preferences API, concurrency/eligibility refresh, native push registration and device QA remain pending; do not mark OMTS-176 complete from mock evidence.
+
+### 22/10/2026 — approved MSG19 fix and profile mock assembly
+
+User explicitly approved fixing MSG19 first, then assembling the personal profile with mock data. These micro-tasks are complete **within that mock scope**, not real API/Expo Go acceptance:
+
+1. P1: preserve expired reason across teardown/login, distinguish explicit logout, dismiss on new login input/attempt; retain the reason through cleanup retry. Session store/flow regressions pass.
+2. P2: share mock auth/profile account data; bind ProfileService to accountId + login generation; save displayName with opaque revision and accept only canonical returned names. Test offline, real mock revision conflict, stale services and late successful responses.
+3. P3: replace `/account` summary with ProfileController, without adding a duplicate route. Keep skeleton/retry/pending/draft/conflict; wire password navigation and logout, including a logout escape on loading/error. Contacts/username/grants remain read-only; unassembled actions are absent rather than no-op.
+4. P4: self-review automatic expiry generation and cleanup retry; add regression coverage. No business-flow/validation/permission/offline-queue changes.
+5. P5: 47 suites / 268 tests, lint/typecheck, web export and Expo Doctor 21/21 pass. Browser save/password-cancel/logout/relogin and no horizontal overflow at 360 CSS px checked. Full evidence: `docs/reports/MOBILE_MSG19_PROFILE_ASSEMBLY_2026-10-22.md`.
+
+SESSION-UX-01 is now closed in the mock flow; the earlier log below describes the pre-fix review. Local lesson 44 explains session generation versus profile revision and the real TypeScript test failure. Learning/screenshots stay ignored. No commit/push, merge, backend/SRS/Jira writes in this slice. Next candidate is a separate preferences mock wrapper; real adapters still require confirmed backend contracts and device QA.
+
 ### 22/10/2026 — session assembly review and backend recheck
 
 - Reviewed the assembled mock flow and added seven service regressions: late bootstrap/password success, duplicate login, cleanup retry, transient refresh, standard password preservation and save-before-clear ordering.
@@ -859,6 +887,8 @@ Minimum touch target target: approximately 44–48 logical pixels. Forms must re
 
 **Implementation result (22/10/2026):** Complete at presentation/controller level: profile loading/retry, required-name validation, canonical save response, duplicate-submit protection, MSG10/MSG20 and a session-expired state that removes editable data. The application save contract contains only displayName and an opaque expectedRevision. Endpoint adapter, contact verification and real QA remain pending.
 
+**Subsequent approved assembly (22/10/2026):** `/account` now uses this controller with a session-scoped shared mock gateway. Save updates the correct mock account and session identity; offline retains draft without auto-save. Password navigation and confirmed logout work; contact/preferences wrappers remain separate. This does not complete the endpoint/device acceptance criteria.
+
 ### M10.3 Reuse SCR-02 for changed contacts
 
 **What:** Verify new email or phone before replacement.
@@ -880,6 +910,8 @@ Minimum touch target target: approximately 44–48 logical pixels. Forms must re
 **Done when:** conflict test preserves the user's unsaved values long enough to review while offering a safe reload.
 
 **Implementation result (22/10/2026):** Frontend controller tests pass. A conflict preserves the draft and blocks blind retries using the stale revision. An explicit “Tải lại và bỏ thay đổi” action replaces it only after a successful reload; a failed reload keeps both the draft and conflict lock. Late responses and parent callback identity changes have regression tests. The backend concurrency stamp/HTTP mapping is still unconfirmed, so M10.4 is not integrated end to end.
+
+**Subsequent mock evidence (22/10/2026):** A second session using the same synthetic account can change its revision. The routed controller detects that conflict, retains the draft on failed reload and replaces it only after successful explicit retry. No backend version representation has been chosen by this mock implementation.
 
 ## Phase M11 — `OMTS-176` notification preferences, SCR-06
 
@@ -944,6 +976,8 @@ Minimum touch target target: approximately 44–48 logical pixels. Forms must re
 **Implementation result (22/10/2026):** Frontend contract and mock adapter are complete. Tests cover editable save, MSG21, MSG22 partial save, MSG23, session expiry and isolated data copies. QA API persistence and canonical reload remain blocked by `OMTS-124`/`OMTS-174` and the missing API contract.
 
 **Hardening update (22/10/2026):** A controller now owns initial load, draft/canonical separation, cancel, save, OS permission request, typed feedback and session-expiry delegation. Tests verify that cancelling restores the last canonical settings and that an OS permission response cannot overwrite preference edits made while its promise was pending. This controller is framework-independent and ready for a route wrapper, but it is not evidence of QA API persistence.
+
+**Subsequent approved mock assembly (22/10/2026):** The controller is routed at `/notification-preferences` from `/account`. A shared mock-auth credential resolver selects a separate repository per account; AccountSessionScope prevents old-login services/responses from affecting the next session. Offline load/save explicitly use MSG07 without queue/auto-save. The mock route reports device permission unavailable and never calls the native permission adapter. Full evidence is in `MOBILE_NOTIFICATION_ASSEMBLY_2026-10-22.md`; real catalog, endpoint, push and QA acceptance remain open.
 
 ## Phase M12 — `OMTS-180` online and offline logout
 

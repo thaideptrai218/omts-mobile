@@ -1,10 +1,4 @@
-import {
-  ScrollView,
-  StyleSheet,
-  Switch,
-  Text,
-  View,
-} from "react-native";
+import { ScrollView, StyleSheet, Switch, Text, View } from "react-native";
 
 import { PushPermissionCard } from "@/features/notifications/components/push-permission-card";
 import {
@@ -26,28 +20,30 @@ import { MessageBanner } from "@/shared/ui/message-banner";
 import { ScreenContainer } from "@/shared/ui/screen-container";
 import { Skeleton, SkeletonGroup } from "@/shared/ui/skeleton";
 
-type NotificationPreferencesScreenProps =
-  | Readonly<{
-      status: "loading";
-    }>
-  | Readonly<{
-      message: string;
-      onRetry: () => void;
-      retrying?: boolean;
-      status: "error";
-    }>
-  | Readonly<{
-      feedback?: ResolvedMessage | null;
-      onCancel: () => void;
-      onChange: (selection: NotificationPreferenceSelection) => void;
-      onRequestPushPermission: () => void;
-      onSave: () => void;
-      pushPermission: PushPermissionState;
-      requestingPushPermission?: boolean;
-      saving?: boolean;
-      settings: NotificationPreferenceSettings;
-      status: "ready";
-    }>;
+type NotificationPreferencesScreenProps = Readonly<{ onClose?: () => void }> &
+  (
+    | Readonly<{
+        status: "loading";
+      }>
+    | Readonly<{
+        message: string;
+        onRetry: () => void;
+        retrying?: boolean;
+        status: "error";
+      }>
+    | Readonly<{
+        feedback?: ResolvedMessage | null;
+        onCancel: () => void;
+        onChange: (selection: NotificationPreferenceSelection) => void;
+        onRequestPushPermission: () => void;
+        onSave: () => void;
+        pushPermission: PushPermissionState;
+        requestingPushPermission?: boolean;
+        saving?: boolean;
+        settings: NotificationPreferenceSettings;
+        status: "ready";
+      }>
+  );
 
 function resolveLockedReason(
   reason: LockedNotificationPreferenceReason,
@@ -98,6 +94,13 @@ export function NotificationPreferencesScreen(
   if (props.status === "loading") {
     return (
       <ScreenContainer testID="notification-preferences-loading">
+        {props.onClose ? (
+          <AppButton
+            label="Quay lại hồ sơ"
+            onPress={props.onClose}
+            variant="ghost"
+          />
+        ) : null}
         <LoadingContent />
       </ScreenContainer>
     );
@@ -106,6 +109,13 @@ export function NotificationPreferencesScreen(
   if (props.status === "error") {
     return (
       <ScreenContainer testID="notification-preferences-error">
+        {props.onClose ? (
+          <AppButton
+            label="Quay lại hồ sơ"
+            onPress={props.onClose}
+            variant="ghost"
+          />
+        ) : null}
         <ContentState
           actionLabel="Thử lại"
           actionLoading={props.retrying}
@@ -150,10 +160,22 @@ export function NotificationPreferencesScreen(
           },
         ]}
       >
+        {props.onClose ? (
+          <AppButton
+            label="Quay lại hồ sơ"
+            onPress={props.onClose}
+            disabled={saving}
+            variant="ghost"
+            fullWidth={false}
+          />
+        ) : null}
         <View style={{ gap: theme.spacing.xs }}>
           <Text
             accessibilityRole="header"
-            style={[theme.typography.title, { color: theme.colors.textPrimary }]}
+            style={[
+              theme.typography.title,
+              { color: theme.colors.textPrimary },
+            ]}
           >
             Tùy chọn thông báo
           </Text>

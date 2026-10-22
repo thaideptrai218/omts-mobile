@@ -4,6 +4,7 @@ import type {
   SessionCredential,
   SessionCredentialRepository,
   SessionSnapshot,
+  AccountSessionScope,
 } from "@/features/session/domain/mobile-session";
 import type { VerificationChannel } from "@/features/verification/domain/verification-contract";
 import { createSessionAccess } from "@/features/session/services/session-access";
@@ -35,12 +36,16 @@ export function createMobileSessionStore({
   function assertOnline() {
     if (isOffline()) throw new SessionFailure("offline");
   }
-  async function hideAndClear(startedAt: number) {
+  async function hideAndClear(startedAt: number, reason?: "sessionExpired") {
     credential = null;
     publish({ status: "loading" });
     try {
       await access.clear();
-      if (startedAt === generation) publish({ status: "signedOut" });
+      if (startedAt === generation) {
+        publish(
+          reason ? { status: "signedOut", reason } : { status: "signedOut" },
+        );
+      }
       return true;
     } catch {
       if (startedAt === generation) {
@@ -48,9 +53,20 @@ export function createMobileSessionStore({
           status: "error",
           reason: "unavailable",
           operation: "logout",
+          ...(reason ? { signOutReason: reason } : {}),
         });
       }
       return false;
+    }
+  }
+  async function expireCurrentSession(startedAt: number) {
+    if (startedAt !== generation) return;
+    const endedAt = ++generation;
+    busy = true;
+    try {
+      await hideAndClear(endedAt, "sessionExpired");
+    } finally {
+      if (endedAt === generation) busy = false;
     }
   }
   async function authenticated<T>(
@@ -78,7 +94,7 @@ export function createMobileSessionStore({
         error instanceof SessionFailure &&
         error.code === "expired"
       ) {
-        await hideAndClear(startedAt);
+        await expireCurrentSession(startedAt);
       }
       throw error;
     } finally {
@@ -94,10 +110,44 @@ export function createMobileSessionStore({
         listeners.delete(listener);
       };
     },
+    acknowledgeSignOutReason() {
+      if (snapshot.status === "signedOut" && snapshot.reason) {
+        publish({ status: "signedOut" });
+      }
+    },
+    createAccountScope(accountId: string): AccountSessionScope {
+      const ownerGeneration = generation;
+      const isCurrent = () =>
+        ownerGeneration === generation &&
+        snapshot.status === "active" &&
+        snapshot.session.accountId === accountId &&
+        snapshot.session.nextAction === "ready";
+      return {
+        async run<T>(request: (current: SessionCredential) => Promise<T>) {
+          // A service from an old login must not execute with a new account's credential.
+          if (!isCurrent()) throw new SessionFailure("expired");
+          return mutate(() => authenticated(request));
+        },
+        acceptDisplayName(displayName) {
+          if (isCurrent() && snapshot.status === "active") {
+            publish({
+              status: "active",
+              session: { ...snapshot.session, displayName },
+            });
+          }
+        },
+        async expire() {
+          if (!isCurrent()) return;
+          await expireCurrentSession(ownerGeneration);
+        },
+      };
+    },
     async bootstrap() {
       if (busy) return;
       if (snapshot.status === "error" && snapshot.operation === "logout") {
-        await store.logout();
+        if (snapshot.signOutReason === "sessionExpired")
+          await expireCurrentSession(generation);
+        else await store.logout();
         return;
       }
       busy = true;
@@ -119,7 +169,7 @@ export function createMobileSessionStore({
       } catch (error) {
         if (startedAt !== generation) return;
         if (error instanceof SessionFailure && error.code === "expired") {
-          await hideAndClear(startedAt);
+          await expireCurrentSession(startedAt);
         } else {
           publish({
             status: "error",
@@ -136,6 +186,7 @@ export function createMobileSessionStore({
     },
     login(identifier: string, password: string) {
       return mutate(async () => {
+        store.acknowledgeSignOutReason();
         assertOnline();
         const startedAt = generation;
         const lease = await gateway.login(identifier, password);

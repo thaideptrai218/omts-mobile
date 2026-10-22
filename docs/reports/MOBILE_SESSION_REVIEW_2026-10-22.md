@@ -1,5 +1,7 @@
 # Review luồng session Mobile — 22/10/2026
 
+> Cập nhật tiếp theo cùng ngày: người dùng đã yêu cầu sửa SESSION-UX-01. Finding này **đã đóng trong phạm vi mock** với regression expired → login có MSG19 và explicit logout không MSG19. Xem [báo cáo triển khai tiếp theo](MOBILE_MSG19_PROFILE_ASSEMBLY_2026-10-22.md). Phần bên dưới giữ nguyên kết quả review tại thời điểm trước khi sửa, không phải trạng thái còn mở hiện tại.
+
 ## Kết luận
 
 Luồng mock đã ghép đủ để review login → forced password → xác minh một email/SĐT → account → logout. Kiểm tra source và test bổ sung chưa tái hiện lỗi mở lại app sau logout trong các tình huống đã xét. **Có một finding P2 về thông báo hết phiên còn mở**; không coi đây là bản đã nghiệm thu API/Expo Go hoặc sẵn sàng merge.

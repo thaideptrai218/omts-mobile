@@ -9,6 +9,8 @@ import {
 import { useConnectivity } from "@/features/connectivity/state/connectivity-provider";
 import { createMemorySessionCredentials } from "../adapters/memory-session-credentials";
 import { createMockSessionGateway } from "../adapters/mock-session-gateway";
+import type { ProfileGateway } from "@/features/profile/services/profile-gateway";
+import type { NotificationPreferencesGateway } from "@/features/notifications/services/notification-preferences-gateway";
 import {
   createMobileSessionStore,
   type MobileSessionStore,
@@ -25,17 +27,22 @@ const unavailableSnapshot = () => unavailable;
 const SessionContext = createContext<{
   store: MobileSessionStore | null;
   snapshot: SessionSnapshot;
+  profileGateway: ProfileGateway | null;
+  notificationGateway: NotificationPreferencesGateway | null;
 } | null>(null);
 
 export type SessionRuntime = {
   store: MobileSessionStore;
   setOffline: (value: boolean) => void;
+  profileGateway?: ProfileGateway;
+  notificationGateway?: NotificationPreferencesGateway;
 };
 
 function createRuntime(): SessionRuntime | null {
   // Explicit opt-in only. Never silently use a mock when API mode fails.
   if (process.env.EXPO_PUBLIC_AUTH_MODE !== "mock") return null;
-  const { gateway } = createMockSessionGateway();
+  const { gateway, profileGateway, notificationGateway } =
+    createMockSessionGateway();
   let offline = false;
   const store = createMobileSessionStore({
     gateway,
@@ -44,6 +51,8 @@ function createRuntime(): SessionRuntime | null {
   });
   return {
     store,
+    profileGateway,
+    notificationGateway,
     setOffline: (value: boolean) => {
       offline = value;
     },
@@ -80,7 +89,14 @@ export function MobileSessionProvider({
   }, [status, store]);
 
   return (
-    <SessionContext.Provider value={{ store, snapshot }}>
+    <SessionContext.Provider
+      value={{
+        store,
+        snapshot,
+        profileGateway: runtime?.profileGateway ?? null,
+        notificationGateway: runtime?.notificationGateway ?? null,
+      }}
+    >
       {children}
     </SessionContext.Provider>
   );

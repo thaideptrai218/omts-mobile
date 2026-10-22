@@ -3,7 +3,10 @@ import { StyleSheet, Text, View } from "react-native";
 import type { PushPermissionState } from "@/features/notifications/domain/push-permission";
 import { useAppTheme } from "@/shared/theme/use-app-theme";
 import { AppButton } from "@/shared/ui/app-button";
-import { InlineStatus, type InlineStatusVariant } from "@/shared/ui/inline-status";
+import {
+  InlineStatus,
+  type InlineStatusVariant,
+} from "@/shared/ui/inline-status";
 
 type PushPermissionCardProps = Readonly<{
   onRequestPermission: () => void;
@@ -21,10 +24,16 @@ function getPermissionPresentation(
   permission: PushPermissionState,
 ): PermissionPresentation {
   switch (permission.status) {
-    case "granted":
+    case "unavailable":
       return {
         description:
-          "Thiết bị đang cho phép OMTS hiển thị thông báo đẩy.",
+          "Bản trải nghiệm chưa kết nối quyền thông báo đẩy của thiết bị. Lưu tùy chọn không gửi thông báo.",
+        label: "Chưa kết nối",
+        variant: "neutral",
+      };
+    case "granted":
+      return {
+        description: "Thiết bị đang cho phép OMTS hiển thị thông báo đẩy.",
         label: "Đã cho phép",
         variant: "success",
       };
@@ -89,10 +98,7 @@ export function PushPermissionCard({
         />
       </View>
       <Text
-        style={[
-          theme.typography.body,
-          { color: theme.colors.textSecondary },
-        ]}
+        style={[theme.typography.body, { color: theme.colors.textSecondary }]}
       >
         {presentation.description}
       </Text>

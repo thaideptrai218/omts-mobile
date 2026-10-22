@@ -5,10 +5,10 @@ import type { ProfileService } from "@/features/profile/services/profile-service
 import { resolveKnownMessage } from "@/shared/messages/message-catalog";
 
 type ProfileControllerProps = Readonly<{
-  onChangeEmail: () => void;
-  onChangePhone: () => void;
+  onChangeEmail?: () => void;
+  onChangePhone?: () => void;
   onLogout: () => void;
-  onOpenNotifications: () => void;
+  onOpenNotifications?: () => void;
   onOpenPasswordChange: () => void;
   onSessionExpired: () => void;
   service: ProfileService;
@@ -22,12 +22,14 @@ export function ProfileController({
   const controller = useProfileController({ service, onSessionExpired });
   const { state } = controller;
 
-  if (state.status === "loading") return <ProfileLoadState status="loading" />;
+  if (state.status === "loading")
+    return <ProfileLoadState status="loading" onLogout={actions.onLogout} />;
   if (state.status === "error") {
     return (
       <ProfileLoadState
         message={state.message}
         onRetry={controller.reload}
+        onLogout={actions.onLogout}
         retrying={state.retrying}
         status="error"
       />
@@ -46,9 +48,12 @@ export function ProfileController({
     <ProfileScreen
       {...actions}
       account={state.profile.account}
-      conflict={state.conflict
-        ? { onReload: controller.reload, reloading: state.reloading }
-        : undefined}
+      displayName={state.profile.displayName}
+      conflict={
+        state.conflict
+          ? { onReload: controller.reload, reloading: state.reloading }
+          : undefined
+      }
       errors={state.errors}
       feedback={state.feedback}
       onChangeDisplayName={controller.changeDisplayName}

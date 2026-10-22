@@ -22,18 +22,27 @@ export type MobileSession = Readonly<{
 
 // This handle is an application contract, not the backend's access/refresh DTO.
 export type SessionCredential = Readonly<{ handle: string }>;
+export type AccountSessionScope = Readonly<{
+  run: <T>(
+    request: (credential: SessionCredential) => Promise<T>,
+  ) => Promise<T>;
+  acceptDisplayName: (displayName: string) => void;
+  expire: () => Promise<void>;
+}>;
 export type SessionLease = Readonly<{
   credential: SessionCredential;
   session: MobileSession;
 }>;
 
 export type SessionSnapshot =
-  | Readonly<{ status: "loading" | "signedOut" }>
+  | Readonly<{ status: "loading" }>
+  | Readonly<{ status: "signedOut"; reason?: "sessionExpired" }>
   | Readonly<{ status: "active"; session: MobileSession }>
   | Readonly<{
       status: "error";
       reason: "offline" | "unavailable";
       operation: "bootstrap" | "logout";
+      signOutReason?: "sessionExpired";
     }>;
 
 export type SessionFailureCode =
