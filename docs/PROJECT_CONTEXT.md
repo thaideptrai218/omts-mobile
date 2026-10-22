@@ -42,10 +42,19 @@ Jira `OMTS-133` requires:
 
 ## Current code status
 
-- Expo 57, React Native 0.86, Expo Router, and strict TypeScript are configured.
+- Expo 57.0.31, React Native 0.86, Expo Router 57.0.29, and strict TypeScript are configured. Expo packages pass the SDK compatibility checks from Expo Doctor.
 - Typed routes and React Compiler are enabled.
-- The root layout currently renders a plain Stack and the root screen is placeholder content.
-- Secure token storage, session bootstrap, API client, refresh flow, route groups, permission navigation, message catalog, and offline banner are not implemented yet.
+- The root layout owns a connectivity provider and accessible global offline banner. The typed catalog now covers implemented verification, login and recovery outcomes (MSG01/04/07/12/13/15/16/67/68/69) without displaying raw server prose; MSG07 deliberately does not promise an offline mutation queue. Connectivity transitions and banner visibility have automated tests; physical-device transitions remain unverified.
+- Connectivity is isolated through domain, repository and service boundaries. The Expo Network adapter maps native `online/offline/unknown` state without letting UI components call the native module directly.
+- `expo-secure-store` is installed and configured for SDK 57, but secure token persistence, session bootstrap, API client, refresh flow, route groups, and permission navigation are not implemented yet.
+- The current backend contract has been inventoried at commit `14d7839`. It serializes several public enums numerically, so Mobile has prepared a string-enum proposal but has not hard-coded `clientType: 1` or started production login integration.
+- A tested unauthenticated fetch transport and ProblemDetails parser now handle JSON/no-content responses, safe URL joining (including encoded traversal rejection), timeout/cancellation and privacy-safe failures. They deliberately do not attach tokens or refresh sessions while the auth contract remains unresolved.
+- OMTS-151 now has a tested production SCR-02 presentation composed from the six-digit field, screen-safe purpose contract and foreground-aware countdown. It is not routed with fake data; endpoint adapters, resend/attempt policy and calling-flow wrappers remain pending, and the transient verification token is not persisted.
+- OMTS-155 now has a tested controlled SCR-01 presentation, Email/Phone selector and pure form contract for confirmed password rules. No identifier regex, endpoint call, method-switch data deletion or fake route has been invented while the canonical backend registration contract is absent.
+- OMTS-160 now has a tested controlled SCR-03 login presentation, required-only credential validation and provisional MSG12/13/67/68/69 content. Session creation, SecureStore tokens, gate priority, permission navigation and routes remain unimplemented pending the documented backend contracts.
+- OMTS-164 M7.1 now has a tested privacy-equivalent recovery-request presentation and MSG15. The next verification action is visually uniform, but an opaque recovery-attempt backend contract is required before routing to SCR-02; Mobile does not fabricate a local challenge.
+- The Mobile UI foundation has typed semantic light/dark themes and shared form/feedback primitives now exercised by real auth feature components. The repository currently passes 18 automated suites / 109 tests.
+- The current verification baseline is lint, strict TypeScript, Expo Doctor 21/21, `git diff --check` and a successful Expo web export. Expo Go/physical-device connectivity, accessibility/autofill and the QA API remain unverified.
 
 Do not report `OMTS-133` as complete based on the scaffold alone.
 
@@ -59,9 +68,12 @@ Do not report `OMTS-133` as complete based on the scaffold alone.
 ## Decisions still requiring confirmation
 
 - QA API base URL and current OpenAPI/response contracts.
-- Access/refresh token response shape, lifetime, and refresh endpoint behavior.
-- `/me/permissions` payload, especially zone scope and all-zone access.
+- Backend approval of the proposed string wire values for Mobile `clientType`, login `subjectType` and permission `dataScope`.
+- QA evidence that a Mobile login creates the intended Mobile session and lifetime.
+- The final post-login gate response (`nextAction + onboarding` versus the backend's current booleans).
+- `/me/permissions` payload stability, especially zone scope and all-zone access.
 - Canonical Vietnamese/English message catalog.
+- Final Vietnamese wording for `MSG07`; the current banner copy is deliberately narrower than the SRS message because offline draft persistence/synchronization is not implemented by this foundation slice.
 - Required offline behavior beyond showing `MSG07`; no mutation queue or conflict policy is assumed.
 - Which screens are Mobile-native versus Web-only when Jira has not assigned a channel.
 

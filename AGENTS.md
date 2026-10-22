@@ -23,6 +23,12 @@ npx expo install --fix      # fix incompatible package versions
 
 Run lint and typecheck before declaring any task done.
 
+## React Native tests
+
+- This project uses `@testing-library/react-native` v14. Before writing or changing component tests, read `node_modules/@testing-library/react-native/docs/guides/llm-guidelines.md` and the relevant installed-package guide.
+- Prefer semantic role/name queries and `userEvent`; use `fireEvent` only when a native/test-renderer boundary cannot reproduce the full user-event sequence.
+- Keep `test-renderer` pinned to a version compatible with the React version required by the current Expo SDK; do not force-install an invalid peer tree.
+
 ## Navigation & Routing
 
 - Use **Expo Router** for all navigation. Routes live in `src/app/` — every file there is a screen, `_layout.tsx` files define navigators. Keep non-route code (components, hooks, utils) outside `src/app/`.

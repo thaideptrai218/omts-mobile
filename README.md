@@ -18,12 +18,21 @@ cp .env.example .env.local   # set EXPO_PUBLIC_API_BASE_URL to your machine's LA
 npx expo start               # scan the QR code with Expo Go
 ```
 
+`EXPO_PUBLIC_API_BASE_URL` must be an absolute `http` or `https` URL without
+credentials, query parameters, or fragments. When testing on a physical phone,
+use an API address the phone can reach; `localhost` points to the phone itself.
+Values with the `EXPO_PUBLIC_` prefix are bundled into the app, so never put
+tokens, passwords, private keys, or other secrets in them.
+
 Add dependencies with `npx expo install <package>` (picks SDK-compatible versions).
 
 | Script | Purpose |
 |---|---|
 | `npm run lint` | `expo lint` |
+| `npm test` | Jest component/unit tests, run serially |
 | `npm run typecheck` | `tsc --noEmit` |
+| `npx expo-doctor` | Expo SDK and dependency compatibility checks |
+| `npx expo export --platform web` | Metro/static-export smoke test |
 
 ## Contributing
 
@@ -32,4 +41,3 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) — branches, Jira keys, commit/PR rules,
 ## Project guidance
 
 - [Current project context](docs/PROJECT_CONTEXT.md)
-- [Learning and defense notes](docs/learning/README.md)

@@ -38,6 +38,12 @@ yarn-error.*
 # typescript
 *.tsbuildinfo
 
+# test output
+coverage/
+
+# local learning notes
+/docs/learning/
+
 example
 
 # generated native folders
