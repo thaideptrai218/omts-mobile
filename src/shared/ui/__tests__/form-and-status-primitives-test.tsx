@@ -47,7 +47,11 @@ describe("shared form and status primitives", () => {
       "accessibilityHint",
       "Số điện thoại không hợp lệ.",
     );
-    expect(screen.getByText("Số điện thoại không hợp lệ.")).toBeOnTheScreen();
+    expect(
+      screen.getByRole("alert", {
+        name: "Số điện thoại không hợp lệ.",
+      }),
+    ).toBeOnTheScreen();
   });
 
   test("PasswordField toggles secure entry from an accessible action", async () => {

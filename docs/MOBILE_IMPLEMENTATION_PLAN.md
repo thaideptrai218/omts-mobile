@@ -217,12 +217,47 @@
 
 ### 22/10/2026 — full batch checkpoint
 
-- All 18 suites / 105 tests pass with strict TypeScript, Expo lint and whitespace checks.
+- All 18 suites / 109 tests pass with strict TypeScript, Expo lint and whitespace checks.
 - Expo Doctor passes 21/21 checks and the Expo web static export completes successfully.
 - Self-review found no production credential fixture, debug log, fake challenge route or raw server error rendering.
 - See `docs/reports/MOBILE_BATCH_CHECKPOINT_2026-10-22.md` for resolved findings and remaining blockers.
 
+### 22/10/2026 — M7.3 recovery new-password presentation
+
+- Re-read Jira OMTS-164 and SRS UC03/SCR-04 before implementation.
+- Extracted one shared new-password policy and refactored trader registration to use it without changing behavior.
+- Added a controlled recovery new-password screen with field errors, pending lock, safe feedback and the confirmed old-session revocation notice.
+- Kept the verification/recovery token out of UI props and storage; M7.2 and the reset controller remain blocked on the opaque recovery-attempt and endpoint contracts.
+- Full verification now passes 20 suites / 119 tests, strict TypeScript, Expo lint and whitespace checks.
+
+### 22/10/2026 — M8.1/M8.2 password-change form and current-password proof
+
+- Re-read Jira OMTS-168 and SRS UC04/SCR-05 before implementation.
+- Added one shared password-change domain form for normal and forced modes, reusing the common new-password policy.
+- Added typed MSG17/MSG18 outcomes and a controlled screen whose forced-mode props cannot expose a Cancel action.
+- Corrected a test-helper union-narrowing error by extracting the forced discriminated-union member before applying partial overrides.
+- M8.3/M8.4 remain open for verified-email proof, the mutation service, session policy and the route-level app-stack block.
+- Full verification now passes 22 suites / 127 tests, strict TypeScript, Expo lint and whitespace checks.
+
+### 22/10/2026 — M10.1/M10.2 account hub and profile presentation
+
+- Re-read Jira OMTS-172 and SRS UC05/SCR-05 before implementation.
+- Added a required display-name form contract and a controlled account/profile screen without any hard-coded user or cooperative identity.
+- Kept username/account identity read-only, rendered multiple access-summary lines without collapsing zone–role grants into one global role, and separated contact-change actions from direct profile save.
+- Added typed MSG10 rendering and tests for identity, display-name save, independent contact-verification entry points and pending locks.
+- M10.3/M10.4 remain open for contact-change SCR-02 wrappers, API contracts, optimistic concurrency and QA/device evidence.
+- Full verification now passes 24 suites / 133 tests, strict TypeScript, Expo lint and whitespace checks.
+
+### 22/10/2026 — M10 profile controller and notification regression fixes
+
+- `M10.2/M10.4`: implemented frontend load/save controller, application-only revision contract, conflict draft retention and explicit successful reload before replacing the draft. Added skeleton/error/session-expired rendering and MSG06/MSG20. Real API/version mapping and contact verification remain open.
+- `M11/M13`: fixed notification duplicate submission, concurrent progress-state overwrite and callback-triggered draft loss. Session expiry now removes editable settings immediately and cannot be undone by a late OS permission result.
+- Verification: 40 suites / 212 tests passed, lint and typecheck passed, Expo Doctor 21/21, Expo web export succeeded. Only three scaffold routes are exported; no claim of routed auth/device QA is made.
+- Reports: `docs/reports/OMTS-172_M10_PROFILE_CONTROLLER_2026-10-22.md` and `docs/reports/OMTS_M13_PROFILE_NOTIFICATION_BATCH_2026-10-22.md`. Learning notes 39–40 stay local/ignored. No commit/push or Jira mutation in this slice.
+
 ## 1. What this plan covers
+
+> Latest review: `docs/reports/MOBILE_FULL_REVIEW_2026-10-22.md`. Full batch now has 40 suites / 223 tests, lint/typecheck and web export passing. Doctor is 20/21 because schema lookup fails with exp.host DNS EAI_AGAIN; SDK compatibility checks pass after updating expo-notifications to ~57.0.24. Dependency audit remains open (53 production-graph packages flagged). These results supersede older verification totals below without changing historical execution entries.
 
 This plan covers the Mobile work currently assigned to D DT:
 
@@ -711,6 +746,8 @@ Minimum touch target target: approximately 44–48 logical pixels. Forms must re
 
 **Done when:** success returns to login, old sessions are rejected by backend and Back does not reveal the password.
 
+**Hardening update (22/10/2026):** The frontend now has a recovery-completion service contract plus a controller that validates locally, prevents duplicate completion requests and clears both password fields after success, invalid/expired attempt, infrastructure failure and explicit back-to-login. The recovery proof remains bound outside screen props and is not stored locally. Endpoint integration, old-session rejection and route replacement still require the backend recovery-attempt contract and QA evidence.
+
 ## Phase M8 — `OMTS-168` forced and normal password change, SCR-05
 
 ### M8.1 Define one password-change form with two modes
@@ -732,6 +769,8 @@ Minimum touch target target: approximately 44–48 logical pixels. Forms must re
 **How:** Map MSG17, MSG18 and MSG19; clear secret fields after every terminal result.
 
 **Done when:** wrong proof preserves no password in logs/storage and success updates session destination.
+
+**Hardening update (22/10/2026):** A typed current-password service contract and controller now map changed/current-password-invalid/session-expired outcomes to MSG18/17/19, prevent duplicate submissions and clear current/new/confirmation secrets after every terminal result. Standard-mode cancel also clears secrets before delegating navigation. The same controller drives forced and standard presentations, but route-level gate enforcement and the real mutation adapter remain open.
 
 ### M8.3 Implement verified-email proof when backend supports it
 
@@ -797,6 +836,8 @@ Minimum touch target target: approximately 44–48 logical pixels. Forms must re
 
 **Done when:** username cannot enter the update payload and MSG20 is available for server rejection.
 
+**Implementation result (22/10/2026):** Complete at presentation/controller level: profile loading/retry, required-name validation, canonical save response, duplicate-submit protection, MSG10/MSG20 and a session-expired state that removes editable data. The application save contract contains only displayName and an opaque expectedRevision. Endpoint adapter, contact verification and real QA remain pending.
+
 ### M10.3 Reuse SCR-02 for changed contacts
 
 **What:** Verify new email or phone before replacement.
@@ -817,6 +858,8 @@ Minimum touch target target: approximately 44–48 logical pixels. Forms must re
 
 **Done when:** conflict test preserves the user's unsaved values long enough to review while offering a safe reload.
 
+**Implementation result (22/10/2026):** Frontend controller tests pass. A conflict preserves the draft and blocks blind retries using the stale revision. An explicit “Tải lại và bỏ thay đổi” action replaces it only after a successful reload; a failed reload keeps both the draft and conflict lock. Late responses and parent callback identity changes have regression tests. The backend concurrency stamp/HTTP mapping is still unconfirmed, so M10.4 is not integrated end to end.
+
 ## Phase M11 — `OMTS-176` notification preferences, SCR-06
 
 ### M11.1 Define notification matrix domain model
@@ -829,6 +872,8 @@ Minimum touch target target: approximately 44–48 logical pixels. Forms must re
 
 **Done when:** UI can render mandatory, disabled and editable cells without hard-coded type names.
 
+**Implementation result (22/10/2026):** Complete in the frontend. The typed model is server-driven and represents editable cells plus locked MSG21/MSG22/MSG23 reasons. Unknown and duplicate selections are treated as contract errors instead of silently creating new preferences.
+
 ### M11.2 Build mobile-friendly preference UI
 
 **What:** Render grouped notification types with channel controls suitable for a narrow screen.
@@ -838,6 +883,8 @@ Minimum touch target target: approximately 44–48 logical pixels. Forms must re
 **How:** Use stacked cards/sections, keep labels visible and announce locked reasons.
 
 **Done when:** no horizontal scroll is required and large-font mode remains understandable.
+
+**Implementation result (22/10/2026):** Complete as a controlled presentation. SCR-06 uses stacked cards, visible mandatory/ineligible explanations, accessible switches and deliberate loading/error/empty/saving states. Route/controller integration remains part of the API slice.
 
 ### M11.3 Read OS push permission
 
@@ -849,6 +896,8 @@ Minimum touch target target: approximately 44–48 logical pixels. Forms must re
 
 **Done when:** denied permission leaves other channels savable and push visibly inactive.
 
+**Implementation result (22/10/2026):** Complete for permission status. `expo-notifications` 57.0.23 is isolated behind a repository; reading has no prompt and requesting happens only from an explicit button. Android creates its notification channel before requesting permission. Unit tests cover undetermined, granted, denied and iOS provisional states.
+
 ### M11.4 Register and maintain push token
 
 **What:** Send the device push token to backend and update it when it changes.
@@ -859,6 +908,8 @@ Minimum touch target target: approximately 44–48 logical pixels. Forms must re
 
 **Done when:** the team confirms Expo Go versus development-build support and QA receives a current token.
 
+**Blocked (22/10/2026):** Expo SDK 57 documentation states that Android remote push is unavailable in Expo Go and requires a development build. The app also has no EAS `projectId`, and backend `OMTS-174` is still To Do with no device-token endpoint in source. Do not claim token registration is complete or invent an endpoint. BA/backend must also reconcile backend `Sms` with SRS `Zalo OA` before the wire contract is frozen.
+
 ### M11.5 Save the matrix
 
 **What:** Persist valid preferences while preserving mandatory and ineligible rules.
@@ -868,6 +919,10 @@ Minimum touch target target: approximately 44–48 logical pixels. Forms must re
 **How:** Save a versioned payload, map MSG21/MSG23, and reload canonical server state after success.
 
 **Done when:** denied push, unverified email, mandatory item and normal save paths are verified.
+
+**Implementation result (22/10/2026):** Frontend contract and mock adapter are complete. Tests cover editable save, MSG21, MSG22 partial save, MSG23, session expiry and isolated data copies. QA API persistence and canonical reload remain blocked by `OMTS-124`/`OMTS-174` and the missing API contract.
+
+**Hardening update (22/10/2026):** A controller now owns initial load, draft/canonical separation, cancel, save, OS permission request, typed feedback and session-expiry delegation. Tests verify that cancelling restores the last canonical settings and that an OS permission response cannot overwrite preference edits made while its promise was pending. This controller is framework-independent and ready for a route wrapper, but it is not evidence of QA API persistence.
 
 ## Phase M12 — `OMTS-180` online and offline logout
 
@@ -881,6 +936,10 @@ Minimum touch target target: approximately 44–48 logical pixels. Forms must re
 
 **Done when:** Android Back and deep links cannot reveal the prior user's data.
 
+**Implementation result (22/10/2026):** The local-first service boundary and versioned SecureStore token bundle are implemented and tested. Token, protected-cache and in-memory session cleanup finish before server revoke. Actual route replacement, protected-cache adapter and Back/deep-link device evidence remain pending because the authenticated app stack is not implemented yet.
+
+**Hardening update (22/10/2026):** A tested logout controller now owns confirmation visibility, pending state and duplicate-submit prevention. It delegates the final navigation result instead of importing Expo Router, so route replacement remains an explicit M12.1 integration task rather than hidden inside reusable session logic.
+
 ### M12.2 Implement online revoke
 
 **What:** Call `/api/auth/logout` with the current access token before/alongside final local cleanup without making local privacy depend on the response.
@@ -890,6 +949,8 @@ Minimum touch target target: approximately 44–48 logical pixels. Forms must re
 **How:** Treat already-expired session as a successful local logout and show MSG19 only when useful.
 
 **Done when:** old access and refresh tokens are rejected in QA after online logout.
+
+**Implementation result (22/10/2026, corrected during full review):** The API repository calls `POST api/auth/logout` with the captured bearer token. Success confirms revoke; 401 and other failures report revoke failed because an expired bearer token can be rejected before the revoke action runs. Token-read failure also does not claim revoke is unnecessary. Local cleanup continues independently. QA rejection evidence remains pending.
 
 ### M12.3 Design the deferred offline revoke queue
 
@@ -901,6 +962,8 @@ Minimum touch target target: approximately 44–48 logical pixels. Forms must re
 
 **Done when:** threat model, storage, expiry, retry and app-reinstall behavior are approved.
 
+**Blocked (22/10/2026):** The backend accepts only the current bearer session and exposes no opaque revocation handle or idempotent deferred-revoke endpoint. Mobile clears secrets locally and returns `deferred-contract-required`; it does not retain a refresh token after logout or invent a generic mutation queue.
+
 ### M12.4 Retry revoke after connectivity returns
 
 **What:** Process pending revoke intents without restoring the logged-out user session.
@@ -910,6 +973,8 @@ Minimum touch target target: approximately 44–48 logical pixels. Forms must re
 **How:** Background/foreground retry must be idempotent, bounded and silent unless intervention is needed.
 
 **Done when:** device test logs out offline, returns online, clears the pending intent and backend rejects the old session.
+
+**Blocked (22/10/2026):** Depends on the approved M12.3 contract plus authenticated app bootstrap and a physical-device connectivity test.
 
 ## Phase M13 — QA hardening and completion evidence
 
@@ -922,6 +987,8 @@ Minimum touch target target: approximately 44–48 logical pixels. Forms must re
 **How:** Prioritize session reducer, refresh concurrency, message rendering, permission mapping and each multi-step flow.
 
 **Done when:** CI runs the test suite and critical transitions have explicit tests.
+
+**Implementation result (22/10/2026):** Partially complete. The repository now has 40 passing suites / 223 tests. Transition tests cover profile load/save/conflict/reload and source replacement; notification concurrent operations and stale responses; logout cleanup and honest revoke mapping; password/recovery secret cleanup and late-result suppression. Component integration tests exercise real screen/controller wiring. CI includes `npm test` after lint/typecheck but does not trigger on a feature-only push. Route/session bootstrap and refresh-concurrency integration tests remain blocked by the unconfirmed auth contracts.
 
 ### M13.2 Physical-device matrix
 
@@ -942,6 +1009,8 @@ Minimum touch target target: approximately 44–48 logical pixels. Forms must re
 **How:** Test large text, reduced motion, keyboard-only where applicable and visible error recovery.
 
 **Done when:** no critical action depends only on color, tiny icons or hidden gestures.
+
+**Implementation result (22/10/2026):** Partially complete at code/test level. Dynamic field errors now expose an alert role in addition to red styling and text; disabled notification switches expose their locked reason as an accessibility hint; card headers wrap under large text; button labels can shrink/wrap instead of clipping. Automated semantic tests pass, but TalkBack/VoiceOver, maximum font size, sunlight and one-handed physical-device evidence are still required.
 
 ### M13.4 Final verification
 

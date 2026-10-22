@@ -1,3 +1,7 @@
+import {
+  validateNewPassword,
+} from "@/shared/security/new-password-policy";
+
 export type RegistrationMethod = "email" | "phone";
 
 export type RegistrationFormValues = Readonly<{
@@ -26,14 +30,12 @@ export type RegistrationValidationResult =
   | Readonly<{ data: RegistrationFormData; isValid: true }>
   | Readonly<{ errors: RegistrationFormErrors; isValid: false }>;
 
-const hasLetter = (value: string) => /\p{L}/u.test(value);
-const hasNumber = (value: string) => /\p{N}/u.test(value);
-
 export function validateTraderRegistration(
   values: RegistrationFormValues,
 ): RegistrationValidationResult {
   const errors: Partial<Record<RegistrationFormField, string>> = {};
   const identifier = values.identifier.trim();
+  const passwordValidation = validateNewPassword(values);
 
   if (!identifier) {
     errors.identifier =
@@ -42,21 +44,8 @@ export function validateTraderRegistration(
         : "Vui lòng nhập số điện thoại.";
   }
 
-  if (!values.password) {
-    errors.password = "Vui lòng nhập mật khẩu.";
-  } else if (
-    values.password.length < 8 ||
-    !hasLetter(values.password) ||
-    !hasNumber(values.password)
-  ) {
-    errors.password =
-      "Mật khẩu phải có ít nhất 8 ký tự, bao gồm chữ và số.";
-  }
-
-  if (!values.passwordConfirmation) {
-    errors.passwordConfirmation = "Vui lòng nhập lại mật khẩu.";
-  } else if (values.passwordConfirmation !== values.password) {
-    errors.passwordConfirmation = "Mật khẩu nhập lại chưa khớp.";
+  if (!passwordValidation.isValid) {
+    Object.assign(errors, passwordValidation.errors);
   }
 
   if (Object.keys(errors).length > 0) {

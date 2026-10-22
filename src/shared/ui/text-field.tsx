@@ -144,6 +144,7 @@ export const TextField = forwardRef<TextInput, TextFieldProps>(
         {supportMessage ? (
           <Text
             accessibilityLiveRegion={errorMessage ? "polite" : "none"}
+            accessibilityRole={errorMessage ? "alert" : undefined}
             style={[
               theme.typography.caption,
               {

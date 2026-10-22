@@ -1,11 +1,20 @@
 export const supportedMessageCodes = [
   "MSG01",
   "MSG04",
+  "MSG06",
   "MSG07",
+  "MSG10",
   "MSG12",
   "MSG13",
   "MSG15",
   "MSG16",
+  "MSG17",
+  "MSG18",
+  "MSG19",
+  "MSG20",
+  "MSG21",
+  "MSG22",
+  "MSG23",
   "MSG67",
   "MSG68",
   "MSG69",
@@ -23,7 +32,11 @@ export type ResolvedMessage = {
 
 type MessageParameters = Readonly<{
   fieldName?: string;
+  objectName?: string;
+  channelName?: string;
   serviceName?: string;
+  userName?: string | null;
+  time?: string | null;
 }>;
 
 type MessageDefinition = Omit<ResolvedMessage, "code" | "message"> & {
@@ -43,11 +56,31 @@ const vietnameseCatalog = {
     severity: "danger",
     title: "Dịch vụ tạm thời gián đoạn",
   },
+  MSG06: {
+    message: (parameters) => {
+      const author = parameters?.userName?.trim();
+      const time = parameters?.time?.trim();
+      const detail = author
+        ? ` bởi ${author}${time ? ` lúc ${time}` : ""}`
+        : time
+          ? ` lúc ${time}`
+          : "";
+      return `Hồ sơ vừa được cập nhật${detail}. Thay đổi của bạn chưa được lưu. Vui lòng tải lại hồ sơ để kiểm tra trước khi sửa tiếp.`;
+    },
+    severity: "warning",
+    title: "Hồ sơ đã thay đổi",
+  },
   MSG07: {
     message: () =>
       "Các thao tác cần Internet tạm thời không khả dụng. Kiểm tra kết nối rồi thử lại.",
     severity: "warning",
     title: "Không có kết nối",
+  },
+  MSG10: {
+    message: (parameters) =>
+      `${parameters?.objectName ?? "Thông tin"} đã được lưu.`,
+    severity: "success",
+    title: "Đã lưu",
   },
   MSG12: {
     message: () =>
@@ -72,6 +105,46 @@ const vietnameseCatalog = {
       "Mã xác minh không đúng hoặc đã hết hạn. Bạn có thể nhập lại hoặc yêu cầu mã mới.",
     severity: "danger",
     title: "Không thể xác minh",
+  },
+  MSG17: {
+    message: () =>
+      "Mật khẩu hiện tại không đúng. Mật khẩu của bạn chưa được thay đổi.",
+    severity: "danger",
+    title: "Không thể đổi mật khẩu",
+  },
+  MSG18: {
+    message: () => "Mật khẩu của bạn đã được thay đổi.",
+    severity: "success",
+    title: "Đổi mật khẩu thành công",
+  },
+  MSG19: {
+    message: () =>
+      "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại để tiếp tục.",
+    severity: "warning",
+    title: "Phiên đăng nhập đã hết hạn",
+  },
+  MSG20: {
+    message: () =>
+      "Bạn không thể tự thay đổi tên đăng nhập. Vui lòng liên hệ Chủ hợp tác xã hoặc kênh hỗ trợ.",
+    severity: "danger",
+    title: "Tên đăng nhập không thể chỉnh sửa",
+  },
+  MSG21: {
+    message: (parameters) =>
+      `Kênh ${parameters?.channelName ?? "này"} chưa được cấu hình hoặc thông tin liên hệ chưa đủ điều kiện, nên chưa thể bật.`,
+    severity: "danger",
+    title: "Kênh chưa thể sử dụng",
+  },
+  MSG22: {
+    message: () =>
+      "Thiết bị đã từ chối nhận thông báo đẩy. Các kênh hợp lệ khác vẫn được lưu.",
+    severity: "warning",
+    title: "Thông báo đẩy đang tắt",
+  },
+  MSG23: {
+    message: () => "Loại thông báo này là bắt buộc và không thể tắt.",
+    severity: "danger",
+    title: "Thông báo bắt buộc",
   },
   MSG67: {
     message: () =>
@@ -130,12 +203,30 @@ export function resolveKnownMessage(
   parameters: Readonly<{ serviceName: string }>,
 ): ResolvedMessage;
 export function resolveKnownMessage(
+  code: "MSG06",
+  parameters: Readonly<{ userName?: string | null; time?: string | null }>,
+): ResolvedMessage;
+export function resolveKnownMessage(
+  code: "MSG10",
+  parameters: Readonly<{ objectName: string }>,
+): ResolvedMessage;
+export function resolveKnownMessage(
+  code: "MSG21",
+  parameters: Readonly<{ channelName: string }>,
+): ResolvedMessage;
+export function resolveKnownMessage(
   code:
     | "MSG07"
     | "MSG12"
     | "MSG13"
     | "MSG15"
     | "MSG16"
+    | "MSG17"
+    | "MSG18"
+    | "MSG19"
+    | "MSG20"
+    | "MSG22"
+    | "MSG23"
     | "MSG67"
     | "MSG68"
     | "MSG69",

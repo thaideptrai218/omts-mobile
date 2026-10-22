@@ -28,6 +28,9 @@ describe("message catalog", () => {
         serviceName: "Dịch vụ gửi mã xác minh",
       }).message,
     ).toContain("Dịch vụ gửi mã xác minh hiện không phản hồi");
+    expect(
+      resolveKnownMessage("MSG10", { objectName: "Hồ sơ cá nhân" }).message,
+    ).toBe("Hồ sơ cá nhân đã được lưu.");
   });
 
   test("resolves the verification failure code without server prose", () => {
@@ -36,6 +39,16 @@ describe("message catalog", () => {
     expect(message.code).toBe("MSG16");
     expect(message.title).toBe("Không thể xác minh");
     expect(message.message).toContain("không đúng hoặc đã hết hạn");
+  });
+
+  test("explains a profile conflict with optional audit context", () => {
+    expect(resolveKnownMessage("MSG06", {
+      userName: "Nguyễn An", time: "22/10/2026 09:30",
+    }).message).toContain("bởi Nguyễn An lúc 22/10/2026 09:30");
+    const withoutAudit = resolveKnownMessage("MSG06", { userName: null, time: null });
+    expect(withoutAudit.severity).toBe("warning");
+    expect(withoutAudit.message).not.toMatch(/null|undefined/);
+    expect(resolveKnownMessage("MSG20").message).toContain("không thể tự thay đổi tên đăng nhập");
   });
 
   test.each([
@@ -51,6 +64,29 @@ describe("message catalog", () => {
       severity,
       title,
     });
+  });
+
+  test.each([
+    ["MSG17", "Không thể đổi mật khẩu", "danger"],
+    ["MSG18", "Đổi mật khẩu thành công", "success"],
+    ["MSG19", "Phiên đăng nhập đã hết hạn", "warning"],
+  ] as const)("resolves password outcome %s", (code, title, severity) => {
+    expect(resolveKnownMessage(code)).toMatchObject({
+      code,
+      severity,
+      title,
+    });
+  });
+
+  test("resolves notification preference messages", () => {
+    expect(
+      resolveKnownMessage("MSG21", { channelName: "Email" }).message,
+    ).toContain("Kênh Email");
+    expect(resolveKnownMessage("MSG22")).toMatchObject({
+      severity: "warning",
+      title: "Thông báo đẩy đang tắt",
+    });
+    expect(resolveKnownMessage("MSG23").message).toContain("bắt buộc");
   });
 
   test("returns a safe fallback without echoing an unknown server value", () => {

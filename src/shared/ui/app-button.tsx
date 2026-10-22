@@ -140,6 +140,7 @@ export function AppButton({
         ) : null}
         <Text
           style={[
+            styles.label,
             theme.typography.bodyStrong,
             { color: palette.foreground, textAlign: "center" },
           ]}
@@ -160,5 +161,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     flexDirection: "row",
     justifyContent: "center",
+  },
+  label: {
+    flexShrink: 1,
   },
 });

@@ -7,6 +7,7 @@ import type {
   RegistrationMethod,
 } from "@/features/registration/domain/registration-form";
 import type { ResolvedMessage } from "@/shared/messages/message-catalog";
+import { newPasswordRequirement } from "@/shared/security/new-password-policy";
 import { useAppTheme } from "@/shared/theme/use-app-theme";
 import { AppButton } from "@/shared/ui/app-button";
 import { KeyboardSafeForm } from "@/shared/ui/keyboard-safe-form";
@@ -107,7 +108,7 @@ export function RegistrationScreen({
               autoComplete="new-password"
               disabled={pending}
               errorMessage={errors.password}
-              helperText="Ít nhất 8 ký tự, bao gồm chữ và số."
+              helperText={newPasswordRequirement}
               label="Mật khẩu"
               onChangeText={onChangePassword}
               textContentType="newPassword"
