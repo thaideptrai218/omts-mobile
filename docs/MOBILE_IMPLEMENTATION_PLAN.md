@@ -7,6 +7,27 @@
 
 ## Execution log
 
+### 22/10/2026 — session assembly review and backend recheck
+
+- Reviewed the assembled mock flow and added seven service regressions: late bootstrap/password success, duplicate login, cleanup retry, transient refresh, standard password preservation and save-before-clear ordering.
+- Full suite: 45 suites / 252 tests pass. Expo Doctor 21/21. Final lint/typecheck/export evidence is in `docs/reports/MOBILE_SESSION_REVIEW_2026-10-22.md`.
+- Open P2 SESSION-UX-01: expired reason/MSG19 is lost across the return to login. Logged with a narrow proposed fix; not silently counted as complete or fixed in this review-only request.
+- Fresh backend fetch distinguishes develop `c5360ca` from feature audit/refactor `7a41aa6`. New internal services/models do not provide the missing password/OTP/profile/recovery endpoints. See `docs/reports/BACKEND_READINESS_RECHECK_2026-10-22.md`.
+- Recommended next slices: SESSION-UX-01 → profile mock wrapper → preferences mock wrapper/native QA. Real API end-to-end remains blocked by the documented backend/deployment contract requirements, not by the user's already-approved frontend decisions.
+- Delivery remains current feature branch only, no merge to develop.
+
+### 22/10/2026 — approved mock end-to-end assembly
+
+User approved assembling routes/session mock before the real API adapter and the proposed session/offline handling. This approval unblocks the **mock** slice, not the pending backend wire contracts.
+
+- S1: domain session/gateway/storage contract and synthetic Staff fixtures.
+- S2: process-memory mock adapter, bootstrap, password/contact gates, single-flight refresh and local-first logout.
+- S3: protected `(auth)` / `(onboarding)` / `(app)` groups; controlled login; forced password; email-or-phone verification; personal identity and security/logout entries.
+- S4: integration tests across real controlled forms, service race/error tests, browser route checks and review report.
+- Verification after review: 45 suites / 245 tests pass; lint/typecheck/web export pass; Expo Doctor 21/21; browser login/forced gate/account/security-cancel/logout/Back/direct protected URL checked, plus account width 360 CSS px. No real API/device acceptance is claimed.
+- See `docs/reports/MOBILE_SESSION_ASSEMBLY_2026-10-22.md` for evidence and limitations. These are not QA API / Expo Go completion claims, and do not mark the whole M3/M6/M8/M12 or OMTS-133 Done.
+- Next separate slices: real auth/session API adapter after contract confirmation; recovery/profile/preferences wrappers; permission-driven field-feature navigation; device/QA acceptance. No offline business mutation queue or deferred revoke contract has been invented.
+
 ### 22/10/2026 — first coding slice
 
 - `M0.1`: reviewed and preserved the existing connectivity foundation; no unrelated working-tree change was discarded.

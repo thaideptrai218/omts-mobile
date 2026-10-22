@@ -26,6 +26,24 @@ tokens, passwords, private keys, or other secrets in them.
 
 Add dependencies with `npx expo install <package>` (picks SDK-compatible versions).
 
+## Chạy luồng tài khoản bằng mock
+
+`.env.example` bật `EXPO_PUBLIC_AUTH_MODE=mock` một cách tường minh. Đây là adapter
+trải nghiệm UI, không gọi QA API và không được nhập thông tin đăng nhập thật.
+Nếu không bật mock, app chặn luồng cho tới khi adapter API thật được tích hợp;
+không tự chuyển sang mock khi API lỗi.
+
+- Staff lần đầu: `nguyen.minh.an` / `OmtsDemo2026` → đổi mật khẩu → xác minh một liên hệ.
+- Staff đã xác minh: `tran.thu.ha` / `OmtsDemo2026` → tài khoản cá nhân.
+- Mã thử tổng hợp: `246810`. Mock không gửi SMS hoặc email.
+- Mật khẩu mới, trạng thái onboarding và phiên chỉ sống trong tiến trình.
+  Logout rồi login lại trong cùng lần chạy dùng mật khẩu mới; reload toàn bộ app
+  sẽ khởi tạo lại fixture, trở về mật khẩu mẫu và yêu cầu đăng nhập.
+- Chạy xem bằng trình duyệt: `npx expo start --web --port 8082`.
+
+Chi tiết phạm vi, bằng chứng và phần chưa hoàn thành:
+[báo cáo ghép luồng](docs/reports/MOBILE_SESSION_ASSEMBLY_2026-10-22.md).
+
 | Script | Purpose |
 |---|---|
 | `npm run lint` | `expo lint` |

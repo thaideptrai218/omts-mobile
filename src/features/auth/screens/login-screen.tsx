@@ -19,9 +19,9 @@ type LoginScreenProps = Readonly<{
   onChangeIdentifier: (value: string) => void;
   onChangePassword: (value: string) => void;
   onLogin: () => void;
-  onOpenPublicQr: () => void;
-  onOpenRecovery: () => void;
-  onOpenRegistration: () => void;
+  onOpenPublicQr?: () => void;
+  onOpenRecovery?: () => void;
+  onOpenRegistration?: () => void;
   pending?: boolean;
   values: LoginFormValues;
 }>;
@@ -65,7 +65,10 @@ export function LoginScreen({
             </Text>
             <Text
               accessibilityRole="header"
-              style={[theme.typography.title, { color: theme.colors.textPrimary }]}
+              style={[
+                theme.typography.title,
+                { color: theme.colors.textPrimary },
+              ]}
             >
               Đăng nhập
             </Text>
@@ -120,45 +123,55 @@ export function LoginScreen({
               loadingLabel="Đang đăng nhập"
               onPress={onLogin}
             />
-            <AppButton
-              disabled={pending}
-              label="Quên mật khẩu"
-              onPress={onOpenRecovery}
-              variant="ghost"
-            />
+            {onOpenRecovery ? (
+              <AppButton
+                disabled={pending}
+                label="Quên mật khẩu"
+                onPress={onOpenRecovery}
+                variant="ghost"
+              />
+            ) : null}
           </View>
 
-          <View
-            style={[
-              styles.secondaryActions,
-              {
-                borderTopColor: theme.colors.border,
-                gap: theme.spacing.xs,
-                paddingTop: theme.spacing.md,
-              },
-            ]}
-          >
-            <AppButton
-              disabled={pending}
-              label="Đăng ký tài khoản thương lái"
-              onPress={onOpenRegistration}
-              variant="secondary"
-            />
-            <AppButton
-              disabled={pending}
-              label="Tra cứu nguồn gốc bằng QR"
-              onPress={onOpenPublicQr}
-              variant="ghost"
-            />
-            <Text
+          {onOpenRegistration || onOpenPublicQr ? (
+            <View
               style={[
-                theme.typography.caption,
-                { color: theme.colors.textMuted, textAlign: "center" },
+                styles.secondaryActions,
+                {
+                  borderTopColor: theme.colors.border,
+                  gap: theme.spacing.xs,
+                  paddingTop: theme.spacing.md,
+                },
               ]}
             >
-              Tra cứu QR không yêu cầu tài khoản.
-            </Text>
-          </View>
+              {onOpenRegistration ? (
+                <AppButton
+                  disabled={pending}
+                  label="Đăng ký tài khoản thương lái"
+                  onPress={onOpenRegistration}
+                  variant="secondary"
+                />
+              ) : null}
+              {onOpenPublicQr ? (
+                <AppButton
+                  disabled={pending}
+                  label="Tra cứu nguồn gốc bằng QR"
+                  onPress={onOpenPublicQr}
+                  variant="ghost"
+                />
+              ) : null}
+              {onOpenPublicQr ? (
+                <Text
+                  style={[
+                    theme.typography.caption,
+                    { color: theme.colors.textMuted, textAlign: "center" },
+                  ]}
+                >
+                  Tra cứu QR không yêu cầu tài khoản.
+                </Text>
+              ) : null}
+            </View>
+          ) : null}
         </View>
       </KeyboardSafeForm>
     </ScreenContainer>

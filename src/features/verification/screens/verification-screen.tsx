@@ -13,7 +13,7 @@ import { ScreenContainer } from "@/shared/ui/screen-container";
 
 export type VerificationPendingAction = "resend" | "verify" | null;
 
-type VerificationScreenProps = Readonly<{
+export type VerificationScreenProps = Readonly<{
   challenge: VerificationChallenge;
   code: string;
   feedback?: ResolvedMessage | null;
@@ -51,14 +51,16 @@ export function VerificationScreen({
   const theme = useAppTheme();
   const isPending = pendingAction !== null;
   const canVerify =
-    isCompleteVerificationCode(code) && !timing.isExpired && !isPending;
+    isCompleteVerificationCode(code) &&
+    challenge.attemptsRemaining > 0 &&
+    !timing.isExpired &&
+    !isPending;
   const canResend =
     resendAllowed &&
     timing.hasRemainingSends &&
     timing.isResendCooldownComplete &&
     !isPending;
-  const recipientKind =
-    challenge.channel === "sms" ? "số điện thoại" : "email";
+  const recipientKind = challenge.channel === "sms" ? "số điện thoại" : "email";
   const resendLabel = timing.isResendCooldownComplete
     ? "Gửi lại mã"
     : `Gửi lại sau ${formatVerificationCountdown(timing.secondsUntilResend)}`;
@@ -83,7 +85,10 @@ export function VerificationScreen({
           <View style={{ gap: theme.spacing.xs }}>
             <Text
               accessibilityRole="header"
-              style={[theme.typography.title, { color: theme.colors.textPrimary }]}
+              style={[
+                theme.typography.title,
+                { color: theme.colors.textPrimary },
+              ]}
             >
               Xác minh thông tin liên hệ
             </Text>
@@ -111,7 +116,10 @@ export function VerificationScreen({
             ]}
           >
             <Text
-              style={[theme.typography.caption, { color: theme.colors.textMuted }]}
+              style={[
+                theme.typography.caption,
+                { color: theme.colors.textMuted },
+              ]}
             >
               Mã đã được gửi tới {recipientKind}
             </Text>
@@ -162,7 +170,7 @@ export function VerificationScreen({
                 { color: theme.colors.textSecondary },
               ]}
             >
-              Còn {challenge.attemptsRemaining} lần nhập mã và {" "}
+              Còn {challenge.attemptsRemaining} lần nhập mã và{" "}
               {challenge.sendsRemaining} lần gửi lại.
             </Text>
           </View>

@@ -96,6 +96,11 @@ describe("VerificationScreen", () => {
     expect(screen.getByRole("button", { name: "Xác minh" })).toBeDisabled();
   });
 
+  test("blocks verification after attempts are exhausted even with a complete code", async () => {
+    await renderScreen({ code: "123456", challenge: { ...challenge, attemptsRemaining: 0 } });
+    expect(screen.getByRole("button", { name: "Xác minh" })).toBeDisabled();
+  });
+
   test("allows resend only when the controller and timing both allow it", async () => {
     const user = userEvent.setup();
     const onResend = jest.fn();

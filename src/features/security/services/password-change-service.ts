@@ -3,6 +3,7 @@ import type { PasswordChangeSubmission } from "@/features/security/domain/passwo
 export type PasswordChangeResult =
   | Readonly<{ status: "changed" }>
   | Readonly<{ status: "current-password-invalid" }>
+  | Readonly<{ status: "offline" }>
   | Readonly<{ status: "session-expired" }>;
 
 export type PasswordChangeService = Readonly<{

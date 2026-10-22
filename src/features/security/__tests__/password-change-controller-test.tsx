@@ -33,6 +33,18 @@ function renderController(dependencies = createDependencies()) {
 }
 
 describe("password change controller", () => {
+  test("offline rejection shows MSG07, clears secrets, and does not advance the gate", async () => {
+    const dependencies = createDependencies();
+    dependencies.service.change.mockResolvedValue({ status: "offline" });
+    const { result } = await renderController(dependencies);
+    await enterValidValues(result);
+    await act(() => result.current.submit());
+    expect(result.current.feedback?.code).toBe("MSG07");
+    expect(result.current.values.password).toBe("");
+    expect(dependencies.onChanged).not.toHaveBeenCalled();
+    expect(dependencies.onSessionExpired).not.toHaveBeenCalled();
+  });
+
   test("does not turn a navigation callback error into a failed password change", async () => {
     const dependencies = createDependencies();
     dependencies.onChanged.mockImplementation(() => { throw new Error("navigation failed"); });

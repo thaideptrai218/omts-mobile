@@ -5,7 +5,10 @@ import {
   type PasswordChangeFormErrors,
   type PasswordChangeFormValues,
 } from "@/features/security/domain/password-change-form";
-import type { PasswordChangeResult, PasswordChangeService } from "@/features/security/services/password-change-service";
+import type {
+  PasswordChangeResult,
+  PasswordChangeService,
+} from "@/features/security/services/password-change-service";
 import { useRequestScope } from "@/shared/hooks/use-request-scope";
 import {
   resolveKnownMessage,
@@ -93,6 +96,8 @@ export function usePasswordChangeController({
     } else if (result.status === "session-expired") {
       setFeedback(resolveKnownMessage("MSG19"));
       onSessionExpired();
+    } else if (result.status === "offline") {
+      setFeedback(resolveKnownMessage("MSG07"));
     } else {
       setFeedback(resolveKnownMessage("MSG17"));
     }

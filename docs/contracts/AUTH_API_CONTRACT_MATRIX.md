@@ -5,6 +5,8 @@
 > Purpose: record the current wire contract before Mobile implements its HTTP/session layer
 > Authority: evidence from backend source and integration-test source; this file does not change SRS, Jira or backend behavior
 
+> Recheck 22/10/2026: this matrix is the historical `14d7839` feature-branch snapshot, not proof the endpoints exist on backend develop. Fresh fetch shows develop `c5360ca` has domain/schema but not auth controllers; feature `7a41aa6` contains refactored auth plus audit, with the same gate/wire gaps. See [backend readiness recheck](../reports/BACKEND_READINESS_RECHECK_2026-10-22.md) for per-ref evidence and current integration blockers.
+
 ## 1. Reliability labels
 
 - **Implemented:** an endpoint and its behavior exist in the inspected backend source.
