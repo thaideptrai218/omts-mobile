@@ -7,6 +7,7 @@ export const MOCK_VERIFICATION_CODE = "246810";
 export const mockSessionFixtures: readonly MobileSession[] = [
   {
     accountId: "mock-staff-first",
+    subjectType: "Staff",
     displayName: "Nguyễn Minh An",
     username: "nguyen.minh.an",
     grants: [{ zoneName: "Vùng Đông", roleName: "Nhân viên" }],
@@ -22,6 +23,7 @@ export const mockSessionFixtures: readonly MobileSession[] = [
   },
   {
     accountId: "mock-staff-ready",
+    subjectType: "Staff",
     displayName: "Trần Thu Hà",
     username: "tran.thu.ha",
     grants: [{ zoneName: "Vùng Tây", roleName: "Quản lý vùng" }],

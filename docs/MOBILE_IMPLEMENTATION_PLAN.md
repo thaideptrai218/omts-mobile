@@ -7,6 +7,22 @@
 
 ## Execution log
 
+### 23/10/2026 — M6 registration review and feature-only delivery
+
+- Re-read UC01/UC08/Table 3.4-3 and registration plus shared session/profile/recovery/preferences source. Fresh OMTS-155/151 reads return 404; no Jira/SRS/backend writes, no runtime changes in this review.
+- Added 7 regressions (2 gateway, 2 service, 3 form): cancel/contact isolation, parallel one-use complete, rejection/manual retry, old completion vs new proof, real proof expiry, leave/reopen, pending duplicate/late response. Existing 56 suites now have **371 passing tests**; lint/typecheck/export and Doctor **21/21** pass.
+- No new reproduced P1/P2; **open P3 REG-REV-01**: complete with expired proof resets to the registration form but MSG16 still suggests entering/requesting OTP. Section R of the registration report describes reproduction, proposed contextual copy and acceptance. No runtime fix authorized/applied by this review; passing characterization is not closure.
+- Browser/device/API not rerun; prior browser evidence remains assembly-only. Canonical format, real delivery/API, native acceptance and excluded Customer linkage stay incomplete. Local lesson 51 explains the review; user requested commit/push current feature only, no merge into develop or PR.
+
+### 23/10/2026 — approved M6 Trader registration mock assembly
+
+- J1: read UC01/UC08 and current source; OMTS-155/151 returned 404. User explicitly excluded Customer/profile/order linkage; no Jira/SRS/backend writes or new business grants.
+- J2: start/resend/verify/complete/cancel contract, purpose-bound private proof and shared mock auth source. Duplicate checked before OTP and again at create; no account before explicit confirmation, no automatic login. Trader subject label/grants/contact login/profile/recovery share the same account.
+- J3: `/register` in existing auth guard, entry from login, channel-specific drafts, real OTP/confirmation/success/login actions; secret clearing, pending locks, MSG14/16/07/04 and no queue/auto-retry. Staff example notification catalog unavailable to Trader, without defining real Trader preferences.
+- J4: 12 gateway + 8 service + 9 form-flow tests, plus 1 selector controlled-state regression. Fixed browser radio ARIA mapping and send-cooldown microcopy found in review; documented TS2322/2353, sync throw/test-harness/query errors and an initial non-reproduced 5-second test timeout.
+- J5: **56 suites / 364 tests PASS**, lint/typecheck/web export and Doctor **21/21** pass. Browser empty form, email/SĐT, required errors, radio checked and no overflow at 360 CSS px checked. Signup/login credentials exercised through component tests only; native acceptance still open.
+- J6: report `docs/reports/MOBILE_TRADER_REGISTRATION_ASSEMBLY_2026-10-23.md`, ignored lesson 50. Mock M6 assembly only; canonical format, HTTP DTO/QA API, real delivery/audit/statuses, native QA and intentionally excluded Customer linkage remain incomplete. No commit/push/merge this turn.
+
 ### 23/10/2026 — approved REC-REV-01/02 fixes and regression delivery
 
 - User explicitly requested both P2 fixes, regressions, self-review, report and commit/push current branch, no develop merge. Base `005d9e9`; fresh OMTS-164 read still 404, no Jira/SRS/backend writes. No UI redesign/native API or new session/offline-queue policy.
@@ -788,6 +804,8 @@ Minimum touch target target: approximately 44–48 logical pixels. Forms must re
 **How:** Registration state holds the verification result token transiently; password/OTP are never persisted locally.
 
 **Done when:** successful flow ends at login and Back cannot reopen a completed credential form with secrets.
+
+**Mock assembly (23/10/2026):** M6.1–M6.4 now connect at `/register`, with separate channel drafts, OTP, explicit create confirmation, shared Trader auth/profile/recovery and secret-free return to login. Customer/profile/order linkage is excluded by explicit approval. Canonical format validation, real delivery/API, native Back and full UC01 postconditions remain pending; see latest execution log, not historical missing-wrapper notes, for current evidence.
 
 ## Phase M7 — `OMTS-164` recovery, SCR-04
 

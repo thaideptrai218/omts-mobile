@@ -25,6 +25,7 @@ type RegistrationScreenProps = Readonly<{
   onChangePasswordConfirmation: (value: string) => void;
   onContinue: () => void;
   onOpenLogin: () => void;
+  onOpenRecovery?: () => void;
   pending?: boolean;
   values: RegistrationFormValues;
 }>;
@@ -38,6 +39,7 @@ export function RegistrationScreen({
   onChangePasswordConfirmation,
   onContinue,
   onOpenLogin,
+  onOpenRecovery,
   pending = false,
   values,
 }: RegistrationScreenProps) {
@@ -65,7 +67,10 @@ export function RegistrationScreen({
           <View style={{ gap: theme.spacing.xs }}>
             <Text
               accessibilityRole="header"
-              style={[theme.typography.title, { color: theme.colors.textPrimary }]}
+              style={[
+                theme.typography.title,
+                { color: theme.colors.textPrimary },
+              ]}
             >
               Tạo tài khoản thương lái
             </Text>
@@ -75,8 +80,8 @@ export function RegistrationScreen({
                 { color: theme.colors.textSecondary },
               ]}
             >
-              Đăng ký để theo dõi đơn hàng, phiếu bán và công nợ của bạn tại
-              hợp tác xã.
+              Xác minh email hoặc số điện thoại để tạo tài khoản. Bạn sẽ đăng
+              nhập sau khi hoàn tất đăng ký.
             </Text>
           </View>
 
@@ -97,9 +102,7 @@ export function RegistrationScreen({
               keyboardType={isEmail ? "email-address" : "phone-pad"}
               label={identifierLabel}
               onChangeText={onChangeIdentifier}
-              placeholder={
-                isEmail ? "ten@example.com" : "Nhập số điện thoại"
-              }
+              placeholder={isEmail ? "ten@example.com" : "Nhập số điện thoại"}
               textContentType={isEmail ? "emailAddress" : "telephoneNumber"}
               value={values.identifier}
             />
@@ -149,6 +152,14 @@ export function RegistrationScreen({
               onPress={onOpenLogin}
               variant="ghost"
             />
+            {feedback?.code === "MSG14" && onOpenRecovery ? (
+              <AppButton
+                disabled={pending}
+                label="Quên mật khẩu? Khôi phục tài khoản"
+                onPress={onOpenRecovery}
+                variant="ghost"
+              />
+            ) : null}
           </View>
         </View>
       </KeyboardSafeForm>

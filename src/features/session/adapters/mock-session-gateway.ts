@@ -11,6 +11,7 @@ import { createMockProfileGateway } from "@/features/profile/adapters/mock-profi
 import { createMockSessionNotificationGateway } from "@/features/notifications/adapters/mock-session-notification-gateway";
 import { createMockRecoveryGateway } from "@/features/recovery/adapters/mock-recovery-gateway";
 import { mockRecoveryIdentifiers } from "@/features/recovery/adapters/mock-recovery-identifiers";
+import { createMockRegistrationGateway } from "@/features/registration/adapters/mock-registration-gateway";
 
 type MockAccount = {
   session: MobileSession;
@@ -31,6 +32,11 @@ export function createMockSessionGateway(now: () => number = Date.now) {
     }),
   );
   const leases = new Map<string, MockLease>();
+  const identifiers: {
+    accountId: string;
+    channel: "email" | "sms";
+    identifier: string;
+  }[] = [...mockRecoveryIdentifiers];
   const codes = createMockOnboardingCodes(now);
   let sequence = 0;
 
@@ -49,7 +55,18 @@ export function createMockSessionGateway(now: () => number = Date.now) {
   const gateway: MobileSessionGateway = {
     async login(identifier, password) {
       const account = accounts.find(
-        (item) => item.session.username === identifier.trim(),
+        (item) =>
+          item.session.username === identifier.trim() ||
+          (item.session.subjectType === "Trader" &&
+            identifiers.some(
+              (contact) =>
+                contact.accountId === item.session.accountId &&
+                contact.identifier === identifier.trim() &&
+                item.session.contacts.some(
+                  (value) =>
+                    value.channel === contact.channel && value.verified,
+                ),
+            )),
       );
       if (!account || account.password !== password)
         throw new SessionFailure("credentials");
@@ -127,12 +144,15 @@ export function createMockSessionGateway(now: () => number = Date.now) {
     (credential) => lease(credential).account,
   );
   const notificationGateway = createMockSessionNotificationGateway(
-    (credential) => lease(credential).account.session,
+    (credential) => {
+      const session = lease(credential).account.session;
+      if (session.subjectType !== "Staff")
+        throw new SessionFailure("unavailable");
+      return session;
+    },
   );
   const recoveryGateway = createMockRecoveryGateway((identifier) => {
-    const contact = mockRecoveryIdentifiers.find(
-      (item) => item.identifier === identifier,
-    );
+    const contact = identifiers.find((item) => item.identifier === identifier);
     const account = accounts.find(
       (item) => item.session.accountId === contact?.accountId,
     );
@@ -155,11 +175,49 @@ export function createMockSessionGateway(now: () => number = Date.now) {
       },
     };
   }, now);
+  const registrationGateway = createMockRegistrationGateway({
+    now,
+    exists: (method, identifier) =>
+      identifiers.some(
+        (contact) =>
+          contact.channel === (method === "email" ? "email" : "sms") &&
+          contact.identifier === identifier,
+      ),
+    create(input) {
+      const accountId = `mock-trader-${++sequence}`;
+      const channel = input.method === "email" ? "email" : "sms";
+      const at = input.identifier.indexOf("@");
+      accounts.push({
+        password: input.password,
+        profileRevision: 1,
+        session: {
+          accountId,
+          subjectType: "Trader",
+          username: accountId,
+          displayName: input.identifier,
+          grants: [],
+          nextAction: "ready",
+          contacts: [
+            {
+              channel,
+              verified: true,
+              maskedRecipient:
+                channel === "email"
+                  ? `${input.identifier.slice(0, 1)}***${input.identifier.slice(at)}`
+                  : `******${input.identifier.slice(-4)}`,
+            },
+          ],
+        },
+      });
+      identifiers.push({ accountId, channel, identifier: input.identifier });
+    },
+  });
   return {
     gateway,
     profileGateway,
     notificationGateway,
     recoveryGateway,
+    registrationGateway,
     currentChallenge: codes.current,
   };
 }

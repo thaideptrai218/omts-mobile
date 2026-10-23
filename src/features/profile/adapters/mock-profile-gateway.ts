@@ -35,7 +35,10 @@ export function createMockProfileGateway(
       revision: `mock-profile-${session.accountId}-${account.profileRevision}`,
       account: {
         accountCode: session.accountId,
-        accountTypeLabel: "Nhân viên hợp tác xã", // Both synthetic fixtures are Staff subjects.
+        accountTypeLabel:
+          session.subjectType === "Trader"
+            ? "Thương lái"
+            : "Nhân viên hợp tác xã",
         username: session.username,
         accessSummary: session.grants.map(
           (grant) => `${grant.roleName} — ${grant.zoneName}`,

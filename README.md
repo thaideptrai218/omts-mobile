@@ -60,12 +60,25 @@ không tự chuyển sang mock khi API lỗi.
   và xác minh SMS trong cùng tiến trình. Không dùng số điện thoại thật.
   Reset thu hồi mọi phiên mock cũ của đúng tài khoản; app cũ nhận MSG19 khi
   thực hiện yêu cầu được bảo vệ tiếp theo. Không có server push đăng xuất tức thì.
+- **Đăng ký tài khoản thương lái** ở login → `/register`: dùng email tổng hợp
+  `trader@example.invalid` hoặc số tổng hợp `0000000999`, tự nhập password thử
+  thỏa quy tắc form → OTP → **Tạo tài khoản** → về login bằng liên hệ đó.
+  Mã gửi lần 1/2/3 là `246810`/`246811`/`246812` trong cửa sổ mock; không gửi
+  SMS/email thật. Tài khoản mới chưa tồn tại trước bước xác nhận, không tự login,
+  không có grants nội bộ và không tạo/liên kết Customer hoặc Order.
+  Account/password chỉ còn trong cùng tiến trình; reload toàn app reset.
+  Không nhập credential thật; format/canonicalization email/SĐT chưa nghiệm thu.
 
 Chi tiết phạm vi, bằng chứng và phần chưa hoàn thành:
 [báo cáo ghép luồng](docs/reports/MOBILE_SESSION_ASSEMBLY_2026-10-22.md).
 Lát tiếp theo: [MSG19 và hồ sơ mock](docs/reports/MOBILE_MSG19_PROFILE_ASSEMBLY_2026-10-22.md).
 Lát thông báo: [báo cáo ghép mock](docs/reports/MOBILE_NOTIFICATION_ASSEMBLY_2026-10-22.md).
 Lát khôi phục: [phạm vi, kiểm thử và giới hạn](docs/reports/MOBILE_RECOVERY_ASSEMBLY_2026-10-23.md).
+Lát đăng ký: [báo cáo ghép Trader mock](docs/reports/MOBILE_TRADER_REGISTRATION_ASSEMBLY_2026-10-23.md).
+
+Review đăng ký (mục R): 56 suites / 371 tests PASS; P3 REG-REV-01 vẫn mở:
+proof hết hạn ở bước xác nhận đưa về form đăng ký nhưng thông báo còn hướng dẫn
+nhập OTP. Báo cáo có cách tái hiện/đề xuất; chưa nghiệm thu API/native/full UC01.
 
 Hai lỗi review REC-REV-01/02 đã sửa và có test hồi quy: OTP gửi lại có thời hạn
 riêng; outcome offline từ adapter giữ proof để thử lại thủ công, nhưng không

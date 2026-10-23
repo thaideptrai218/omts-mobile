@@ -13,12 +13,15 @@ function closePreferences() {
 
 export function SessionNotificationPreferencesScreen() {
   const { store, snapshot, notificationGateway } = useMobileSession();
+  const subjectType =
+    snapshot.status === "active" ? snapshot.session.subjectType : null;
   const accountId =
     snapshot.status === "active" && snapshot.session.nextAction === "ready"
       ? snapshot.session.accountId
       : null;
   const binding = useMemo(() => {
-    if (!store || !notificationGateway || !accountId) return null;
+    if (!store || !notificationGateway || !accountId || subjectType !== "Staff")
+      return null;
     const scope = store.createAccountScope(accountId);
     return {
       service: createSessionNotificationPreferencesService(
@@ -27,7 +30,7 @@ export function SessionNotificationPreferencesScreen() {
       ),
       expire: scope.expire,
     };
-  }, [store, notificationGateway, accountId]);
+  }, [store, notificationGateway, accountId, subjectType]);
 
   if (!accountId) return null;
   if (!binding)

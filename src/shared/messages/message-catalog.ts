@@ -6,6 +6,7 @@ export const supportedMessageCodes = [
   "MSG10",
   "MSG12",
   "MSG13",
+  "MSG14",
   "MSG15",
   "MSG16",
   "MSG17",
@@ -93,6 +94,12 @@ const vietnameseCatalog = {
       "Tài khoản này hiện không thể sử dụng. Vui lòng liên hệ kênh hỗ trợ.",
     severity: "danger",
     title: "Không thể truy cập tài khoản",
+  },
+  MSG14: {
+    message: () =>
+      "Không thể đăng ký với email hoặc số điện thoại này. Vui lòng đăng nhập hoặc khôi phục tài khoản.",
+    severity: "danger",
+    title: "Không thể đăng ký",
   },
   MSG15: {
     message: () =>
@@ -219,6 +226,7 @@ export function resolveKnownMessage(
     | "MSG07"
     | "MSG12"
     | "MSG13"
+    | "MSG14"
     | "MSG15"
     | "MSG16"
     | "MSG17"

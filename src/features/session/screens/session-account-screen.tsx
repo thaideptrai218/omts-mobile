@@ -49,7 +49,9 @@ export function SessionAccountScreen() {
         onSessionExpired={() => void binding.expire()}
         onOpenPasswordChange={() => router.push("/security")}
         onOpenNotifications={
-          notificationGateway
+          notificationGateway &&
+          snapshot.status === "active" &&
+          snapshot.session.subjectType === "Staff"
             ? () => router.push("/notification-preferences")
             : undefined
         }

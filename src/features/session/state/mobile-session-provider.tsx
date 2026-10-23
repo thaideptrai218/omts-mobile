@@ -9,6 +9,10 @@ import {
 import { useConnectivity } from "@/features/connectivity/state/connectivity-provider";
 import { createMemorySessionCredentials } from "../adapters/memory-session-credentials";
 import { createMockSessionGateway } from "../adapters/mock-session-gateway";
+import {
+  createRegistrationFlowService,
+  type RegistrationFlowService,
+} from "@/features/registration/services/registration-flow-service";
 import type { ProfileGateway } from "@/features/profile/services/profile-gateway";
 import type { NotificationPreferencesGateway } from "@/features/notifications/services/notification-preferences-gateway";
 import {
@@ -34,6 +38,7 @@ const SessionContext = createContext<{
   profileGateway: ProfileGateway | null;
   notificationGateway: NotificationPreferencesGateway | null;
   createRecoveryFlow: (() => RecoveryFlowService) | null;
+  createRegistrationFlow: (() => RegistrationFlowService) | null;
 } | null>(null);
 
 export type SessionRuntime = {
@@ -42,13 +47,19 @@ export type SessionRuntime = {
   profileGateway?: ProfileGateway;
   notificationGateway?: NotificationPreferencesGateway;
   createRecoveryFlow?: () => RecoveryFlowService;
+  createRegistrationFlow?: () => RegistrationFlowService;
 };
 
 function createRuntime(): SessionRuntime | null {
   // Explicit opt-in only. Never silently use a mock when API mode fails.
   if (process.env.EXPO_PUBLIC_AUTH_MODE !== "mock") return null;
-  const { gateway, profileGateway, notificationGateway, recoveryGateway } =
-    createMockSessionGateway();
+  const {
+    gateway,
+    profileGateway,
+    notificationGateway,
+    recoveryGateway,
+    registrationGateway,
+  } = createMockSessionGateway();
   let offline = false;
   const store = createMobileSessionStore({
     gateway,
@@ -59,6 +70,8 @@ function createRuntime(): SessionRuntime | null {
     store,
     profileGateway,
     notificationGateway,
+    createRegistrationFlow: () =>
+      createRegistrationFlowService(registrationGateway, () => offline),
     createRecoveryFlow: () =>
       createRecoveryFlowService(recoveryGateway, () => offline),
     setOffline: (value: boolean) => {
@@ -104,6 +117,7 @@ export function MobileSessionProvider({
         profileGateway: runtime?.profileGateway ?? null,
         notificationGateway: runtime?.notificationGateway ?? null,
         createRecoveryFlow: runtime?.createRecoveryFlow ?? null,
+        createRegistrationFlow: runtime?.createRegistrationFlow ?? null,
       }}
     >
       {children}

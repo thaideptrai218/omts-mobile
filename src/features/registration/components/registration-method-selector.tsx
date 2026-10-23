@@ -48,8 +48,9 @@ export function RegistrationMethodSelector({
 
           return (
             <Pressable
-              accessibilityRole="radio"
-              accessibilityState={{ checked: selected, disabled }}
+              role="radio"
+              aria-checked={selected}
+              aria-disabled={disabled}
               disabled={disabled}
               key={option.value}
               onPress={() => onChange(option.value)}
@@ -59,18 +60,15 @@ export function RegistrationMethodSelector({
                   backgroundColor: selected
                     ? theme.colors.surfaceRaised
                     : "transparent",
-                  borderColor: selected
-                    ? theme.colors.brand
-                    : "transparent",
+                  borderColor: selected ? theme.colors.brand : "transparent",
                   borderRadius: theme.radii.md,
                   borderWidth: theme.borderWidths.default,
                   minHeight: theme.sizes.touchTarget,
-                  opacity:
-                    disabled
-                      ? theme.opacity.disabled
-                      : pressed
-                        ? theme.opacity.pressed
-                        : theme.opacity.visible,
+                  opacity: disabled
+                    ? theme.opacity.disabled
+                    : pressed
+                      ? theme.opacity.pressed
+                      : theme.opacity.visible,
                   paddingHorizontal: theme.spacing.sm,
                 },
               ]}

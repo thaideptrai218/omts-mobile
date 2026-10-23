@@ -11,7 +11,8 @@ import {
 } from "@/shared/messages/message-catalog";
 
 export function SessionLoginController() {
-  const { store, snapshot, createRecoveryFlow } = useMobileSession();
+  const { store, snapshot, createRecoveryFlow, createRegistrationFlow } =
+    useMobileSession();
   const scope = useRequestScope(store ?? {});
   const [values, setValues] = useState({ identifier: "", password: "" });
   const [errors, setErrors] = useState<LoginFormErrors>({});
@@ -67,6 +68,16 @@ export function SessionLoginController() {
       onChangeIdentifier={(value) => change("identifier", value)}
       onChangePassword={(value) => change("password", value)}
       onLogin={() => void login()}
+      onOpenRegistration={
+        createRegistrationFlow
+          ? () => {
+              if (scope.isBlocked()) return;
+              store?.acknowledgeSignOutReason();
+              setValues((current) => ({ ...current, password: "" }));
+              router.push("/register");
+            }
+          : undefined
+      }
       onOpenRecovery={
         createRecoveryFlow
           ? () => {

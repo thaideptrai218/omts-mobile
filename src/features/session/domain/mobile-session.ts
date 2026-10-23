@@ -13,6 +13,7 @@ export type SessionContact = Readonly<{
 
 export type MobileSession = Readonly<{
   accountId: string;
+  subjectType: "Staff" | "Trader";
   displayName: string;
   username: string;
   grants: readonly Readonly<{ zoneName: string; roleName: string }>[];
