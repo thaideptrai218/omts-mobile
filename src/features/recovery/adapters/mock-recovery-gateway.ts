@@ -9,6 +9,7 @@ const rateWindowMs = 5 * 60_000;
 export type MockRecoveryOwner = Readonly<{
   accountId: string;
   replacePassword: (password: string) => void;
+  isCurrent?: () => boolean;
 }>;
 type Attempt = {
   challenge: VerificationChallenge;
@@ -129,7 +130,11 @@ export function createMockRecoveryGateway(
           challenge: attempt ? { ...attempt.challenge } : null,
         };
       const budget = budgets.get(identifiers.get(challengeId) ?? "");
-      if (!attempt.owner || code !== attempt.code) {
+      if (
+        !attempt.owner ||
+        attempt.owner.isCurrent?.() === false ||
+        code !== attempt.code
+      ) {
         if (budget) budget.failures++;
         attempt.challenge = {
           ...attempt.challenge,
@@ -153,6 +158,7 @@ export function createMockRecoveryGateway(
         !attempt.proof ||
         attempt.cancelled ||
         !attempt.owner ||
+        attempt.owner.isCurrent?.() === false ||
         now() >= attempt.proofExpiresAt
       )
         return { status: "attempt-invalid" };

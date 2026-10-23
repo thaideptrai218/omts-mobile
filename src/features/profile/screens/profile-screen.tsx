@@ -86,7 +86,7 @@ function ContactCard({ contact, disabled, label, onChange }: ContactCardProps) {
         <AppButton
           disabled={disabled}
           fullWidth={false}
-          label={`Thay đổi ${label.toLocaleLowerCase("vi-VN")}`}
+          label={`${contact.value ? "Thay đổi" : "Thêm"} ${label.toLocaleLowerCase("vi-VN")}`}
           onPress={onChange}
           variant="secondary"
         />

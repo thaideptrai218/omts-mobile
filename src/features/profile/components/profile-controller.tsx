@@ -1,3 +1,7 @@
+import { useMemo, useState } from "react";
+import type { VerificationChannel } from "@/features/verification/domain/verification-contract";
+import { ContactChangeController } from "./contact-change-controller";
+import type { ContactChangeService } from "../services/contact-change-service";
 import { ProfileLoadState } from "@/features/profile/components/profile-load-state";
 import { useProfileController } from "@/features/profile/hooks/use-profile-controller";
 import { ProfileScreen } from "@/features/profile/screens/profile-screen";
@@ -5,6 +9,7 @@ import type { ProfileService } from "@/features/profile/services/profile-service
 import { resolveKnownMessage } from "@/shared/messages/message-catalog";
 
 type ProfileControllerProps = Readonly<{
+  createContactChange?: () => ContactChangeService;
   onChangeEmail?: () => void;
   onChangePhone?: () => void;
   onLogout: () => void;
@@ -17,8 +22,15 @@ type ProfileControllerProps = Readonly<{
 export function ProfileController({
   service,
   onSessionExpired,
+  createContactChange,
   ...actions
 }: ProfileControllerProps) {
+  const [contactChannel, setContactChannel] =
+    useState<VerificationChannel | null>(null);
+  const contactService = useMemo(
+    () => (contactChannel ? (createContactChange?.() ?? null) : null),
+    [contactChannel, createContactChange],
+  );
   const controller = useProfileController({ service, onSessionExpired });
   const { state } = controller;
 
@@ -44,9 +56,32 @@ export function ProfileController({
     );
   }
 
+  if (contactChannel && contactService)
+    return (
+      <ContactChangeController
+        key={contactChannel}
+        service={contactService}
+        channel={contactChannel}
+        initialProfile={state.profile}
+        onSaved={controller.acceptContactUpdate}
+        onClose={() => setContactChannel(null)}
+        onSessionExpired={onSessionExpired}
+      />
+    );
+
   return (
     <ProfileScreen
       {...actions}
+      onChangeEmail={
+        createContactChange
+          ? () => setContactChannel("email")
+          : actions.onChangeEmail
+      }
+      onChangePhone={
+        createContactChange
+          ? () => setContactChannel("sms")
+          : actions.onChangePhone
+      }
       account={state.profile.account}
       displayName={state.profile.displayName}
       conflict={

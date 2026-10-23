@@ -136,6 +136,17 @@ export function createMobileSessionStore({
             });
           }
         },
+        acceptContacts(contacts) {
+          if (isCurrent() && snapshot.status === "active") {
+            publish({
+              status: "active",
+              session: {
+                ...snapshot.session,
+                contacts: contacts.map((contact) => ({ ...contact })),
+              },
+            });
+          }
+        },
         async expire() {
           if (!isCurrent()) return;
           await expireCurrentSession(ownerGeneration);

@@ -12,6 +12,7 @@ import { createMockSessionNotificationGateway } from "@/features/notifications/a
 import { createMockRecoveryGateway } from "@/features/recovery/adapters/mock-recovery-gateway";
 import { mockRecoveryIdentifiers } from "@/features/recovery/adapters/mock-recovery-identifiers";
 import { createMockRegistrationGateway } from "@/features/registration/adapters/mock-registration-gateway";
+import { createMockContactChangeGateway } from "@/features/profile/adapters/mock-contact-change-gateway";
 
 type MockAccount = {
   session: MobileSession;
@@ -57,16 +58,14 @@ export function createMockSessionGateway(now: () => number = Date.now) {
       const account = accounts.find(
         (item) =>
           item.session.username === identifier.trim() ||
-          (item.session.subjectType === "Trader" &&
-            identifiers.some(
-              (contact) =>
-                contact.accountId === item.session.accountId &&
-                contact.identifier === identifier.trim() &&
-                item.session.contacts.some(
-                  (value) =>
-                    value.channel === contact.channel && value.verified,
-                ),
-            )),
+          identifiers.some(
+            (contact) =>
+              contact.accountId === item.session.accountId &&
+              contact.identifier === identifier.trim() &&
+              item.session.contacts.some(
+                (value) => value.channel === contact.channel && value.verified,
+              ),
+          ),
       );
       if (!account || account.password !== password)
         throw new SessionFailure("credentials");
@@ -143,6 +142,50 @@ export function createMockSessionGateway(now: () => number = Date.now) {
   const profileGateway = createMockProfileGateway(
     (credential) => lease(credential).account,
   );
+  const contactChangeGateway = createMockContactChangeGateway({
+    now,
+    resolveOwner: (credential) => lease(credential).account,
+    profileGateway,
+    currentIdentifier: (accountId, channel) =>
+      identifiers.find(
+        (contact) =>
+          contact.accountId === accountId && contact.channel === channel,
+      )?.identifier,
+    isTaken: (channel, identifier, accountId) =>
+      identifiers.some(
+        (contact) =>
+          contact.channel === channel &&
+          contact.identifier === identifier &&
+          contact.accountId !== accountId,
+      ),
+    replace(account, channel, identifier) {
+      const accountId = account.session.accountId;
+      const oldIndex = identifiers.findIndex(
+        (contact) =>
+          contact.accountId === accountId && contact.channel === channel,
+      );
+      if (oldIndex >= 0) identifiers.splice(oldIndex, 1);
+      identifiers.push({ accountId, channel, identifier });
+      const at = identifier.indexOf("@");
+      account.session = {
+        ...account.session,
+        contacts: [
+          ...account.session.contacts.filter(
+            (contact) => contact.channel !== channel,
+          ),
+          {
+            channel,
+            verified: true,
+            maskedRecipient:
+              channel === "email"
+                ? `${identifier.slice(0, 1)}***${identifier.slice(at)}`
+                : `******${identifier.slice(-4)}`,
+          },
+        ],
+      };
+      account.profileRevision++;
+    },
+  });
   const notificationGateway = createMockSessionNotificationGateway(
     (credential) => {
       const session = lease(credential).account.session;
@@ -166,6 +209,16 @@ export function createMockSessionGateway(now: () => number = Date.now) {
       return null;
     return {
       accountId: account.session.accountId,
+      isCurrent: () =>
+        identifiers.some(
+          (item) =>
+            item.accountId === account.session.accountId &&
+            item.channel === contact.channel &&
+            item.identifier === identifier,
+        ) &&
+        account.session.contacts.some(
+          (item) => item.channel === contact.channel && item.verified,
+        ),
       replacePassword(password) {
         account.password = password;
         for (const [handle, current] of leases) {
@@ -215,6 +268,7 @@ export function createMockSessionGateway(now: () => number = Date.now) {
   return {
     gateway,
     profileGateway,
+    contactChangeGateway,
     notificationGateway,
     recoveryGateway,
     registrationGateway,

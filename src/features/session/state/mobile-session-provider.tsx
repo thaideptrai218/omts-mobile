@@ -14,6 +14,7 @@ import {
   type RegistrationFlowService,
 } from "@/features/registration/services/registration-flow-service";
 import type { ProfileGateway } from "@/features/profile/services/profile-gateway";
+import type { ContactChangeGateway } from "@/features/profile/services/contact-change-gateway";
 import type { NotificationPreferencesGateway } from "@/features/notifications/services/notification-preferences-gateway";
 import {
   createRecoveryFlowService,
@@ -36,6 +37,7 @@ const SessionContext = createContext<{
   store: MobileSessionStore | null;
   snapshot: SessionSnapshot;
   profileGateway: ProfileGateway | null;
+  contactChangeGateway: ContactChangeGateway | null;
   notificationGateway: NotificationPreferencesGateway | null;
   createRecoveryFlow: (() => RecoveryFlowService) | null;
   createRegistrationFlow: (() => RegistrationFlowService) | null;
@@ -45,6 +47,7 @@ export type SessionRuntime = {
   store: MobileSessionStore;
   setOffline: (value: boolean) => void;
   profileGateway?: ProfileGateway;
+  contactChangeGateway?: ContactChangeGateway;
   notificationGateway?: NotificationPreferencesGateway;
   createRecoveryFlow?: () => RecoveryFlowService;
   createRegistrationFlow?: () => RegistrationFlowService;
@@ -56,6 +59,7 @@ function createRuntime(): SessionRuntime | null {
   const {
     gateway,
     profileGateway,
+    contactChangeGateway,
     notificationGateway,
     recoveryGateway,
     registrationGateway,
@@ -69,6 +73,7 @@ function createRuntime(): SessionRuntime | null {
   return {
     store,
     profileGateway,
+    contactChangeGateway,
     notificationGateway,
     createRegistrationFlow: () =>
       createRegistrationFlowService(registrationGateway, () => offline),
@@ -115,6 +120,7 @@ export function MobileSessionProvider({
         store,
         snapshot,
         profileGateway: runtime?.profileGateway ?? null,
+        contactChangeGateway: runtime?.contactChangeGateway ?? null,
         notificationGateway: runtime?.notificationGateway ?? null,
         createRecoveryFlow: runtime?.createRecoveryFlow ?? null,
         createRegistrationFlow: runtime?.createRegistrationFlow ?? null,

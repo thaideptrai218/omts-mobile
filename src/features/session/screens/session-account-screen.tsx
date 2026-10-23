@@ -4,6 +4,7 @@ import { router } from "expo-router";
 import { useConnectivity } from "@/features/connectivity/state/connectivity-provider";
 import { ProfileController } from "@/features/profile/components/profile-controller";
 import { createSessionProfileService } from "@/features/profile/services/session-profile-service";
+import { createContactChangeService } from "@/features/profile/services/contact-change-service";
 import { ContentState } from "@/shared/ui/content-state";
 import { ScreenContainer } from "@/shared/ui/screen-container";
 import { useMobileSession } from "../state/mobile-session-provider";
@@ -11,8 +12,13 @@ import { LogoutConfirmationDialog } from "../components/logout-confirmation-dial
 import { SessionLogoutAction } from "../components/session-logout-action";
 
 export function SessionAccountScreen() {
-  const { store, snapshot, profileGateway, notificationGateway } =
-    useMobileSession();
+  const {
+    store,
+    snapshot,
+    profileGateway,
+    notificationGateway,
+    contactChangeGateway,
+  } = useMobileSession();
   const { status } = useConnectivity();
   const [logoutVisible, setLogoutVisible] = useState(false);
   const accountId =
@@ -25,8 +31,16 @@ export function SessionAccountScreen() {
     return {
       service: createSessionProfileService(scope, profileGateway),
       expire: scope.expire,
+      createContactChange: contactChangeGateway
+        ? () =>
+            createContactChangeService(
+              scope,
+              contactChangeGateway,
+              profileGateway,
+            )
+        : undefined,
     };
-  }, [store, profileGateway, accountId]);
+  }, [store, profileGateway, accountId, contactChangeGateway]);
 
   if (!accountId) return null;
   if (!binding)
@@ -46,6 +60,7 @@ export function SessionAccountScreen() {
       <ProfileController
         key={accountId}
         service={binding.service}
+        createContactChange={binding.createContactChange}
         onSessionExpired={() => void binding.expire()}
         onOpenPasswordChange={() => router.push("/security")}
         onOpenNotifications={

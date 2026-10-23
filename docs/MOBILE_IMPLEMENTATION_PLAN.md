@@ -7,6 +7,22 @@
 
 ## Execution log
 
+### 23/10/2026 — contact-change review, backend refresh and feature delivery
+
+- Reviewed contact/session/profile/recovery source against UC05/UC08; fresh OMTS-172 read 404. No runtime/business changes, backend/SRS/Jira writes or API activation by the review.
+- **OPEN P2 CONTACT-REV-01:** contact is replaced and OTP consumed before fallible profile read; a read failure strands UI at OTP with false unchanged-data feedback. Source characterization reproduces it; explicit ignored acceptance probe FAIL. Proposal: shared pure canonical snapshot for mock, canonical mutation response/reconciliation for real API. User approval needed before applying runtime fix; delivery does not close P2.
+- +5 tests: rejected-resend manual retry, stale same-account scope, gateway-offline retry, failed conflict reload lock, and defect characterization. **59 suites / 410 tests PASS**, lint/typecheck/export, Doctor 21/21; green suite excludes failing probe and is not defect closure. No browser/device rerun.
+- Backend develop stays c5360ca; ACS 27a8673 and inventory of feature refs/SDS now show self-service and device APIs, enum strings, Zalo/format candidates. Open stacked PRs, QA unknown, phone-only/Customer/revision/recovery-binding differences remain. PR #7 has unverified-cause GitGuardian failure; no ACS build-test evidence observed. Local SDK mismatch prevents runtime backend checks. Report `BACKEND_READINESS_RECHECK_2026-10-23.md` has exact mapping/proposals.
+- Contact report R + ignored lesson 54/probe; commit/push current feature only, no develop merge/PR/force. Prior assembly no-P2 statement below is historical and superseded.
+
+### 23/10/2026 — approved M10.3 add/replace contact mock assembly
+
+- C1: re-read UC05/UC08/BR-31 and profile/session source; OMTS-172/151/141 return 404, no current parent/status inferred. User excludes Customer/Order; no Jira/SRS/backend/Figma writes.
+- C2: account/channel/purpose-bound contact gateway, required/different/unique + revision before issuance/commit, OTP TTL/resend/cancel/limits, shared identifier update and current-binding recheck for existing recovery attempts/proofs. Verified Staff aliases now work as SRS permits; no grants/token-policy change. Format/canonicalization remains deferred, not silently resolved.
+- C3: session-scoped service/lifetime cleanup + child contact editor under /account, preserving profile/name draft. Correct OTP saves contact without an extra confirmation step. Canonical contacts enter only the owning session; MSG01/04/06/07/16/19/62, explicit conflict reload and no offline queue/auto-retry.
+- C4: 3 suites/32 new tests (13 gateway, 8 service, 11 flow); **59 suites / 405 tests PASS**. Lint/typecheck/export and Doctor **21/21** pass. TS2339 union modeling, rejected patch context and import/first warnings documented/fixed; self-review hardened cleanup when scope rejects a returned challenge after logout.
+- C5: report `docs/reports/MOBILE_CONTACT_CHANGE_ASSEMBLY_2026-10-23.md`, ignored lesson 53. No remaining reproduced P1/P2 in checked scope, no browser/device/API rerun. Customer postconditions excluded, real format/HTTP/audit/delivery/native acceptance pending. No commit/push/merge this slice.
+
 ### 23/10/2026 — approved REG-REV-01 contextual-copy fix
 
 - User explicitly requested P3 fix, regression/review/report and feature-only commit/push, no develop merge. Base `165821b`; fresh OMTS-155/151 reads still 404, no Jira/SRS/backend writes.
@@ -952,6 +968,8 @@ Minimum touch target target: approximately 44–48 logical pixels. Forms must re
 
 **Done when:** cancelling or failing verification leaves the old contact visibly active.
 
+**Mock assembly (23/10/2026):** M10.3 is now usable inside /account for email/phone add/replace, preserving old contact until correct OTP, with revision/duplicate guards and no Customer/Order linkage. Existing name draft stays in the profile controller; saved canonical contacts/revision merge without dropping it. 32 new source/flow regressions; real format/API/audit/native and full UC05 postconditions remain pending. See contact-change report and latest execution log, not the older missing-wrapper notes, for current status.
+
 ### M10.4 Handle concurrent profile updates
 
 **What:** Show MSG06 and reload option when the profile version changed elsewhere.
@@ -1015,6 +1033,8 @@ Minimum touch target target: approximately 44–48 logical pixels. Forms must re
 **Done when:** the team confirms Expo Go versus development-build support and QA receives a current token.
 
 **Blocked (22/10/2026):** Expo SDK 57 documentation states that Android remote push is unavailable in Expo Go and requires a development build. The app also has no EAS `projectId`, and backend `OMTS-174` is still To Do with no device-token endpoint in source. Do not claim token registration is complete or invent an endpoint. BA/backend must also reconcile backend `Sms` with SRS `Zalo OA` before the wire contract is frozen.
+
+**Source update (23/10/2026):** ACS@27a8673 now implements POST/DELETE /api/me/devices and offers Zalo (not configured), with Sms retained as legacy. The missing-endpoint/channel observation above is historical; current blockers are QA deploy/catalog mapping, EAS credentials/project and native integration/acceptance. Do not infer current OMTS-174 status from the old read or mark push complete from endpoint existence.
 
 ### M11.5 Save the matrix
 

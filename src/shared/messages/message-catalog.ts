@@ -16,6 +16,7 @@ export const supportedMessageCodes = [
   "MSG21",
   "MSG22",
   "MSG23",
+  "MSG62",
   "MSG67",
   "MSG68",
   "MSG69",
@@ -38,6 +39,7 @@ type MessageParameters = Readonly<{
   serviceName?: string;
   userName?: string | null;
   time?: string | null;
+  maskedEmail?: string;
 }>;
 
 type MessageDefinition = Omit<ResolvedMessage, "code" | "message"> & {
@@ -153,6 +155,12 @@ const vietnameseCatalog = {
     severity: "danger",
     title: "Thông báo bắt buộc",
   },
+  MSG62: {
+    message: (parameters) =>
+      `Nhập mã xác minh được gửi tới ${parameters?.maskedEmail ?? "email mới"} để hoàn tất. Email hiện tại vẫn được sử dụng cho đến khi xác minh thành công.`,
+    severity: "info",
+    title: "Xác minh email mới",
+  },
   MSG67: {
     message: () =>
       "Tài khoản cần có số điện thoại đã xác minh để tiếp tục sử dụng OMTS. Vui lòng nhập hoặc xác nhận số điện thoại, sau đó nhập mã được gửi qua SMS.",
@@ -204,6 +212,10 @@ function resolveCatalogEntry(
 export function resolveKnownMessage(
   code: "MSG01",
   parameters: Readonly<{ fieldName: string }>,
+): ResolvedMessage;
+export function resolveKnownMessage(
+  code: "MSG62",
+  parameters: Readonly<{ maskedEmail: string }>,
 ): ResolvedMessage;
 export function resolveKnownMessage(
   code: "MSG04",

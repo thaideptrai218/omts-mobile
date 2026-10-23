@@ -28,6 +28,7 @@ export type AccountSessionScope = Readonly<{
     request: (credential: SessionCredential) => Promise<T>,
   ) => Promise<T>;
   acceptDisplayName: (displayName: string) => void;
+  acceptContacts: (contacts: readonly SessionContact[]) => void;
   expire: () => Promise<void>;
 }>;
 export type SessionLease = Readonly<{

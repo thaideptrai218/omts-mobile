@@ -40,9 +40,17 @@ không tự chuyển sang mock khi API lỗi.
   Logout rồi login lại trong cùng lần chạy dùng mật khẩu mới; reload toàn bộ app
   sẽ khởi tạo lại fixture, trở về mật khẩu mẫu và yêu cầu đăng nhập.
 - Chạy xem bằng trình duyệt: `npx expo start --web --port 8082`.
-- `/account` đã ghép hồ sơ mock: sửa tên hiển thị, xem tài khoản/liên hệ/phân công
+- `/account` đã ghép hồ sơ mock: sửa tên hiển thị, xem tài khoản/phân công
   chỉ đọc, mở đổi mật khẩu và đăng xuất. Tên đã lưu còn sau logout/login trong cùng
   tiến trình; reload toàn bộ app reset fixture. Offline không tự lưu hoặc xếp hàng.
+- **Thêm/Thay đổi email hoặc số điện thoại** từ hồ sơ → nhập liên hệ mới → OTP →
+  lưu liên hệ đã xác minh. Dùng `new.ha@example.invalid` hoặc `0000000999` tổng hợp;
+  mã lần gửi 1/2/3 là `246810`/`246811`/`246812` trong cửa sổ mock. Liên hệ cũ
+  chỉ được thay sau mã đúng; hủy/sai/offline không đổi hồ sơ. Bản nháp tên đang
+  sửa được giữ lại. Login/recovery dùng contact mới verified, contact cũ hết hiệu
+  lực cho các yêu cầu đó; không liên kết Customer/Order. Staff cũng dùng được
+  liên hệ đã verified để login; username vẫn giữ. Format/API/native QA còn mở.
+  Full reload một lần nếu dev runtime cũ chưa hiện action mới; reload reset mock.
 - Hết phiên về login có MSG19; logout chủ động không hiện lỗi hết phiên.
 - Hồ sơ có nút **Tùy chọn thông báo** → `/notification-preferences`: lưu/hủy
   riêng từng tài khoản, có khóa mục bắt buộc và email chưa xác minh. Catalog chỉ
@@ -75,6 +83,13 @@ Lát tiếp theo: [MSG19 và hồ sơ mock](docs/reports/MOBILE_MSG19_PROFILE_AS
 Lát thông báo: [báo cáo ghép mock](docs/reports/MOBILE_NOTIFICATION_ASSEMBLY_2026-10-22.md).
 Lát khôi phục: [phạm vi, kiểm thử và giới hạn](docs/reports/MOBILE_RECOVERY_ASSEMBLY_2026-10-23.md).
 Lát đăng ký: [báo cáo ghép Trader mock](docs/reports/MOBILE_TRADER_REGISTRATION_ASSEMBLY_2026-10-23.md).
+Lát đổi liên hệ: [phạm vi, test và giới hạn mock](docs/reports/MOBILE_CONTACT_CHANGE_ASSEMBLY_2026-10-23.md).
+
+Review đổi liên hệ (mục R): **CONTACT-REV-01 P2 còn mở** — lỗi đọc hồ sơ sau khi
+ghi có thể báo chưa đổi dù contact đã lưu. 410 tests PASS không đóng finding;
+báo cáo có test tái hiện và đề xuất sửa, chưa sửa runtime trong lượt review.
+Backend đã có thêm API ở nhánh feature, chưa tự bật API Mobile:
+[recheck 23/10 và các điểm cần đồng bộ](docs/reports/BACKEND_READINESS_RECHECK_2026-10-23.md).
 
 REG-REV-01 đã sửa (mục S): xác nhận đăng ký hết hiệu lực đưa về form trống với
 hướng dẫn nhập lại thông tin và xác minh; không còn hướng dẫn nhập OTP ở màn

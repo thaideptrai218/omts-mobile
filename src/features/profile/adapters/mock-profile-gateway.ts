@@ -12,6 +12,10 @@ export type MockProfileOwner = {
   profileRevision: number;
 };
 
+export function mockProfileRevision(account: MockProfileOwner) {
+  return `mock-profile-${account.session.accountId}-${account.profileRevision}`;
+}
+
 export function createMockProfileGateway(
   resolveOwner: (credential: SessionCredential) => MockProfileOwner,
 ): ProfileGateway {
@@ -32,7 +36,7 @@ export function createMockProfileGateway(
     };
     return {
       displayName: session.displayName,
-      revision: `mock-profile-${session.accountId}-${account.profileRevision}`,
+      revision: mockProfileRevision(account),
       account: {
         accountCode: session.accountId,
         accountTypeLabel:

@@ -221,5 +221,31 @@ export function useProfileController({
     }
   }, [onSessionExpired, service, state]);
 
-  return { changeDisplayName, reload, save, state } as const;
+  const acceptContactUpdate = useCallback((profile: ProfileSnapshot) => {
+    setState((current) => {
+      if (
+        current.status !== "ready" ||
+        current.profile.account.accountCode !== profile.account.accountCode
+      )
+        return current;
+      const conflict =
+        current.conflict || current.profile.displayName !== profile.displayName;
+      return {
+        ...current,
+        profile,
+        conflict,
+        feedback: conflict ? resolveKnownMessage("MSG06", {}) : null,
+        // A verified contact must not discard an unsaved personal-name draft.
+        values: current.values,
+      };
+    });
+  }, []);
+
+  return {
+    acceptContactUpdate,
+    changeDisplayName,
+    reload,
+    save,
+    state,
+  } as const;
 }
