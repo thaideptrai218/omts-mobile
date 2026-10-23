@@ -145,7 +145,6 @@ export function createMockSessionGateway(now: () => number = Date.now) {
   const contactChangeGateway = createMockContactChangeGateway({
     now,
     resolveOwner: (credential) => lease(credential).account,
-    profileGateway,
     currentIdentifier: (accountId, channel) =>
       identifiers.find(
         (contact) =>

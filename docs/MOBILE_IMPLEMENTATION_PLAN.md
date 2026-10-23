@@ -7,6 +7,12 @@
 
 ## Execution log
 
+### 23/10/2026 — approved CONTACT-REV-01 fix, no develop merge
+
+- CLOSED in client/mock: shared pure ProfileSnapshot builder used by profile read/save and contact verify. Removed ProfileGateway dependency from contact mock, eliminating its post-write read. Kept readiness/revision/duplicate/OTP/session guards, explicit conflict reload, name draft, no Customer/Order and existing messages/policies.
+- Four source Email/SĐT service/flow acceptance cases **FAIL before / PASS after**, replacing the old defect characterization. Added four snapshot/guard cases and one pre-write failure/manual-retry case: net +8 tests, **60 suites / 418 tests PASS**, no skipped tests. Local probe updated to assert no read and also PASS; red/green evidence is in source tests.
+- Lint/typecheck/export (17 routes), Doctor **21/21** PASS. Self-review found no new reproduced P1/P2 in this fix; API/native acceptance and backend canonical response gap remain open. Fresh OMTS-172 404; no Jira/SRS/backend writes or UI redesign. Report contact-change S + ignored lesson 55. Commit/push current feature only, no PR/force/develop merge; old review below is historical.
+
 ### 23/10/2026 — contact-change review, backend refresh and feature delivery
 
 - Reviewed contact/session/profile/recovery source against UC05/UC08; fresh OMTS-172 read 404. No runtime/business changes, backend/SRS/Jira writes or API activation by the review.
@@ -959,6 +965,8 @@ Minimum touch target target: approximately 44–48 logical pixels. Forms must re
 **Subsequent approved assembly (22/10/2026):** `/account` now uses this controller with a session-scoped shared mock gateway. Save updates the correct mock account and session identity; offline retains draft without auto-save. Password navigation and confirmed logout work; contact/preferences wrappers remain separate. This does not complete the endpoint/device acceptance criteria.
 
 ### M10.3 Reuse SCR-02 for changed contacts
+
+**Fix follow-up (23/10/2026):** CONTACT-REV-01 closed for client/mock by shared pure canonical snapshot, with red/green service/UI tests. This does not close M10.4 real API/concurrency/native acceptance; see contact report S and latest execution log.
 
 **What:** Verify new email or phone before replacement.
 

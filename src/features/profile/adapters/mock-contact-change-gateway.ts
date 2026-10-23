@@ -10,11 +10,11 @@ import type {
   ContactChangeGateway,
   ContactChangeInput,
 } from "../services/contact-change-gateway";
-import type { ProfileGateway } from "../services/profile-gateway";
 import {
+  createMockProfileSnapshot,
   mockProfileRevision,
   type MockProfileOwner,
-} from "./mock-profile-gateway";
+} from "./mock-profile-snapshot";
 
 type Budget = {
   until: number;
@@ -31,7 +31,6 @@ type Attempt = {
 };
 type Options = {
   resolveOwner: (credential: SessionCredential) => MockProfileOwner;
-  profileGateway: ProfileGateway;
   currentIdentifier: (
     accountId: string,
     channel: VerificationChannel,
@@ -52,7 +51,6 @@ type Options = {
 
 export function createMockContactChangeGateway({
   resolveOwner,
-  profileGateway,
   currentIdentifier,
   isTaken,
   replace,
@@ -181,7 +179,7 @@ export function createMockContactChangeGateway({
       attempts.delete(id);
       return {
         status: "saved",
-        profile: await profileGateway.load(credential),
+        profile: createMockProfileSnapshot(account),
       };
     },
     cancel(id) {

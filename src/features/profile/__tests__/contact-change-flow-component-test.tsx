@@ -394,34 +394,65 @@ test("a failed conflict reload preserves the target and keeps blind retry blocke
   ).toBeEnabled();
 });
 
-test("characterizes CONTACT-REV-01: post-save read failure reports unchanged data although contact changed", async () => {
-  const { profileGateway, gateway } = await setup();
-  await open();
-  await start();
-  jest
-    .spyOn(profileGateway, "load")
-    .mockRejectedValueOnce(new Error("Synthetic post-commit read failure"));
-  await verify();
-  // Characterization of an OPEN defect, not acceptance of this feedback.
-  expect(
-    await screen.findByText(
-      resolveKnownMessage("MSG04", { serviceName: "Dịch vụ xác minh liên hệ" })
-        .message,
-    ),
-  ).toBeOnTheScreen();
-  expect(screen.getByLabelText("Mã xác minh")).toBeOnTheScreen();
-  expect(screen.queryByText("Đã cập nhật liên hệ")).not.toBeOnTheScreen();
-  await expect(
-    gateway.login("new.ha@example.invalid", MOCK_PASSWORD),
-  ).resolves.toBeDefined();
-  await expect(
-    gateway.login("ha@example.invalid", MOCK_PASSWORD),
-  ).rejects.toMatchObject({ code: "credentials" });
-  await verify();
-  expect(
-    await screen.findByText(resolveKnownMessage("MSG16").message),
-  ).toBeOnTheScreen();
-});
+test.each([
+  {
+    channel: "email" as const,
+    identifier: "new.ha@example.invalid",
+    masked: "n***@example.invalid",
+  },
+  { channel: "sms" as const, identifier: "0000000999", masked: "******0999" },
+])(
+  "CONTACT-REV-01: $channel succeeds without a follow-up read and retains the name draft",
+  async ({ channel, identifier, masked }) => {
+    const { profileGateway, gateway, store } = await setup();
+    await user().clear(screen.getByLabelText("Tên hiển thị"));
+    await user().paste(screen.getByLabelText("Tên hiển thị"), "Tên đang soạn");
+    await open(channel);
+    await start(identifier, channel);
+    const load = jest
+      .spyOn(profileGateway, "load")
+      .mockRejectedValue(new Error("Synthetic post-commit read failure"));
+    await verify();
+    expect(await screen.findByText("Đã cập nhật liên hệ")).toBeOnTheScreen();
+    expect(screen.queryByLabelText("Mã xác minh")).not.toBeOnTheScreen();
+    expect(
+      screen.queryByText(
+        resolveKnownMessage("MSG04", {
+          serviceName: "Dịch vụ xác minh liên hệ",
+        }).message,
+      ),
+    ).not.toBeOnTheScreen();
+    expect(load).not.toHaveBeenCalled();
+    await user().press(screen.getByRole("button", { name: "Về hồ sơ" }));
+    expect(screen.getByText(masked)).toBeOnTheScreen();
+    expect(screen.getByLabelText("Tên hiển thị")).toHaveDisplayValue(
+      "Tên đang soạn",
+    );
+    expect(store.getSnapshot()).toMatchObject({
+      status: "active",
+      session: {
+        contacts: expect.arrayContaining([
+          { channel, maskedRecipient: masked, verified: true },
+        ]),
+      },
+    });
+    await user().press(
+      screen.getByRole("button", { name: "Lưu tên hiển thị" }),
+    );
+    expect(
+      await screen.findByText("Hồ sơ cá nhân đã được lưu."),
+    ).toBeOnTheScreen();
+    expect(load).not.toHaveBeenCalled();
+    load.mockRestore();
+    await expect(
+      gateway.login(identifier, MOCK_PASSWORD),
+    ).resolves.toBeDefined();
+    if (channel === "email")
+      await expect(
+        gateway.login("ha@example.invalid", MOCK_PASSWORD),
+      ).rejects.toMatchObject({ code: "credentials" });
+  },
+);
 
 test("a Trader can add a phone without gaining Staff permissions", async () => {
   const { store } = await setup(true);

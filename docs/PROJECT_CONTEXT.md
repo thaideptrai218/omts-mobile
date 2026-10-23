@@ -42,7 +42,15 @@ Jira `OMTS-133` requires:
 
 ## Current code status
 
+### CONTACT-REV-01 approved fix — 23/10/2026
+
+**CLOSED in client/mock**, superseding the open finding below. User approved the shared pure snapshot proposal: profile load/save and contact verify now use `mock-profile-snapshot.ts`; contact gateway no longer depends on ProfileGateway or awaits a read after committing. Session/contact/profile merge guards and drafts are unchanged. No real API, validation/OTP/session policy, Customer/Order or native API changes.
+
+Four Email/Sms service/flow acceptance cases failed on old runtime, then passed unchanged after the fix. Replaced the historical characterization with success/no-follow-up-read acceptance; added detached DTO/readiness/pre-write regressions. Latest **60 suites / 418 tests PASS**, lint/typecheck/export and Doctor **21/21** pass; updated explicit local probe also passes. Full suite has no skipped tests. No new reproduced P1/P2 in the narrow self-review, not a production sign-off. Browser/device/QA API not rerun for the fix; any later demo opening is not acceptance evidence. OMTS-172 still 404; no Jira/SRS/backend writes. Report contact-change section S; local lesson 55/probe stay ignored. Commit/push current feature only, no develop merge. Backend response/concurrency/Customer/native gaps remain open.
+
 ### Contact-change review and backend refresh — 23/10/2026
+
+> Historical review before approved fix S above; its OPEN status and 410-test baseline are superseded for client/mock only.
 
 User requested review/report/commit/push current mobile branch only, no develop merge. **OPEN P2 CONTACT-REV-01** supersedes the assembly's no-P2 conclusion: mock replaces contact/deletes OTP attempt before awaiting profile load; a failing read leaves UI at OTP with MSG04 claiming unchanged data although the new contact already works and the old one does not. Source characterization and an explicit ignored failing acceptance probe reproduce it. No runtime fix applied by this review; report section R has proposal/acceptance. Delivery does not mean merge-ready or P2 closed.
 

@@ -67,6 +67,8 @@ StartContactChangeRequest chỉ channel/target; ConfirmContactRequest chỉ toke
 
 ### C. Confirm trả thiếu canonical profile; tránh lỗi đọc-sau-ghi
 
+**Cập nhật client/mock sau khi được duyệt:** CONTACT-REV-01 đã đóng bằng shared pure snapshot builder, xem báo cáo contact-change S. Đoạn tái hiện dưới đây là trạng thái lúc audit; fix mock không sửa backend confirm response hoặc chứng minh QA API đã sẵn sàng. Không fetch/re-audit backend ở lượt fix này.
+
 HTTP verify chỉ cấp token. ConfirmContactChangeAsync lưu xong trả ContactConfirmed(contact, oldDocumentsHidden, notice), không rowVersion/profile; API adapter phải GET profile lại. Mobile mock hiện có finding **CONTACT-REV-01** khi ghi xong mà đọc lại lỗi, UI báo sai rằng không đổi dữ liệu.
 
 **Đề xuất:** backend trả canonical profile/revision trong confirm để adapter không cần một GET quyết định success. Nếu vẫn hai request, client cần phân biệt “đã lưu, chưa tải lại hồ sơ” với “chưa ghi”; không tự gửi confirm/OTP lại hoặc claim unchanged. Không áp dụng fix/runtime API trong lượt review này.
@@ -96,7 +98,7 @@ Nguồn cho các điểm B–F: [ProfileService](https://github.com/thaideptrai2
 
 ## 5. Có thể tiếp tục gì và cần ai chốt?
 
-1. Mobile: xử lý finding CONTACT-REV-01 sau khi user duyệt fix; tiếp tục native QA. Không cần làm lại foundation vì backend thêm controller.
+1. Mobile: CONTACT-REV-01 đã được duyệt và sửa trong client/mock (contact report S); tiếp tục native QA. Vấn đề response API thật ở 3C vẫn mở. Không cần làm lại foundation vì backend thêm controller.
 2. Backend-dev: chỉ định QA ref/SHA/URL/OpenAPI, xử lý status checks và xác nhận auth accounts stack được deploy; không cần đợi mọi nhánh nghiệp vụ merge nếu nhóm có QA feature environment được phê duyệt.
 3. BA/backend: đồng bộ gate đã chốt, contact concurrency/current-unverified behavior, Customer side effects và recovery binding; thống nhất format/OTP metadata.
 4. Sau đó mới có lát API adapter nhỏ: login Mobile + SecureStore + refresh + bootstrap/gates trước, rồi profile/contact. Verify token giữ private trong adapter/service, không thêm một màn nghiệp vụ chỉ vì HTTP có thêm bước confirm.

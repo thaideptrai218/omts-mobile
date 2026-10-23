@@ -18,7 +18,6 @@ test("a delivery failure cannot change the old contact or emit a successful star
   const replace = jest.fn();
   const gateway = createMockContactChangeGateway({
     resolveOwner: () => account,
-    profileGateway: server.profileGateway,
     currentIdentifier: () => "ha@example.invalid",
     isTaken: () => false,
     replace,
@@ -30,6 +29,57 @@ test("a delivery failure cannot change the old contact or emit a successful star
   expect(replace).not.toHaveBeenCalled();
   expect(await server.profileGateway.load(credential)).toEqual(profile);
 });
+test("a replacement rejected before writing keeps the contact, revision and attempt for manual retry", async () => {
+  const { server, credential, input } = await contactChangeFixture();
+  const account = {
+    session: await server.gateway.inspect(credential),
+    profileRevision: 1,
+  };
+  const before = JSON.stringify(account);
+  const replace = jest.fn().mockImplementationOnce(() => {
+    throw new Error("Synthetic pre-write failure");
+  });
+  const gateway = createMockContactChangeGateway({
+    resolveOwner: () => account,
+    currentIdentifier: () => "ha@example.invalid",
+    isTaken: () => false,
+    replace,
+  });
+  const pending = challenge(await gateway.start(credential, input));
+  await expect(
+    gateway.verify(credential, pending.id, "246810"),
+  ).rejects.toThrow("Synthetic pre-write failure");
+  expect(JSON.stringify(account)).toBe(before);
+  expect(replace).toHaveBeenCalledTimes(1);
+  replace.mockImplementationOnce(() => {
+    account.session = {
+      ...account.session,
+      contacts: [
+        {
+          channel: "email",
+          maskedRecipient: "n***@example.invalid",
+          verified: true,
+        },
+      ],
+    };
+    account.profileRevision++;
+  });
+  await expect(
+    gateway.verify(credential, pending.id, "246810"),
+  ).resolves.toMatchObject({
+    status: "saved",
+    profile: {
+      revision: "mock-profile-mock-staff-ready-2",
+      account: { email: { value: "n***@example.invalid", verified: true } },
+    },
+  });
+  expect(replace).toHaveBeenCalledTimes(2);
+  await expect(
+    gateway.verify(credential, pending.id, "246810"),
+  ).rejects.toMatchObject({ code: "verification" });
+  expect(replace).toHaveBeenCalledTimes(2);
+});
+
 test.each([
   {
     channel: "email" as const,

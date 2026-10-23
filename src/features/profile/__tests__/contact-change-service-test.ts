@@ -24,6 +24,41 @@ test("a previous login's contact acceptance cannot alter a new login of the same
   expect(store.getSnapshot()).toEqual(current);
 });
 
+test.each([
+  { channel: "email" as const, identifier: "new.ha@example.invalid" },
+  { channel: "sms" as const, identifier: "0000000999" },
+])(
+  "CONTACT-REV-01: $channel returns the committed canonical snapshot without loading it again",
+  async ({ channel, identifier }) => {
+    const { service, server, credential, input, profile } =
+      await contactChangeFixture();
+    await service.start({ ...input, channel, identifier });
+    const load = jest
+      .spyOn(server.profileGateway, "load")
+      .mockRejectedValue(new Error("Synthetic post-commit read failure"));
+    const result = await service.verify("246810");
+    expect(result.status).toBe("saved");
+    expect(load).not.toHaveBeenCalled();
+    load.mockRestore();
+    if (result.status !== "saved") throw new Error("Expected saved contact");
+    expect(result.profile).toEqual(
+      await server.profileGateway.load(credential),
+    );
+    expect(result.profile.revision).not.toBe(profile.revision);
+    expect(result.profile.account).toMatchObject({
+      accountCode: profile.account.accountCode,
+      username: profile.account.username,
+      accessSummary: profile.account.accessSummary,
+    });
+    await expect(service.verify("246810")).rejects.toMatchObject({
+      code: "verification",
+    });
+    expect(await server.profileGateway.load(credential)).toEqual(
+      result.profile,
+    );
+  },
+);
+
 test("successful verification updates the current session contacts without changing permissions", async () => {
   const { service, store, input } = await contactChangeFixture();
   const before = store.getSnapshot();

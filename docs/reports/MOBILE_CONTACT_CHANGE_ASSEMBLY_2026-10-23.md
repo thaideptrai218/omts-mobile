@@ -6,7 +6,7 @@
 
 Base `bff9709`, nhánh `feature/OMTS-133-mobile-foundation`; working tree sạch trước triển khai. Lượt ghép ban đầu chưa commit; lượt review tiếp theo người dùng yêu cầu cập nhật báo cáo, kiểm tra backend và commit/push đúng nhánh hiện tại, chưa merge develop. Không sửa Jira/SRS/backend/Figma. Đây là lát mock M10.3, không phải nghiệm thu đầy đủ UC05 hay OMTS-172/133.
 
-**Review mới nhất:** có **P2 CONTACT-REV-01 OPEN** về đọc hồ sơ thất bại sau khi contact đã được ghi. **59 suites / 410 tests PASS**, nhưng một acceptance probe local FAIL và characterization trong source tái hiện lỗi; không được dùng test xanh để đóng finding. Chưa sửa runtime trong lượt review. Xem R; cập nhật backend riêng tại `BACKEND_READINESS_RECHECK_2026-10-23.md`.
+**Cập nhật mới nhất — mục S:** người dùng đã duyệt sửa; **P2 CONTACT-REV-01 CLOSED trong client/mock**. Dùng chung pure snapshot builder và bỏ lần load sau ghi; bốn acceptance tests đã đỏ trên code cũ rồi xanh sau fix. **60 suites / 418 tests PASS**, lint/typecheck/export và Doctor 21/21 PASS. Mục R giữ nguyên bằng chứng lịch sử, không còn là trạng thái hiện hành. API thật/native QA vẫn chưa nghiệm thu; cập nhật backend riêng tại `BACKEND_READINESS_RECHECK_2026-10-23.md`.
 
 ## C1 — đọc yêu cầu và hợp đồng
 
@@ -82,6 +82,8 @@ README/context/plan cập nhật ở lượt ghép ban đầu; bài học 53 gi�
 
 ### R2. P2 CONTACT-REV-01 — mutation thành công nhưng lỗi đọc sau đó bị trình bày như chưa ghi
 
+> Đây là bằng chứng lúc review, trước khi được duyệt sửa. Trạng thái hiện hành: CLOSED trong client/mock, xem S. Không suy ra API thật đã được sửa.
+
 **OPEN, tái hiện được bằng failure injection trong mock contract.** `mock-contact-change-gateway.ts` gọi replace (cập nhật identifier/contacts/revision), xóa attempt, rồi await profileGateway.load. Nếu load ném lỗi, service không nhận saved/canonical profile; hook catch hiện MSG04 khẳng định “dữ liệu OMTS không thay đổi”, UI vẫn ở OTP. Mã đã dùng và attempt đã xóa nên verify lại nhận MSG16. Canonical account thực tế đã đổi, old alias không login được, new alias login được. Parent/session UI chưa nhận kết quả canonical.
 
 **Tái hiện:** vào hồ sơ → thay email tổng hợp → start OTP → cấu hình profileGateway.load ném lỗi một lần ở lần đọc sau verify → nhập đúng mã. Test source `characterizes CONTACT-REV-01: post-save read failure reports unchanged data although contact changed` xác nhận banner MSG04, vẫn có ô OTP, không success, old/new login phản ánh dữ liệu đã đổi; verify lại MSG16. Đây là characterization của lỗi, không phải chấp nhận UX đó. Không claim lỗi này xuất hiện trong một lần bấm default mock không có failure injection.
@@ -118,3 +120,45 @@ Không rerun browser/device/QA API; component harness không thay bằng chứng
 Đã fetch/read backend mới tại ACS `27a8673` và inventory các nhánh 208/200/199/209/210/211/212/SDS; develop vẫn `c5360ca`. Các API trước đây thiếu đã có ở feature, HTTP string enums và devices/Zalo đã có. PR stack chưa merged; gate phone-only, concurrency/Customer/recovery binding và QA deployment còn cần đồng bộ. PR #7 có GitGuardian failure chưa kết luận nguyên nhân; không báo toàn stack CI xanh. Báo cáo `BACKEND_READINESS_RECHECK_2026-10-23.md` ghi SHA, endpoint mapping, static gaps, nguồn và điều kiện tiếp tục cụ thể.
 
 Commit/push source ghép đã review, tests và tài liệu nhóm lên duy nhất `feature/OMTS-133-mobile-foundation`; không force/merge/PR hoặc thay backend. Probe/bài học 53/54/env/export giữ local. Mobile remote trước delivery: feature `bff97096db37bcb1dfa3d656534b1445486d504c`, develop `063acd5e193eedfa4e45236b720ddc3cb16a505a`. HEAD/remote và develop được kiểm tra lại sau push trong bàn giao cuối. Delivery không đóng P2 và không đồng nghĩa nghiệm thu/merge.
+
+## S — sửa CONTACT-REV-01 theo phê duyệt, hồi quy và tự review
+
+### S1. Phạm vi và thiết kế
+
+Người dùng yêu cầu sửa P2 theo đề xuất R2, thêm test, tự review, báo cáo và commit/push nhánh hiện tại, không merge develop. Base `b399d515ad97c46ce2ed7563949a97fea43df2bb`, working tree sạch trước sửa. Đọc lại quy tắc repo/context, UC05/UC08 và source liên quan; OMTS-172 vẫn trả **404 Issue not found**, không suy đoán trạng thái hoặc parent. Không sửa Jira/SRS/Figma/backend, không thay layout, validation, OTP TTL/limits, quyền, session policy hay liên kết Customer/Order. Không chạm Expo/React Native API hoặc thêm dependency.
+
+Tách `MockProfileOwner`, `mockProfileRevision` và `createMockProfileSnapshot` sang `mock-profile-snapshot.ts`. Hàm chỉ đọc account đã có trong process memory rồi dựng DTO mới: displayName, opaque revision, định danh, grants dạng chuỗi và contacts đã che. Không gọi gateway/storage/mạng, không sửa account; contact objects và accessSummary được dựng mới. Đây là cùng mapping cũ, không tự bổ sung trường hoặc thay contract.
+
+Profile load/save và contact verify cùng dùng builder. Contact gateway bỏ hẳn dependency ProfileGateway: sau các guard, replace synchronous → xóa attempt → dựng canonical snapshot → trả saved. Không còn await/profile load sau write để biến ghi thành công thành lỗi đọc. Profile load và save vẫn kiểm tra readiness, validate/revision như trước. Service vẫn giữ ProfileGateway cho tải hồ sơ và explicit conflict reload; không xóa khả năng reload để né lỗi. UI/session nhận canonical response qua các guard hiện có, không đổi catch/MSG04 toàn cục hoặc tự retry OTP.
+
+### S2. Test đỏ → xanh và ca bổ sung
+
+Trước sửa runtime, thay characterization của lỗi bằng acceptance cho Email/SĐT và thêm acceptance service hai kênh. Lệnh `npm test -- --runTestsByPath src/features/profile/__tests__/contact-change-service-test.ts src/features/profile/__tests__/contact-change-flow-component-test.tsx --testNamePattern CONTACT-REV-01` cho **4 FAIL / 23 không được chọn**: hai service reject `Synthetic post-commit read failure`; hai flow không tìm thấy “Đã cập nhật liên hệ”, vẫn ở OTP. Failure injection được đặt sau setup/start, không làm hỏng initial load. Sau sửa, **chính bốn test đó PASS**, không đổi điều kiện nghiệm thu cho xanh. TestNamePattern là lượt chạy riêng; lượt full bên dưới không skip test.
+
+Hai service cases đòi saved/canonical profile bằng dữ liệu đọc độc lập sau khi restore spy, revision mới, identity/grants giữ nguyên và verify lần hai bị từ chối, không tăng revision lần nữa. Hai flow cases giữ profile load luôn reject nếu bị gọi, nhưng đòi success/no OTP/no MSG04, masked contact trong session, giữ draft tên và lưu tên được bằng revision mới **mà không gọi load**. Email mới đăng nhập được, email cũ bị từ chối.
+
+Thêm bốn builder/guard cases: Staff/Trader label, missing contacts không bịa giá trị, DTO detached/không sửa account và readiness vẫn chặn load/save/start. Một gateway case cho replace ném lỗi **trước bất kỳ write nào**: old contact/revision giữ nguyên, attempt còn để retry thủ công; lần thành công consumes attempt một lần. Test này không chứng minh rollback khi callback đã ghi một phần rồi ném lỗi; không thiết kế rollback giả cho mock.
+
+Normal discovery: 59/410 → **60 suites / 418 tests** (bỏ 1 characterization, thêm 2 flow acceptance + 2 service + 4 builder/guard + 1 pre-write). Bốn suites contact/snapshot có **45 tests PASS**. Probe local được cập nhật từ mô hình one-shot load rejection sang persistent rejection + assert không gọi load, sau đó restore rồi đọc kiểm chứng. Vì fix loại bỏ lần đọc cũ, giữ one-shot probe nguyên trạng sẽ khiến lần đọc kiểm chứng phía sau nhận lỗi chưa tiêu thụ; không gọi đó là lỗi mới. Probe cập nhật **1 PASS**, ngoài normal discovery; red/green chính nằm ở source tests, không tuyên bố probe nguyên bản đã xanh không chỉnh.
+
+### S3. Gates và lỗi thực tế
+
+| Kiểm tra chạy mới | Kết quả |
+| --- | --- |
+| `npm test` | **60 suites / 418 tests PASS**, 41,149 giây, không skipped |
+| `npm run lint`, `npm run typecheck` | PASS, lint không warning |
+| `npx expo-doctor` | **21/21 PASS** |
+| `npx expo export --platform web --output-dir .expo/contact-rev01-fix-2026-10-23` | PASS, 17 routes |
+| Local CONTACT-REV-01 probe chạy riêng | **1 PASS**, ignored/local |
+
+Export vẫn cảnh báo NO_COLOR bị FORCE_COLOR ghi đè: xung đột màu terminal, exit 0; không đổi env người dùng hoặc tuyên bố đã sửa. Một lệnh inspect dùng nhầm `use-contact-change.ts` và wildcard `hooks/*` cho rg trên Windows bị path-not-found/OS error 123; sửa bằng `rg --files` rồi đọc đúng `use-contact-change-controller.ts` và tìm trong thư mục, không phải lỗi app. Một batch apply_patch bị từ chối do dùng nửa dòng Markdown làm context; kiểm tra source xác nhận chưa áp dụng rồi dùng nguyên dòng/heading đúng. Không sửa file bằng shell, không giấu lỗi trong báo cáo. Chi tiết lệnh/ý nghĩa/cách kiểm tra nằm trong bài học local 55.
+
+### S4. Tự review và giới hạn nghiệm thu
+
+Đọc lại diff runtime và mapping cũ; kiểm tra shared source → identity/revision → scope → hook → profile merge. Không có dependency vòng giữa hai gateway; builder độc lập chỉ import type. Guard readiness/duplicate/revision trước write, OTP TTL/số lần, username/grants và secret handling giữ nguyên. Test wrong/expired/offline/conflict/reload-failure, pending/late logout, stale same-account scope, MSG19 và old-contact recovery vẫn PASS trong full suite. Không ghi nhận P1/P2 mới tái hiện trong phạm vi fix; không phải bảo đảm không còn mọi lỗi.
+
+**CONTACT-REV-01 CLOSED chỉ trong client/mock.** Không sửa API thật và không suy builder synchronous tương đương transaction DB. Backend confirm response thiếu canonical profile/revision vẫn cần giải pháp 3C của báo cáo backend. Unknown network outcome, QA/native/Expo Go, keyboard/accessibility và production readiness chưa được xác minh ở lượt này. Không rerun browser/device hoặc dùng ambient tab làm bằng chứng UI. Canonical format và Customer/Order boundary vẫn như C5.
+
+### S5. Bàn giao
+
+Chỉ stage code/tests và tài liệu nhóm; `docs/learning/55-...md`, probe, env và export giữ ignored/local. Commit/push trên **feature/OMTS-133-mobile-foundation**, không force, PR hoặc merge develop. Trước push, remote feature `b399d515ad97c46ce2ed7563949a97fea43df2bb`, remote develop `063acd5e193eedfa4e45236b720ddc3cb16a505a`. Kiểm tra diff/staged diff, HEAD/remote và develop sau push; kết quả cuối được ghi ở bàn giao chat để không tự tham chiếu SHA trong chính commit. Workflow hiện chỉ chạy main/develop push hoặc PR vào hai nhánh đó, nên feature-only push không được gọi là có CI runner xanh.

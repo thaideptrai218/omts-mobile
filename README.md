@@ -85,9 +85,10 @@ Lát khôi phục: [phạm vi, kiểm thử và giới hạn](docs/reports/MOBIL
 Lát đăng ký: [báo cáo ghép Trader mock](docs/reports/MOBILE_TRADER_REGISTRATION_ASSEMBLY_2026-10-23.md).
 Lát đổi liên hệ: [phạm vi, test và giới hạn mock](docs/reports/MOBILE_CONTACT_CHANGE_ASSEMBLY_2026-10-23.md).
 
-Review đổi liên hệ (mục R): **CONTACT-REV-01 P2 còn mở** — lỗi đọc hồ sơ sau khi
-ghi có thể báo chưa đổi dù contact đã lưu. 410 tests PASS không đóng finding;
-báo cáo có test tái hiện và đề xuất sửa, chưa sửa runtime trong lượt review.
+Fix đổi liên hệ (mục S): **CONTACT-REV-01 P2 đã đóng trong client/mock** — trả
+canonical snapshot trực tiếp sau ghi, không chờ lần tải hồ sơ có thể thất bại.
+Bốn acceptance tests đỏ trước/xanh sau; **60 suites / 418 tests PASS**, lint,
+typecheck/export và Doctor 21/21 PASS. API thật/native QA vẫn còn mở.
 Backend đã có thêm API ở nhánh feature, chưa tự bật API Mobile:
 [recheck 23/10 và các điểm cần đồng bộ](docs/reports/BACKEND_READINESS_RECHECK_2026-10-23.md).
 
