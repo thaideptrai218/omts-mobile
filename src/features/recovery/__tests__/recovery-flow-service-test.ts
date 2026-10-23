@@ -36,6 +36,99 @@ test("proof stays outside presentation results and successful completion clears 
   expect(replacePassword).toHaveBeenCalledTimes(1);
 });
 
+test("REC-REV-02: adapter offline outcome keeps proof for explicit retry, not automatic completion", async () => {
+  const { service, gateway, replacePassword } = setup();
+  await service.start("ha@example.invalid");
+  await service.verify(MOCK_VERIFICATION_CODE);
+  const cancel = jest.spyOn(gateway, "cancel");
+  const complete = jest
+    .spyOn(gateway, "complete")
+    .mockResolvedValueOnce({ status: "offline" });
+
+  expect(
+    await service.completion.complete({ newPassword: "Recovered2026" }),
+  ).toEqual({ status: "offline" });
+  expect(complete).toHaveBeenCalledTimes(1);
+  expect(cancel).not.toHaveBeenCalled();
+  expect(replacePassword).not.toHaveBeenCalled();
+
+  expect(
+    await service.completion.complete({ newPassword: "Recovered2026" }),
+  ).toEqual({ status: "completed" });
+  expect(complete).toHaveBeenCalledTimes(2);
+  expect(complete.mock.calls[1][0]).toEqual(complete.mock.calls[0][0]);
+  expect(replacePassword).toHaveBeenCalledTimes(1);
+  expect(cancel).toHaveBeenCalledTimes(1);
+});
+
+test("retaining proof after adapter offline never extends its expiry", async () => {
+  jest.useFakeTimers();
+  try {
+    const { service, gateway, replacePassword } = setup();
+    await service.start("ha@example.invalid");
+    await service.verify(MOCK_VERIFICATION_CODE);
+    const complete = jest
+      .spyOn(gateway, "complete")
+      .mockResolvedValueOnce({ status: "offline" });
+    expect(
+      await service.completion.complete({ newPassword: "Recovered2026" }),
+    ).toEqual({ status: "offline" });
+    jest.advanceTimersByTime(300_000);
+
+    expect(
+      await service.completion.complete({ newPassword: "Recovered2026" }),
+    ).toEqual({ status: "attempt-invalid" });
+    expect(
+      await service.completion.complete({ newPassword: "Recovered2026" }),
+    ).toEqual({ status: "attempt-invalid" });
+    expect(complete).toHaveBeenCalledTimes(2);
+    expect(replacePassword).not.toHaveBeenCalled();
+  } finally {
+    jest.useRealTimers();
+  }
+});
+
+test("late adapter offline result cannot revive proof after disposal and activation", async () => {
+  const { service, gateway, replacePassword } = setup();
+  await service.start("ha@example.invalid");
+  await service.verify(MOCK_VERIFICATION_CODE);
+  const release = deferredResult<{ status: "offline" }>();
+  const complete = jest
+    .spyOn(gateway, "complete")
+    .mockReturnValueOnce(release.promise);
+  const pending = service.completion.complete({ newPassword: "Recovered2026" });
+  service.dispose();
+  service.activate();
+  release.resolve({ status: "offline" });
+
+  expect(await pending).toEqual({ status: "attempt-invalid" });
+  expect(
+    await service.completion.complete({ newPassword: "Recovered2026" }),
+  ).toEqual({ status: "attempt-invalid" });
+  expect(complete).toHaveBeenCalledTimes(1);
+  expect(replacePassword).not.toHaveBeenCalled();
+});
+
+test("adapter terminal invalid outcome still consumes and cancels the current proof", async () => {
+  const { service, gateway, replacePassword } = setup();
+  await service.start("ha@example.invalid");
+  await service.verify(MOCK_VERIFICATION_CODE);
+  const cancel = jest.spyOn(gateway, "cancel");
+  const complete = jest
+    .spyOn(gateway, "complete")
+    .mockResolvedValueOnce({ status: "attempt-invalid" });
+
+  expect(
+    await service.completion.complete({ newPassword: "Recovered2026" }),
+  ).toEqual({ status: "attempt-invalid" });
+  expect(
+    await service.completion.complete({ newPassword: "Recovered2026" }),
+  ).toEqual({ status: "attempt-invalid" });
+  expect(cancel).toHaveBeenCalledWith("mock-recovery-code-1");
+  expect(complete).toHaveBeenCalledTimes(1);
+  expect(replacePassword).not.toHaveBeenCalled();
+});
+
 test("offline operations never call the gateway; offline completion retains valid proof for explicit retry", async () => {
   const { service, gateway, offline } = setup();
   const start = jest.spyOn(gateway, "start");

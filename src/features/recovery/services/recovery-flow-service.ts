@@ -34,7 +34,7 @@ export function createRecoveryFlowService(
       const result = await gateway.complete(proof, newPassword);
       if (!active || generation !== startedAt)
         return { status: "attempt-invalid" };
-      reset();
+      if (result.status !== "offline") reset();
       return result;
     },
   };

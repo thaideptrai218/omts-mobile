@@ -3,6 +3,9 @@ import { validateNewPassword } from "@/shared/security/new-password-policy";
 import { MOCK_VERIFICATION_CODE } from "@/features/session/adapters/mock-session-fixtures";
 import type { RecoveryGateway } from "../services/recovery-gateway";
 
+const codeTtlMs = 5 * 60_000;
+const rateWindowMs = 5 * 60_000;
+
 export type MockRecoveryOwner = Readonly<{
   accountId: string;
   replacePassword: (password: string) => void;
@@ -40,10 +43,11 @@ export function createMockRecoveryGateway(
   let sequence = 0;
 
   function issue(identifier: string): VerificationChallenge {
+    const issuedAt = now();
     let budget = budgets.get(identifier);
-    if (!budget || now() >= budget.until) {
+    if (!budget || issuedAt >= budget.until) {
       budget = {
-        until: now() + 5 * 60_000,
+        until: issuedAt + rateWindowMs,
         sends: 0,
         failures: 0,
         nextSend: 0,
@@ -52,20 +56,20 @@ export function createMockRecoveryGateway(
     }
     // Same public response even when unknown, throttled or ineligible.
     const allowed =
-      budget.sends < 3 && budget.failures < 5 && now() >= budget.nextSend;
+      budget.sends < 3 && budget.failures < 5 && issuedAt >= budget.nextSend;
     for (const [id, attempt] of attempts) {
       if (identifiers.get(id) === identifier) attempt.cancelled = true;
     }
     if (allowed) {
       budget.sends++;
-      budget.nextSend = now() + 60_000;
+      budget.nextSend = issuedAt + 60_000;
     }
     const challenge: VerificationChallenge = {
       id: `mock-recovery-code-${++sequence}`,
       purpose: "accountRecovery",
       channel: identifier.includes("@") ? "email" : "sms",
       maskedRecipient: maskIdentifier(identifier),
-      expiresAtEpochMs: budget.until,
+      expiresAtEpochMs: issuedAt + codeTtlMs,
       resendAvailableAtEpochMs: budget.nextSend,
       attemptsRemaining: Math.max(0, 5 - budget.failures),
       sendsRemaining: Math.max(0, 3 - budget.sends),

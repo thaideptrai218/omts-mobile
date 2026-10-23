@@ -53,6 +53,7 @@ không tự chuyển sang mock khi API lỗi.
   Trong cửa sổ mock 5 phút, mã lần gửi đầu là `246810`, lần hai `246811`, lần ba
   `246812`; gửi lại cách nhau tối thiểu 60 giây, mã cũ mất hiệu lực. Giới hạn
   5 lần nhập sai/3 lần gửi; quay lại nhập liên hệ không làm mới ngân sách này.
+  Mỗi mã mới có đủ 5 phút kể từ lần gửi của nó, độc lập cửa sổ giới hạn gửi.
   Đây là dữ liệu thử và thời gian mock, không phải hợp đồng endpoint thật.
 - `an@example.invalid` chưa xác minh nên chỉ nhận MSG15, không reset được.
   Số tổng hợp `0000000123` cũng chỉ dùng được sau khi An hoàn tất onboarding
@@ -66,9 +67,9 @@ Lát tiếp theo: [MSG19 và hồ sơ mock](docs/reports/MOBILE_MSG19_PROFILE_AS
 Lát thông báo: [báo cáo ghép mock](docs/reports/MOBILE_NOTIFICATION_ASSEMBLY_2026-10-22.md).
 Lát khôi phục: [phạm vi, kiểm thử và giới hạn](docs/reports/MOBILE_RECOVERY_ASSEMBLY_2026-10-23.md).
 
-Review recovery còn hai lỗi cần sửa: OTP gửi lại đang lấy hạn của cửa sổ đầu,
-và outcome offline từ adapter làm mất proof khi thử lại. Xem mục R của báo cáo;
-test hồi quy xanh không có nghĩa hai lỗi này đã được đóng. Chưa nghiệm thu API/native.
+Hai lỗi review REC-REV-01/02 đã sửa và có test hồi quy: OTP gửi lại có thời hạn
+riêng; outcome offline từ adapter giữ proof để thử lại thủ công, nhưng không
+giữ mật khẩu hay tự gửi lại. Xem mục S của báo cáo; chưa nghiệm thu API/native.
 
 | Script | Purpose |
 |---|---|

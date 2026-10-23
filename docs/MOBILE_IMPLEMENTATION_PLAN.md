@@ -7,6 +7,15 @@
 
 ## Execution log
 
+### 23/10/2026 — approved REC-REV-01/02 fixes and regression delivery
+
+- User explicitly requested both P2 fixes, regressions, self-review, report and commit/push current branch, no develop merge. Base `005d9e9`; fresh OMTS-164 read still 404, no Jira/SRS/backend writes. No UI redesign/native API or new session/offline-queue policy.
+- REC-REV-01 **closed in mock**: separate code TTL and rate-window constants, calculate expiry from a single issuance timestamp. Existing send/cooldown/failure rules remain; crossing the first window does not refill the active code's attempts/sends. Old codes still cancel.
+- REC-REV-02 **closed in client service**: do not reset proof for adapter offline outcome, but keep generation/dispose checks first and terminal cleanup intact. Password fields still clear and retry is manual; no TTL extension or queue.
+- Added **12 source regressions**: 6 gateway, 4 service, 2 form-flow tests. Primary source tests first failed 3 cases on old code, then passed without weakening assertions. Both former local probes also pass; fixes no longer rely on untracked probes for regression coverage.
+- Final gates: **53 suites / 334 tests PASS**, lint/typecheck/export, Doctor **21/21** pass. Self-review found no remaining reproduced P1/P2 in these two fixes. No browser/device rerun; actual form behavior is exercised in component tests. API/native acceptance remains open.
+- Report section S: `docs/reports/MOBILE_RECOVERY_ASSEMBLY_2026-10-23.md`; ignored lesson 49. Commit/push current feature only; no merge/PR. Earlier open-finding review below is historical and superseded for REC-REV-01/02 only.
+
 ### 23/10/2026 — recovery re-review and requested branch delivery
 
 - Reviewed the uncommitted recovery assembly against UC03/Table 3.4-3 and source; fresh OMTS-164 read still returned 404. No Jira/SRS/backend/UI/runtime edits in the review.

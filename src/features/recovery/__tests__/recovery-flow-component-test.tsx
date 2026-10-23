@@ -286,6 +286,52 @@ test("resend cooldown and rotated OTP work through the real verification form", 
   expect(await screen.findByLabelText("Mật khẩu mới")).toBeOnTheScreen();
 });
 
+test("resent OTP still opens the password form after the first code's expiry", async () => {
+  await setup();
+  await openRecovery();
+  await send();
+  await act(() => jest.advanceTimersByTime(60_000));
+  await user().press(screen.getByRole("button", { name: "Gửi lại mã" }));
+  await act(() => jest.advanceTimersByTime(240_001));
+
+  expect(screen.queryByText("Mã hiện tại đã hết hạn.")).not.toBeOnTheScreen();
+  await verify("246811");
+  expect(await screen.findByLabelText("Mật khẩu mới")).toBeOnTheScreen();
+});
+
+test("adapter offline clears both password fields and permits only explicit reset retry", async () => {
+  const { recoveryGateway, connect } = await setup();
+  const complete = jest
+    .spyOn(recoveryGateway, "complete")
+    .mockResolvedValueOnce({ status: "offline" });
+  await openRecovery();
+  await send();
+  await verify();
+  await screen.findByLabelText("Mật khẩu mới");
+  await enterPassword();
+  await user().press(screen.getByRole("button", { name: "Đặt lại mật khẩu" }));
+
+  expect(
+    await screen.findByText(resolveKnownMessage("MSG07").message),
+  ).toBeOnTheScreen();
+  expect(screen.getByLabelText("Mật khẩu mới")).toHaveDisplayValue("");
+  expect(screen.getByLabelText("Nhập lại mật khẩu mới")).toHaveDisplayValue("");
+  expect(
+    screen.queryByText("Đặt lại mật khẩu thành công"),
+  ).not.toBeOnTheScreen();
+  expect(complete).toHaveBeenCalledTimes(1);
+  await act(() => connect("offline"));
+  await act(() => connect("online"));
+  expect(complete).toHaveBeenCalledTimes(1);
+
+  await enterPassword();
+  await user().press(screen.getByRole("button", { name: "Đặt lại mật khẩu" }));
+  expect(
+    await screen.findByText("Đặt lại mật khẩu thành công"),
+  ).toBeOnTheScreen();
+  expect(complete).toHaveBeenCalledTimes(2);
+});
+
 test("proof expiry clears password fields and cannot display reset success", async () => {
   await setup();
   await openRecovery();

@@ -30,6 +30,76 @@ test("eligible and ineligible contacts receive identical public request envelope
   );
 });
 
+test.each([60_000, 299_999])(
+  "REC-REV-01: resend at %i ms gives the new code its own five-minute lifetime",
+  async (sentAt) => {
+    const { gateway, advance } = setup();
+    const first = await gateway.start("ha@example.invalid");
+    advance(sentAt);
+    const second = await gateway.resend(first.id);
+
+    expect(second.expiresAtEpochMs - sentAt).toBe(300_000);
+    expect(second.id).not.toBe(first.id);
+    expect(
+      await gateway.verify(first.id, MOCK_VERIFICATION_CODE),
+    ).toMatchObject({ status: "invalid" });
+  },
+);
+
+test.each([
+  { elapsed: 299_999, status: "verified" },
+  { elapsed: 300_000, status: "invalid" },
+])(
+  "resent code is $status at its own lifetime boundary $elapsed",
+  async ({ elapsed, status }) => {
+    const { gateway, advance } = setup();
+    const first = await gateway.start("ha@example.invalid");
+    advance(60_000);
+    const second = await gateway.resend(first.id);
+    advance(elapsed);
+
+    expect(await gateway.verify(second.id, "246811")).toMatchObject({ status });
+  },
+);
+
+test("resend and crossing the first window do not refill the active code's wrong-entry budget", async () => {
+  const { gateway, advance } = setup();
+  const first = await gateway.start("ha@example.invalid");
+  await gateway.verify(first.id, "000000");
+  await gateway.verify(first.id, "000000");
+  advance(60_000);
+  const second = await gateway.resend(first.id);
+  expect(second.attemptsRemaining).toBe(3);
+  advance(240_001);
+  for (let index = 0; index < 3; index++)
+    await gateway.verify(second.id, "000000");
+
+  expect(await gateway.verify(second.id, "246811")).toMatchObject({
+    status: "invalid",
+    challenge: { attemptsRemaining: 0 },
+  });
+  expect(await gateway.resend(second.id)).toMatchObject({
+    id: second.id,
+    attemptsRemaining: 0,
+  });
+});
+
+test("crossing the first window does not refill sends or replace an active third code", async () => {
+  const { gateway, advance } = setup();
+  const first = await gateway.start("ha@example.invalid");
+  advance(60_000);
+  const second = await gateway.resend(first.id);
+  advance(60_000);
+  const third = await gateway.resend(second.id);
+  advance(180_001);
+
+  expect(third.sendsRemaining).toBe(0);
+  expect(await gateway.resend(third.id)).toEqual(third);
+  expect(await gateway.verify(third.id, "246812")).toMatchObject({
+    status: "verified",
+  });
+});
+
 test("valid OTP permits one password reset, not a session; invalid password does not consume proof", async () => {
   const { gateway, replacePassword } = setup();
   const challenge = await gateway.start("ha@example.invalid");

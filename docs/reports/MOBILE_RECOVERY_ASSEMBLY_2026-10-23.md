@@ -1,10 +1,12 @@
 # Ghép Quên mật khẩu bằng mock — 23/10/2026
 
-> **Kết luận review bàn giao mới nhất:** còn hai finding P2 REC-REV-01/02, đã tái hiện, chưa sửa runtime. 53 suites/322 regression tests PASS không bao gồm hai probe đối chiếu yêu cầu đang FAIL. Xem mục R bên dưới; không coi báo cáo này là chấp thuận merge hay nghiệm thu production.
+> **Kết luận mới nhất, sau lượt sửa được duyệt:** REC-REV-01/02 đã đóng trong phạm vi mock/client, thêm 12 regression source; 53 suites/334 tests PASS và hai probe cũ cũng PASS. Xem mục S. Mục R giữ nguyên lịch sử phát hiện lỗi, không phải trạng thái hiện tại. Chưa merge develop hay nghiệm thu API/native.
 
 ## Phạm vi được duyệt
 
 Lượt ghép ban đầu: request → OTP → mật khẩu mới → login theo từng lát; tự review và báo cáo/bài học local. Baseline commit 365ca1d, 50 suites/292 tests; lúc đó chưa được yêu cầu commit/push. Lượt tiếp theo, người dùng yêu cầu review lại, cập nhật báo cáo rồi commit/push **nhánh hiện tại**, chưa merge develop. Cả hai lượt đều không tích hợp API hay sửa backend/SRS/Jira.
+
+Lượt sửa sau review: người dùng đã yêu cầu rõ sửa cả hai P2, thêm test, tự review, cập nhật báo cáo và commit/push nhánh hiện tại, không merge develop. Base của lượt sửa là `005d9e9`.
 
 ## F1 — nguồn và thiết kế
 
@@ -18,7 +20,7 @@ Gateway khôi phục độc lập session login; challenge/proof sống trong b�
 
 Dùng chung tài khoản auth, không tạo một bản sao mật khẩu riêng cho recovery. Complete đổi mật khẩu rồi xóa tất cả lease của đúng account, reset mã onboarding; không đổi role/grants/profile/preferences, không tự tạo session. Phiên app cũ bị từ chối và dọn về login/MSG19 khi có protected request tiếp theo; không có server-push logout. Tài khoản khác không bị revoke.
 
-Giới hạn mock: cửa sổ mã/ngân sách 5 phút, 5 lần nhập sai, 3 lần gửi; resend không nạp lại số lần sai. Cooldown 60 giây, proof TTL 5 phút là cấu hình thử, không chốt chính sách API. Mã lần gửi 1/2/3 lần lượt 246810/246811/246812 trong cùng cửa sổ; resend làm mã trước mất hiệu lực. Đổi liên hệ/thoát hủy challenge và proof nhưng không reset ngân sách chống spam. Reload toàn bộ app reset tất cả vì không có server/storage thật.
+Giới hạn hiện tại sau mục S: mỗi mã có 5 phút từ lần gửi riêng, độc lập cửa sổ ngân sách mock 5 phút; 5 lần nhập sai/3 lần gửi, resend không nạp lại số lần sai. Cooldown 60 giây theo SRS; proof TTL 5 phút và rate-window là cấu hình mock, không chốt contract API. Mã lần gửi 1/2/3 lần lượt 246810/246811/246812 trong cùng cửa sổ; resend làm mã trước mất hiệu lực. Đổi liên hệ/thoát hủy challenge và proof nhưng không reset ngân sách chống spam. Reload toàn bộ app reset tất cả vì không có server/storage thật.
 
 ## F3 — controller và route
 
@@ -102,7 +104,7 @@ Review source đang chưa commit trên `feature/OMTS-133-mobile-foundation`, bas
 - Đề xuất sửa: giữ proof nếu gateway trả offline rõ ràng; chỉ reset khi completed/attempt-invalid. Vẫn phải loại response muộn sau dispose và xóa field password tại controller, không lưu password/auto-retry. Nếu backend không hỗ trợ outcome offline này thì phải thu hẹp contract và mapping một cách nhất quán, không để union hứa hành vi service không giữ được.
 - Nghiệm thu sửa: offline outcome → MSG07/field trống, reconnect không tự gọi complete, manual retry dùng proof còn hạn; hết hạn/dispose vẫn không được reset thành công. Không coi network timeout không rõ kết quả là một offline outcome chắc chắn chưa thực thi.
 
-Hai lỗi chưa được sửa vì lượt hiện tại yêu cầu **review + báo cáo + commit/push**, không yêu cầu thay đổi runtime. Không cần sửa SRS/Jira để chữa REC-REV-01; cần lượt triển khai sửa và kiểm chứng riêng. Nhánh được bàn giao kèm finding, không phải khuyến nghị merge.
+Trong lượt R, hai lỗi chưa được sửa vì yêu cầu lúc đó là **review + báo cáo + commit/push**, không yêu cầu thay đổi runtime. Lượt S sau đó được người dùng duyệt sửa, xem kết quả bên dưới. Không sửa SRS/Jira để chữa bug.
 
 ### R3. Bằng chứng tái hiện và hồi quy
 
@@ -131,3 +133,47 @@ Không chạy lại browser hoặc thiết bị thật trong lượt R. 319→32
 ### R4. Phạm vi bàn giao Git
 
 Commit gồm source ghép recovery từ lượt trước, ba regression bổ sung và README/context/plan/báo cáo cập nhật. Không đưa `docs/learning/`, probe, screenshot, `.env.local`, `.expo/` hoặc dependencies vào commit. Remote trước push: feature 365ca1d; develop 063acd5e193eedfa4e45236b720ddc3cb16a505a. Chỉ push `HEAD:refs/heads/feature/OMTS-133-mobile-foundation`, không merge/rebase/force-push, không tạo PR hay thay Jira. SHA commit và xác nhận remote sau push được ghi trong phản hồi bàn giao, tránh tự tham chiếu SHA ngay trong nội dung commit đó.
+
+## S — Sửa REC-REV-01/02 sau khi được duyệt
+
+### S1. Nguồn và bước tái hiện trước sửa
+
+Đọc lại source, UC03 và Table 3.4-3: mã có hiệu lực 5 phút từ lúc gửi, tối đa 5 lần sai/3 lần gửi cách nhau 60 giây. Jira OMTS-164 đọc lại vẫn trả `404 Issue not found`; không suy trạng thái ticket. Không cần đọc lại wireframe vì không sửa thiết kế/UI; không đụng backend, SRS, Jira hoặc chính sách auth.
+
+Chuyển yêu cầu từng bị probe phát hiện thành test trong source (không chỉ giữ local). Chạy trước sửa:
+
+```powershell
+npm test -- --runTestsByPath src/features/recovery/__tests__/mock-recovery-gateway-test.ts src/features/recovery/__tests__/recovery-flow-service-test.ts
+```
+
+Kết quả **3 FAIL / 20 PASS**: hai case TTL nhận 240000 ms và 1 ms thay vì 300000 ms; case offline phát hiện gateway.cancel bị gọi một lần trong khi outcome chưa terminal. Đây là expected red để chứng minh regression bắt đúng bug, không phải lỗi setup hay dependency. Không nới timeout, đổi assertion hay test.skip để lấy xanh.
+
+### S2. Sửa nhỏ và kiểm tra từng lỗi
+
+**REC-REV-01 — đã sửa:** `mock-recovery-gateway.ts` có `codeTtlMs` và `rateWindowMs` riêng, dù hiện cùng giá trị 5 phút. Chụp `issuedAt` một lần cho mỗi phát hành; `expiresAtEpochMs = issuedAt + codeTtlMs`, budget.until chỉ phục vụ cửa sổ rate-limit. Không thay policy reset ngân sách, cooldown, code rotation hay cancellation. Mã đang sống không tự được nạp lại attempts/sends khi đồng hồ đi qua mốc cửa sổ đầu; phát hành một attempt mới theo cửa sổ mới vẫn theo hành vi mock có sẵn.
+
+**REC-REV-02 — đã sửa:** service vẫn kiểm tra active/generation sau await trước khi nhận outcome. Chỉ gọi reset khi outcome không phải offline; offline giữ proof hiện tại cho retry thủ công. Không làm mới proof TTL, không lưu/queue password. Completed/attempt-invalid vẫn hủy proof; disposed flow không được hồi sinh kể cả activate lại.
+
+Hai suite sau sửa ban đầu: **23/23 PASS**. Thêm kiểm tra biên đạt **30/30 PASS** trong gateway/service. Component suite **11/11 PASS** qua các form/controller thật. Hai probe local cũ chạy lại **2/2 PASS**; regression cần thiết nay nằm trong source và sẽ có ở checkout của nhóm, không phụ thuộc folder học bị ignored.
+
+### S3. Tổng cộng 12 test source mới
+
+- **6 gateway:** resend ở 60.000 và 299.999 ms vẫn đủ 300 giây; verify đúng ở 299.999 ms và sai tại đúng 300.000 ms tính từ resend; sai trước/sau mốc cửa sổ đầu không nạp lại attempts; lần gửi thứ ba vẫn không có thêm sends và code đó còn dùng được trước hạn riêng.
+- **4 service:** offline outcome giữ cùng proof để retry và không tự mutate/cancel; proof hết hạn sau offline vẫn bị từ chối; offline response về sau dispose/activate không phục hồi proof; terminal attempt-invalid vẫn dọn proof và chặn gọi tiếp.
+- **2 form-flow:** mã gửi lại vẫn mở form mật khẩu sau lúc mã đầu đã hết hạn; offline outcome hiển thị MSG07, xóa cả hai field, không hiện thành công/không tự retry khi connectivity đổi; nhập lại và bấm mới complete thành công.
+
+Self-review đọc lại diff, đường expiry/rate budget và lifetime cleanup; kiểm tra sự khác biệt giữa connectivity preflight, resolved offline, rejected transport và terminal outcome. Không phát hiện P1/P2 còn tái hiện trong hai bản sửa và các ca đã chạy. Không thay validation, role, navigation, proof purpose, token storage hoặc UI layout. Timeout không rõ kết quả không được tự suy thành offline chắc chắn chưa thực thi.
+
+### S4. Kiểm tra cuối và phạm vi kết luận
+
+| Kiểm tra | Kết quả mới nhất |
+| --- | --- |
+| `npm test` | **53 suites / 334 tests PASS**, gồm 12 regression mới |
+| Hai probe local của mục R | **2 PASS**, không còn expected FAIL |
+| `npm run lint` / `npm run typecheck` | PASS |
+| `npx expo-doctor` | **21/21 PASS** |
+| `npx expo export --platform web --output-dir .expo/recovery-p2-fix-2026-10-23` | PASS, có /recovery |
+
+Không chạy lại browser/Expo Go hoặc nhập mật khẩu mới qua browser automation trong lượt S. Bằng chứng form ở đây là component test, ảnh browser ở mục F vẫn thuộc lượt trước. Đóng hai finding P2 này không hoàn thành API/native acceptance, production delivery/audit/eligibility hoặc Jira Done. README/context/plan đã bỏ cảnh báo “hai lỗi còn mở” ở trạng thái hiện tại; mục R chỉ giữ lịch sử.
+
+Bài học 49 lưu local cùng giải thích TTL/rate window, terminal/non-terminal outcome, red/green, đáp án tự luyện; probe và các bài cũ vẫn ignored. Commit chỉ gồm hai file runtime, ba file regression, README/context/plan/báo cáo. Chỉ push `feature/OMTS-133-mobile-foundation`; không merge/rebase/force-push hay tạo PR. Mốc remote develop trước bàn giao vẫn `063acd5e193eedfa4e45236b720ddc3cb16a505a`; SHA fix và đối chiếu remote sau push được ghi ở phản hồi bàn giao.

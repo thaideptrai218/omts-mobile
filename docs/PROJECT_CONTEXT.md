@@ -42,6 +42,12 @@ Jira `OMTS-133` requires:
 
 ## Current code status
 
+### Approved recovery P2 fixes — 23/10/2026
+
+User authorized fixing REC-REV-01/02 and delivering on the current feature branch without merging develop. Both findings are now **closed within the mock/client scope**: each issued OTP expires five minutes after its own send timestamp, independently of the existing rate-limit window; gateway offline outcome retains the current proof for manual retry without extending expiry or reviving a disposed flow. Terminal outcomes still clean up; passwords still clear and are never queued/persisted. No auth policy, permissions, navigation or UI redesign was introduced.
+
+Added 12 source regressions (6 gateway/4 service/2 form-flow); red-before/green-after evidence and the two former probes now pass. Latest gates **53 suites / 334 tests PASS**, lint/typecheck/web export, Doctor **21/21** pass. Self-review found no remaining reproduced P1/P2 in the two fixes, not a claim of production completeness. Browser/device were not rerun. Jira OMTS-164 still 404; no Jira/SRS/backend writes. See section S of `docs/reports/MOBILE_RECOVERY_ASSEMBLY_2026-10-23.md`; ignored local lesson 49. The earlier open-P2 review below is historical; real API/native acceptance remains pending.
+
 ### Recovery re-review — 23/10/2026, supersedes initial no-P2 conclusion
 
 Current user requested review/report/commit/push on `feature/OMTS-133-mobile-foundation`, no develop merge. Review found two reproducible **open P2** issues: REC-REV-01 resend code expiry is anchored to the first rate-limit window rather than five minutes from its own send; REC-REV-02 gateway `offline` outcome resets proof and breaks manual retry (the existing pre-call offline branch still works; default mock does not itself emit that gateway outcome). No runtime fix was authorized/applied by this review. See section R of `docs/reports/MOBILE_RECOVERY_ASSEMBLY_2026-10-23.md` for reproduction, expected/actual, proposed fixes and acceptance.
@@ -101,7 +107,7 @@ Do not report `OMTS-133` as complete based on the scaffold alone.
 
 1. Completed after explicit approval: SESSION-UX-01 and existing profile controller assembly through a shared, session-scoped mock adapter. Keep the new regressions when changing auth or profile.
 2. Completed after subsequent approval: preferences mock wrapper with session-bound service, honest unavailable push state and documented example catalog. Do not call the mock catalog a confirmed backend catalog.
-3. Recovery wrapper now assembled; resolve open REC-REV-01/02 under a separately requested fix slice before calling M7 ready. Contact-change wrappers remain separate/unapproved work.
+3. Recovery wrapper assembled and REC-REV-01/02 fixed with source regressions. Mock/client fixes do not complete M7's real API/native acceptance. Contact-change wrappers remain separate/unapproved work.
 4. Native/Expo Go QA; wire real auth only after a backend QA ref/URL/OpenAPI and reconciled gates are confirmed.
 
 Current Jira check read OMTS-133 as Done and OMTS-121 as In Progress, but no QA completion is inferred. Direct reads of OMTS-151/160/168/180 returned 404 in this review; their old statuses are not treated as current evidence. No Jira writes were made.
