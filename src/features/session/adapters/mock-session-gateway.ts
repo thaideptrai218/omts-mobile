@@ -9,6 +9,8 @@ import { createMockOnboardingCodes } from "./mock-onboarding-codes";
 import { mockSessionFixtures, MOCK_PASSWORD } from "./mock-session-fixtures";
 import { createMockProfileGateway } from "@/features/profile/adapters/mock-profile-gateway";
 import { createMockSessionNotificationGateway } from "@/features/notifications/adapters/mock-session-notification-gateway";
+import { createMockRecoveryGateway } from "@/features/recovery/adapters/mock-recovery-gateway";
+import { mockRecoveryIdentifiers } from "@/features/recovery/adapters/mock-recovery-identifiers";
 
 type MockAccount = {
   session: MobileSession;
@@ -127,10 +129,37 @@ export function createMockSessionGateway(now: () => number = Date.now) {
   const notificationGateway = createMockSessionNotificationGateway(
     (credential) => lease(credential).account.session,
   );
+  const recoveryGateway = createMockRecoveryGateway((identifier) => {
+    const contact = mockRecoveryIdentifiers.find(
+      (item) => item.identifier === identifier,
+    );
+    const account = accounts.find(
+      (item) => item.session.accountId === contact?.accountId,
+    );
+    if (
+      !account ||
+      !contact ||
+      !account.session.contacts.some(
+        (item) => item.channel === contact.channel && item.verified,
+      )
+    )
+      return null;
+    return {
+      accountId: account.session.accountId,
+      replacePassword(password) {
+        account.password = password;
+        for (const [handle, current] of leases) {
+          if (current.account === account) leases.delete(handle);
+        }
+        codes.reset(account.session.accountId);
+      },
+    };
+  }, now);
   return {
     gateway,
     profileGateway,
     notificationGateway,
+    recoveryGateway,
     currentChallenge: codes.current,
   };
 }

@@ -1,6 +1,9 @@
 import { useCallback, useState } from "react";
 
-import type { RecoveryCompletionResult, RecoveryCompletionService } from "@/features/recovery/services/recovery-completion-service";
+import type {
+  RecoveryCompletionResult,
+  RecoveryCompletionService,
+} from "@/features/recovery/services/recovery-completion-service";
 import { useRequestScope } from "@/shared/hooks/use-request-scope";
 import {
   resolveKnownMessage,
@@ -87,7 +90,9 @@ export function useRecoveryNewPasswordController({
     if (!request.isActive()) return;
     setPending(false);
     setValues(emptyValues);
-    if (result.status === "completed") {
+    if (result.status === "offline") {
+      setFeedback(resolveKnownMessage("MSG07"));
+    } else if (result.status === "completed") {
       onCompleted();
     } else {
       setFeedback(resolveKnownMessage("MSG16"));

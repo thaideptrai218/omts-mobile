@@ -12,6 +12,10 @@ import { createMockSessionGateway } from "../adapters/mock-session-gateway";
 import type { ProfileGateway } from "@/features/profile/services/profile-gateway";
 import type { NotificationPreferencesGateway } from "@/features/notifications/services/notification-preferences-gateway";
 import {
+  createRecoveryFlowService,
+  type RecoveryFlowService,
+} from "@/features/recovery/services/recovery-flow-service";
+import {
   createMobileSessionStore,
   type MobileSessionStore,
   type SessionSnapshot,
@@ -29,6 +33,7 @@ const SessionContext = createContext<{
   snapshot: SessionSnapshot;
   profileGateway: ProfileGateway | null;
   notificationGateway: NotificationPreferencesGateway | null;
+  createRecoveryFlow: (() => RecoveryFlowService) | null;
 } | null>(null);
 
 export type SessionRuntime = {
@@ -36,12 +41,13 @@ export type SessionRuntime = {
   setOffline: (value: boolean) => void;
   profileGateway?: ProfileGateway;
   notificationGateway?: NotificationPreferencesGateway;
+  createRecoveryFlow?: () => RecoveryFlowService;
 };
 
 function createRuntime(): SessionRuntime | null {
   // Explicit opt-in only. Never silently use a mock when API mode fails.
   if (process.env.EXPO_PUBLIC_AUTH_MODE !== "mock") return null;
-  const { gateway, profileGateway, notificationGateway } =
+  const { gateway, profileGateway, notificationGateway, recoveryGateway } =
     createMockSessionGateway();
   let offline = false;
   const store = createMobileSessionStore({
@@ -53,6 +59,8 @@ function createRuntime(): SessionRuntime | null {
     store,
     profileGateway,
     notificationGateway,
+    createRecoveryFlow: () =>
+      createRecoveryFlowService(recoveryGateway, () => offline),
     setOffline: (value: boolean) => {
       offline = value;
     },
@@ -95,6 +103,7 @@ export function MobileSessionProvider({
         snapshot,
         profileGateway: runtime?.profileGateway ?? null,
         notificationGateway: runtime?.notificationGateway ?? null,
+        createRecoveryFlow: runtime?.createRecoveryFlow ?? null,
       }}
     >
       {children}

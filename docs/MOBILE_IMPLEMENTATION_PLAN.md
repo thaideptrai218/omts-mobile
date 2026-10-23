@@ -7,6 +7,23 @@
 
 ## Execution log
 
+### 23/10/2026 — recovery re-review and requested branch delivery
+
+- Reviewed the uncommitted recovery assembly against UC03/Table 3.4-3 and source; fresh OMTS-164 read still returned 404. No Jira/SRS/backend/UI/runtime edits in the review.
+- **Open P2 REC-REV-01:** resend inherits first-window expiry, giving 240 seconds after a 60-second wait instead of five minutes from its own send. Separate code TTL from rate-limit window without refilling attempts.
+- **Open P2 REC-REV-02 (adapter contract):** gateway offline outcome unconditionally resets proof, breaking explicit retry; pre-call connectivity offline still works. Retain valid proof for non-terminal offline, preserve dispose/expiry checks and password clearing. Default mock/browser occurrence is not claimed.
+- Two explicit local probes fail and document expected/actual; three new late verify/resend/infrastructure regressions pass. Normal suite: **53 suites / 322 tests PASS**, lint/typecheck/export and Doctor **21/21** pass. Green regression does not close either finding. No browser/device rerun in this review.
+- Report updated in `docs/reports/MOBILE_RECOVERY_ASSEMBLY_2026-10-23.md`, section R; ignored local lesson 48. M7 is **not merge/acceptance-ready** until fixes/regressions and remaining API/native acceptance. User authorized commit/push current feature branch only, no develop merge; delivery records are in the final handoff.
+
+### 23/10/2026 — approved forgot-password mock assembly
+
+- F1: re-read UC03/UC08/BR-31/NFR-01 and existing screens/controllers. Jira search returned 502; direct OMTS-164/139/151 reads returned 404. No ticket status inferred or edited; user explicitly approved this mock slice.
+- F2: separate recovery gateway and route-scoped service. Generic MSG15/envelope, exact verified synthetic contact, purpose isolation, five-minute challenge window, five wrong entries, three sends, rotating resend codes; cooldown/proof TTL are mock configuration, not approved HTTP policy. Private proof is neither a login session nor a route/storage value.
+- F3: `/login` → `/recovery` request → SCR-02 reuse → new password → success → explicit login. Shared mock auth password and account-specific lease revocation. Change-contact/unmount cancels; no fake actions or UI debug panels. Offline requires manual retry, never queued password mutation.
+- F4: 12 gateway/integration + 5 service + 9 component/flow tests; one new default-clock regression in the existing verification suite. Fixed import-time Date reference, explicit foreground test boundary, separate discriminated state variants and neutral recovery recipient caption. Old store session clears with MSG19 after reset; other account remains valid.
+- F5: **53 suites / 319 tests**, lint/typecheck/web export and Doctor **21/21** pass. Browser request/MSG15/OTP/new-password form/back/reopen and no overflow at 360 CSS px checked; reset submission is covered by automated tests, not browser credential entry. Report `docs/reports/MOBILE_RECOVERY_ASSEMBLY_2026-10-23.md`; ignored local lesson 47.
+- Complete only for mock M7 assembly. Real opaque HTTP attempt/proof, eligibility/status rules, delivery/audit, reset/revoke behavior, native Back and QA API/Expo Go remain pending. No SRS/Jira/backend writes, commit, push or develop merge this turn.
+
 ### 23/10/2026 — combined MSG19/profile/preferences review and feature delivery
 
 - R1/R2: reviewed shared session lifetime, cleanup/MSG19 transport, profile revision/draft behavior, preferences canonical/draft and mandatory/eligibility locks; no new P1/P2 finding reproduced in the checked mock scope.
@@ -796,6 +813,8 @@ Minimum touch target target: approximately 44–48 logical pixels. Forms must re
 **Done when:** success returns to login, old sessions are rejected by backend and Back does not reveal the password.
 
 **Hardening update (22/10/2026):** The frontend now has a recovery-completion service contract plus a controller that validates locally, prevents duplicate completion requests and clears both password fields after success, invalid/expired attempt, infrastructure failure and explicit back-to-login. The recovery proof remains bound outside screen props and is not stored locally. Endpoint integration, old-session rejection and route replacement still require the backend recovery-attempt contract and QA evidence.
+
+**Mock assembly update (23/10/2026):** M7.1–M7.3 now run together through `/recovery` with the shared mock auth account, private one-use proof, resend/cancel/expiry and old-lease rejection. Tests prove explicit re-login and old-session MSG19 cleanup. This supersedes earlier missing-wrapper notes for **mock only**; real endpoint, delivery/audit and device acceptance remain open. See the execution log/report above, not the historical blocked notes, for current evidence.
 
 ## Phase M8 — `OMTS-168` forced and normal password change, SCR-05
 

@@ -4,7 +4,10 @@ import type {
   RecoveryRequestFormErrors,
   RecoveryRequestFormValues,
 } from "@/features/recovery/domain/recovery-request-form";
-import { resolveKnownMessage } from "@/shared/messages/message-catalog";
+import {
+  resolveKnownMessage,
+  type ResolvedMessage,
+} from "@/shared/messages/message-catalog";
 import { useAppTheme } from "@/shared/theme/use-app-theme";
 import { AppButton } from "@/shared/ui/app-button";
 import { KeyboardSafeForm } from "@/shared/ui/keyboard-safe-form";
@@ -15,6 +18,7 @@ import { TextField } from "@/shared/ui/text-field";
 type RecoveryRequestScreenProps = Readonly<{
   errors?: RecoveryRequestFormErrors;
   genericResponseVisible?: boolean;
+  feedback?: ResolvedMessage | null;
   onBackToLogin: () => void;
   onChangeIdentifier: (value: string) => void;
   onContinueToVerification: () => void;
@@ -26,6 +30,7 @@ type RecoveryRequestScreenProps = Readonly<{
 export function RecoveryRequestScreen({
   errors = {},
   genericResponseVisible = false,
+  feedback,
   onBackToLogin,
   onChangeIdentifier,
   onContinueToVerification,
@@ -56,7 +61,10 @@ export function RecoveryRequestScreen({
           <View style={{ gap: theme.spacing.xs }}>
             <Text
               accessibilityRole="header"
-              style={[theme.typography.title, { color: theme.colors.textPrimary }]}
+              style={[
+                theme.typography.title,
+                { color: theme.colors.textPrimary },
+              ]}
             >
               Khôi phục tài khoản
             </Text>
@@ -90,6 +98,13 @@ export function RecoveryRequestScreen({
               message={genericResponse.message}
               title={genericResponse.title}
               variant={genericResponse.severity}
+            />
+          ) : null}
+          {feedback ? (
+            <MessageBanner
+              message={feedback.message}
+              title={feedback.title}
+              variant={feedback.severity}
             />
           ) : null}
 

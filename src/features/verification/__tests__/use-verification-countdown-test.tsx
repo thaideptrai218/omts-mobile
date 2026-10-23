@@ -70,6 +70,21 @@ describe("useVerificationCountdown", () => {
     expect(result.current.secondsUntilResend).toBe(59);
   });
 
+  test("default clock follows the current Date implementation rather than an import-time reference", async () => {
+    jest.setSystemTime(initialNowEpochMs);
+    const activity = createActivitySource();
+    const { result } = await renderHook(() =>
+      useVerificationCountdown(challenge, { activitySource: activity.source }),
+    );
+    expect(result.current.secondsUntilResend).toBe(60);
+
+    await act(() => jest.advanceTimersByTime(60_000));
+
+    expect(result.current.secondsUntilResend).toBe(0);
+    expect(result.current.isResendCooldownComplete).toBe(true);
+    expect(result.current.secondsUntilExpiration).toBe(240);
+  });
+
   test("stops in background and catches up immediately on foreground", async () => {
     let nowEpochMs = initialNowEpochMs;
     const clock: VerificationClock = { now: () => nowEpochMs };

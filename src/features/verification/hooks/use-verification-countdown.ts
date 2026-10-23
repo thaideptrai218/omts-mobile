@@ -20,7 +20,7 @@ type VerificationCountdownOptions = Readonly<{
 }>;
 
 const systemClock: VerificationClock = {
-  now: Date.now,
+  now: () => Date.now(),
 };
 
 export function shouldTickForAppState(

@@ -18,6 +18,9 @@ export type VerificationScreenProps = Readonly<{
   code: string;
   feedback?: ResolvedMessage | null;
   fieldError?: string;
+  description?: string;
+  recipientLabel?: string;
+  backLabel?: string;
   onBack: () => void;
   onChangeCode: (code: string) => void;
   onResend: () => void;
@@ -40,6 +43,9 @@ export function VerificationScreen({
   code,
   feedback,
   fieldError,
+  description,
+  recipientLabel,
+  backLabel = "Quay lại",
   onBack,
   onChangeCode,
   onResend,
@@ -98,7 +104,8 @@ export function VerificationScreen({
                 { color: theme.colors.textSecondary },
               ]}
             >
-              Nhập mã gồm 6 chữ số đã gửi tới {recipientKind} bên dưới.
+              {description ??
+                `Nhập mã gồm 6 chữ số đã gửi tới ${recipientKind} bên dưới.`}
             </Text>
           </View>
 
@@ -121,7 +128,7 @@ export function VerificationScreen({
                 { color: theme.colors.textMuted },
               ]}
             >
-              Mã đã được gửi tới {recipientKind}
+              {recipientLabel ?? `Mã đã được gửi tới ${recipientKind}`}
             </Text>
             <Text
               style={[
@@ -193,7 +200,7 @@ export function VerificationScreen({
             />
             <AppButton
               disabled={isPending}
-              label="Quay lại"
+              label={backLabel}
               onPress={onBack}
               variant="ghost"
             />

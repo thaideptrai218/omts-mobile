@@ -35,7 +35,7 @@ không tự chuyển sang mock khi API lỗi.
 
 - Staff lần đầu: `nguyen.minh.an` / `OmtsDemo2026` → đổi mật khẩu → xác minh một liên hệ.
 - Staff đã xác minh: `tran.thu.ha` / `OmtsDemo2026` → tài khoản cá nhân.
-- Mã thử tổng hợp: `246810`. Mock không gửi SMS hoặc email.
+- Mã onboarding tổng hợp: `246810`. Mock không gửi SMS hoặc email.
 - Mật khẩu mới, trạng thái onboarding và phiên chỉ sống trong tiến trình.
   Logout rồi login lại trong cùng lần chạy dùng mật khẩu mới; reload toàn bộ app
   sẽ khởi tạo lại fixture, trở về mật khẩu mẫu và yêu cầu đăng nhập.
@@ -47,11 +47,28 @@ không tự chuyển sang mock khi API lỗi.
 - Hồ sơ có nút **Tùy chọn thông báo** → `/notification-preferences`: lưu/hủy
   riêng từng tài khoản, có khóa mục bắt buộc và email chưa xác minh. Catalog chỉ
   là ví dụ mock; không gửi thông báo, đăng ký push token hay xin quyền thiết bị.
+- **Quên mật khẩu** ở login → `/recovery`: nhập `ha@example.invalid` → nhận
+  phản hồi MSG15 → nhập mã mock → đặt mật khẩu mới → về đăng nhập bằng
+  `tran.thu.ha` và mật khẩu vừa đặt. Không tự đăng nhập sau reset.
+  Trong cửa sổ mock 5 phút, mã lần gửi đầu là `246810`, lần hai `246811`, lần ba
+  `246812`; gửi lại cách nhau tối thiểu 60 giây, mã cũ mất hiệu lực. Giới hạn
+  5 lần nhập sai/3 lần gửi; quay lại nhập liên hệ không làm mới ngân sách này.
+  Đây là dữ liệu thử và thời gian mock, không phải hợp đồng endpoint thật.
+- `an@example.invalid` chưa xác minh nên chỉ nhận MSG15, không reset được.
+  Số tổng hợp `0000000123` cũng chỉ dùng được sau khi An hoàn tất onboarding
+  và xác minh SMS trong cùng tiến trình. Không dùng số điện thoại thật.
+  Reset thu hồi mọi phiên mock cũ của đúng tài khoản; app cũ nhận MSG19 khi
+  thực hiện yêu cầu được bảo vệ tiếp theo. Không có server push đăng xuất tức thì.
 
 Chi tiết phạm vi, bằng chứng và phần chưa hoàn thành:
 [báo cáo ghép luồng](docs/reports/MOBILE_SESSION_ASSEMBLY_2026-10-22.md).
 Lát tiếp theo: [MSG19 và hồ sơ mock](docs/reports/MOBILE_MSG19_PROFILE_ASSEMBLY_2026-10-22.md).
 Lát thông báo: [báo cáo ghép mock](docs/reports/MOBILE_NOTIFICATION_ASSEMBLY_2026-10-22.md).
+Lát khôi phục: [phạm vi, kiểm thử và giới hạn](docs/reports/MOBILE_RECOVERY_ASSEMBLY_2026-10-23.md).
+
+Review recovery còn hai lỗi cần sửa: OTP gửi lại đang lấy hạn của cửa sổ đầu,
+và outcome offline từ adapter làm mất proof khi thử lại. Xem mục R của báo cáo;
+test hồi quy xanh không có nghĩa hai lỗi này đã được đóng. Chưa nghiệm thu API/native.
 
 | Script | Purpose |
 |---|---|
