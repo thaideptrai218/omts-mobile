@@ -76,9 +76,9 @@ Lát thông báo: [báo cáo ghép mock](docs/reports/MOBILE_NOTIFICATION_ASSEMB
 Lát khôi phục: [phạm vi, kiểm thử và giới hạn](docs/reports/MOBILE_RECOVERY_ASSEMBLY_2026-10-23.md).
 Lát đăng ký: [báo cáo ghép Trader mock](docs/reports/MOBILE_TRADER_REGISTRATION_ASSEMBLY_2026-10-23.md).
 
-Review đăng ký (mục R): 56 suites / 371 tests PASS; P3 REG-REV-01 vẫn mở:
-proof hết hạn ở bước xác nhận đưa về form đăng ký nhưng thông báo còn hướng dẫn
-nhập OTP. Báo cáo có cách tái hiện/đề xuất; chưa nghiệm thu API/native/full UC01.
+REG-REV-01 đã sửa (mục S): xác nhận đăng ký hết hiệu lực đưa về form trống với
+hướng dẫn nhập lại thông tin và xác minh; không còn hướng dẫn nhập OTP ở màn
+không có ô mã. 56 suites / 373 tests PASS; chưa nghiệm thu API/native/full UC01.
 
 Hai lỗi review REC-REV-01/02 đã sửa và có test hồi quy: OTP gửi lại có thời hạn
 riêng; outcome offline từ adapter giữ proof để thử lại thủ công, nhưng không

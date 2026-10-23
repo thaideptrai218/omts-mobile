@@ -6,7 +6,7 @@
 
 Base `ff05615`, nhánh `feature/OMTS-133-mobile-foundation`, working tree sạch trước khi triển khai. Lượt ghép ban đầu chưa commit; lượt review/bàn giao sau được người dùng yêu cầu commit/push đúng nhánh hiện tại, không merge develop. Không sửa backend/SRS/Jira. Hoàn thành lát mock không đồng nghĩa toàn bộ UC01/OMTS-155 đã Done.
 
-**Kết luận review mới nhất:** 56 suites / 371 tests PASS; thêm 7 test, không đổi runtime trong lượt review. Không tái hiện P1/P2 trong phạm vi đã kiểm tra; có **P3 REG-REV-01 còn mở** về hướng dẫn sai ngữ cảnh sau khi proof hết hạn. Xem mục R; test xanh không đồng nghĩa finding này đã sửa hoặc đủ điều kiện production.
+**Kết luận mới nhất:** người dùng đã duyệt sửa **P3 REG-REV-01; CLOSED trong phạm vi client/mock**. Thông báo khi confirmation không còn hiệu lực hướng dẫn nhập lại thông tin và xác minh, không nhắc ô OTP đã tháo. **56 suites / 373 tests PASS**, lint/typecheck/export và Doctor 21/21. Xem mục S cho red/green, tự review và phạm vi bàn giao. Mục R là lịch sử trước sửa, không phải trạng thái P3 hiện tại; chưa nghiệm thu production/API/native.
 
 ## J1 — nguồn và thiết kế
 
@@ -93,7 +93,7 @@ Luồng giữ đúng ranh giới đã duyệt: OTP chỉ cấp quyền xác nh�
 
 ### R2. Finding P3 REG-REV-01 — thông báo sau khi proof hết hạn còn chỉ tới ô OTP đã bị tháo
 
-**Trạng thái: OPEN, chưa sửa runtime.** Tại `use-registration-flow-controller.ts`, nhánh complete trả `attempt-invalid` reset về form đăng ký và chọn nguyên văn MSG16. Mã MSG16 dùng chung vẫn phù hợp ở màn OTP, nhưng ở form đầu không còn ô nhập mã hay nút Gửi lại mã.
+**Trạng thái lúc review: OPEN; đã CLOSED sau khi sửa được duyệt ở mục S.** Tại phiên bản trước sửa của `use-registration-flow-controller.ts`, nhánh complete trả `attempt-invalid` reset về form đăng ký và chọn nguyên văn MSG16. Mã MSG16 dùng chung vẫn phù hợp ở màn OTP, nhưng ở form đầu không còn ô nhập mã hay nút Gửi lại mã.
 
 **Tái hiện:** vào register với liên hệ tổng hợp mới → OTP đúng → màn Xác nhận tạo tài khoản → chờ đủ 300.000 ms kể từ verify → bấm Tạo tài khoản. Mock prune proof hết hạn, trả attempt-invalid; form Email/Mật khẩu/Nhập lại mật khẩu trống nhưng banner bảo “Bạn có thể nhập lại hoặc yêu cầu mã mới.” Test `expired confirmation clears the form and cannot create or log into an account` tái hiện bằng fake clock và xác nhận login vẫn bị từ chối.
 
@@ -129,3 +129,42 @@ Không rerun browser/device/QA API trong lượt này; ảnh/bằng chứng 360 
 Không phát hiện P1/P2 mới tái hiện trong các ca đã kiểm tra. Có một P3 đã mô tả đầy đủ và chưa sửa; các phần format/canonicalization, API, native QA, audit/delivery và postcondition Customer bị loại trừ ở J6 vẫn mở. Không gọi toàn bộ M6/UC01 hay OMTS-133 là hoàn thành, không merge-ready production chỉ vì test xanh.
 
 Commit gồm source ghép đã review, test và tài liệu nhóm; bài học 50/51, ảnh, env, export và node_modules giữ local/ignored. Target duy nhất: `feature/OMTS-133-mobile-foundation`; không force push, không merge/PR, không thay develop. Remote trước delivery: feature `ff056150f2c8f70263af92a1f88696ab63f8289e`, develop `063acd5e193eedfa4e45236b720ddc3cb16a505a`. SHA và kết quả đối chiếu remote sau push được ghi trong bàn giao cuối, tránh nhúng SHA tự tham chiếu vào chính commit.
+
+## S — sửa P3 REG-REV-01 theo phê duyệt, 23/10/2026
+
+### S1. Phạm vi và nguyên nhân
+
+Base `165821b`, working tree sạch, tiếp tục đúng `feature/OMTS-133-mobile-foundation`. Người dùng yêu cầu sửa P3, thêm test, tự review/report và commit/push nhánh hiện tại; không merge develop. Đọc lại UC01/UC08, finding R2 và source; OMTS-155/151 vẫn trả 404 `Issue not found`, không xác minh được parent/linked issues và không sửa Jira/SRS/backend. Không cần đổi Figma hoặc API Expo/RN cho bản sửa lời hướng dẫn này.
+
+Root cause là dùng nguyên văn lời hướng dẫn của màn OTP sau khi controller đã tháo màn đó. Gateway từ chối proof hết hạn đúng, không phải lỗi TTL hay quyền. Vì `attempt-invalid` còn có thể biểu thị attempt không còn hợp lệ vì lý do khác, dùng “không còn hiệu lực”, không khẳng định mọi kết quả invalid đều chỉ do hết hạn.
+
+### S2. Bản sửa nhỏ
+
+Chỉ đổi mapping phản hồi trong nhánh confirmation của `use-registration-flow-controller.ts`: `unavailable` giữ MSG14; `attempt-invalid` giữ code/severity MSG16 nhưng title là **Cần đăng ký lại**, message là **Xác nhận đăng ký không còn hiệu lực. Vui lòng nhập lại thông tin và xác minh để tiếp tục.**
+
+Không sửa catalog MSG16 dùng chung, gateway/service/contract, OTP/proof TTL, rate limit, form reset, navigation hoặc quyền. Không tự resend/create, không gia hạn proof, không thêm Customer/Order. Màn OTP sai mã vẫn MSG16 cũ; offline vẫn MSG07 và retry thủ công.
+
+### S3. Test hồi quy và red/green
+
+- Nâng test expiry cũ từ characterization lên acceptance, chạy cho cả Email/SĐT. Mỗi ca dùng fake clock tăng 300.000 ms sau verify: form trống + title/message đúng, không còn gợi ý OTP cũ/ô OTP/nút resend/success; login bị từ chối. Tăng thêm 60 giây không tự start/complete. Người dùng phải nhập lại, verify và bấm tạo mới; sau đó account mới login được, không tự tạo session app.
+- Thêm test `unavailable completion keeps generic MSG14 and recovery action instead of expiry copy`, kiểm tra kết quả unavailable từ adapter vẫn hiện MSG14/recovery, không bị đổi nhầm thành thông báo hết hiệu lực. Đây là test mapping outcome, không giả nhận đã mô phỏng race phía API.
+- Lệnh red trước sửa: `npm test -- --runTestsByPath src/features/registration/__tests__/registration-flow-component-test.tsx --testNamePattern 'expired .* confirmation'` → **2 FAIL / 12 filtered out**. Lỗi `Unable to find an element with text: Xác nhận đăng ký không còn hiệu lực...`; screen dump vẫn có banner MSG16 cũ trên form trống, xác nhận lỗi gốc. Không tăng timeout, không bỏ assertions để làm xanh. Các test bị lọc bởi lệnh này không bị thêm `.skip` vào source.
+- Sau sửa, chạy nguyên suite form: **14/14 PASS**, gồm expiry Email/SĐT, MSG14, sai OTP/resend, offline, duplicate submit và response muộn. Tăng ròng 2 test so với 371: một ca phone bổ sung và một ca unavailable; các ca cũ được giữ/nâng assertions.
+
+### S4. Bằng chứng chạy mới và tự review
+
+| Kiểm tra | Kết quả |
+| --- | --- |
+| `npm test` | **56 suites / 373 tests PASS**, 30,536 giây |
+| `npm run lint`, `npm run typecheck` | PASS |
+| `npx expo-doctor` | **21/21 PASS** |
+| `npx expo export --platform web --output-dir .expo/registration-expiry-copy-fix-2026-10-23` | PASS, có /register |
+| Diff runtime | Chỉ mapping thông báo trong hook; catalog/service/gateway/contract không đổi |
+
+Export có warning `The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.`: hai cấu hình màu terminal cùng được truyền vào worker; FORCE_COLOR được ưu tiên. Đây không phải lỗi auth/Metro build, export kết thúc exit 0; không đổi cấu hình app để tắt warning. Nếu muốn làm sạch output môi trường local, chỉ giữ một cấu hình màu trong phiên terminal. Không kiểm chứng một lần export riêng sau khi bỏ biến màu, không ghi nhận warning đã được sửa.
+
+Tự review đối chiếu cả nhánh invalid, unavailable, offline, verified/success và stale response. Không phát hiện P1/P2/P3 mới còn tái hiện trong phạm vi bản sửa; **đóng REG-REV-01 ở client/mock** nhờ bằng chứng red/green và hành vi đăng ký lại. Không mở rộng kết luận sang toàn bộ UC01/OMTS-133. Browser/device/QA API không rerun; các giới hạn J6 vẫn còn.
+
+### S5. Bàn giao
+
+README/context/plan đã cập nhật trạng thái mới; bài học 52 giữ local, không push. Commit/push chỉ source sửa, test và tài liệu nhóm lên nhánh hiện tại, không force/PR/merge. Remote develop trước delivery vẫn `063acd5e193eedfa4e45236b720ddc3cb16a505a`; kết quả HEAD/remote/working tree sau push ghi trong bàn giao cuối. Feature-only push không trigger CI hiện tại; các gates trên là bằng chứng local.

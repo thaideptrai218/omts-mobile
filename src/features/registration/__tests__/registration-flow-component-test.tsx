@@ -119,6 +119,8 @@ async function setup() {
   };
 }
 const user = () => userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+const invalidConfirmationMessage =
+  "Xác nhận đăng ký không còn hiệu lực. Vui lòng nhập lại thông tin và xác minh để tiếp tục.";
 async function open() {
   await user().press(
     screen.getByRole("button", { name: "Đăng ký tài khoản thương lái" }),
@@ -369,29 +371,65 @@ test("duplicate submit is locked; unmount and late response cannot restore a reg
   expect(screen.queryByLabelText("Mã xác minh")).not.toBeOnTheScreen();
 });
 
-test("expired confirmation clears the form and cannot create or log into an account", async () => {
-  const { gateway } = await setup();
-  await open();
-  await start();
-  await verify();
-  await act(() => jest.advanceTimersByTime(300_000));
-  await user().press(screen.getByRole("button", { name: "Tạo tài khoản" }));
-  expect(
-    await screen.findByText(resolveKnownMessage("MSG16").message),
-  ).toBeOnTheScreen();
-  expect(screen.getByLabelText("Email", { exact: true })).toHaveDisplayValue(
-    "",
-  );
-  expect(screen.getByLabelText("Mật khẩu", { exact: true })).toHaveDisplayValue(
-    "",
-  );
-  expect(screen.getByLabelText("Nhập lại mật khẩu")).toHaveDisplayValue("");
-  expect(screen.queryByLabelText("Mã xác minh")).not.toBeOnTheScreen();
-  expect(screen.queryByText("Đăng ký thành công")).not.toBeOnTheScreen();
-  await expect(
-    gateway.login("trader@example.invalid", "TraderPass2026"),
-  ).rejects.toMatchObject({ code: "credentials" });
-});
+test.each([
+  { method: "email" as const, identifier: "trader@example.invalid" },
+  { method: "phone" as const, identifier: "0000000999" },
+])(
+  "expired $method confirmation explains restarting and requires fresh verification",
+  async ({ method, identifier }) => {
+    const { gateway, registrationGateway, store } = await setup();
+    const begin = jest.spyOn(registrationGateway, "start");
+    const complete = jest.spyOn(registrationGateway, "complete");
+    await open();
+    await start(identifier, method);
+    await verify();
+    await act(() => jest.advanceTimersByTime(300_000));
+    await user().press(screen.getByRole("button", { name: "Tạo tài khoản" }));
+    expect(
+      await screen.findByText(invalidConfirmationMessage),
+    ).toBeOnTheScreen();
+    expect(screen.getByText("Cần đăng ký lại")).toBeOnTheScreen();
+    expect(
+      screen.queryByText(resolveKnownMessage("MSG16").message),
+    ).not.toBeOnTheScreen();
+    expect(screen.getByLabelText("Email", { exact: true })).toHaveDisplayValue(
+      "",
+    );
+    expect(
+      screen.getByLabelText("Mật khẩu", { exact: true }),
+    ).toHaveDisplayValue("");
+    expect(screen.getByLabelText("Nhập lại mật khẩu")).toHaveDisplayValue("");
+    expect(screen.queryByLabelText("Mã xác minh")).not.toBeOnTheScreen();
+    expect(
+      screen.queryByRole("button", { name: "Gửi lại mã" }),
+    ).not.toBeOnTheScreen();
+    expect(screen.queryByText("Đăng ký thành công")).not.toBeOnTheScreen();
+    await expect(
+      gateway.login(identifier, "TraderPass2026"),
+    ).rejects.toMatchObject({ code: "credentials" });
+    await act(() => jest.advanceTimersByTime(60_000));
+    expect(begin).toHaveBeenCalledTimes(1);
+    expect(complete).toHaveBeenCalledTimes(1);
+    expect(store.getSnapshot().status).toBe("signedOut");
+    await start(identifier, method);
+    expect(
+      screen.queryByText(invalidConfirmationMessage),
+    ).not.toBeOnTheScreen();
+    await verify();
+    await expect(
+      gateway.login(identifier, "TraderPass2026"),
+    ).rejects.toMatchObject({ code: "credentials" });
+    await user().press(screen.getByRole("button", { name: "Tạo tài khoản" }));
+    expect(await screen.findByText("Đăng ký thành công")).toBeOnTheScreen();
+    expect(complete).toHaveBeenCalledTimes(2);
+    expect(store.getSnapshot().status).toBe("signedOut");
+    await expect(
+      gateway.login(identifier, "TraderPass2026"),
+    ).resolves.toMatchObject({
+      session: { subjectType: "Trader", grants: [] },
+    });
+  },
+);
 
 test("leaving verified confirmation cancels the attempt without creating an account", async () => {
   const { gateway, registrationGateway } = await setup();
@@ -419,6 +457,31 @@ test("leaving verified confirmation cancels the attempt without creating an acco
     "",
   );
   expect(screen.queryByText("Xác nhận tạo tài khoản")).not.toBeOnTheScreen();
+});
+
+test("unavailable completion keeps generic MSG14 and recovery action instead of expiry copy", async () => {
+  const { registrationGateway, gateway } = await setup();
+  jest
+    .spyOn(registrationGateway, "complete")
+    .mockResolvedValueOnce({ status: "unavailable" });
+  await open();
+  await start();
+  await verify();
+  await user().press(screen.getByRole("button", { name: "Tạo tài khoản" }));
+  expect(
+    await screen.findByText(resolveKnownMessage("MSG14").message),
+  ).toBeOnTheScreen();
+  expect(screen.queryByText(invalidConfirmationMessage)).not.toBeOnTheScreen();
+  expect(screen.getByLabelText("Mật khẩu", { exact: true })).toHaveDisplayValue(
+    "",
+  );
+  expect(screen.getByLabelText("Nhập lại mật khẩu")).toHaveDisplayValue("");
+  expect(
+    screen.getByRole("button", { name: "Quên mật khẩu? Khôi phục tài khoản" }),
+  ).toBeEnabled();
+  await expect(
+    gateway.login("trader@example.invalid", "TraderPass2026"),
+  ).rejects.toMatchObject({ code: "credentials" });
 });
 
 test("pending completion blocks duplicate confirmation and cannot restore success after leaving", async () => {

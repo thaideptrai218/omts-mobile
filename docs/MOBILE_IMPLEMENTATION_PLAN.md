@@ -7,6 +7,13 @@
 
 ## Execution log
 
+### 23/10/2026 — approved REG-REV-01 contextual-copy fix
+
+- User explicitly requested P3 fix, regression/review/report and feature-only commit/push, no develop merge. Base `165821b`; fresh OMTS-155/151 reads still 404, no Jira/SRS/backend writes.
+- **REG-REV-01 CLOSED in client/mock:** invalid confirmation retains form reset but uses “Cần đăng ký lại” and instructions to re-enter/verify. No catalog-wide MSG16, gateway/service/contract, TTL, offline queue, navigation, Customer or Order change. “Không còn hiệu lực” does not falsely equate every invalid attempt with expiry.
+- Old expiry characterization becomes Email/SĐT acceptance (2 red before/green after), with fresh OTP/explicit confirmation required and no automatic requests. Add unavailable-completion MSG14/recovery mapping test; net +2 tests. **56 suites / 373 tests PASS**, lint/typecheck/export and Doctor **21/21** pass.
+- Self-review found no new reproduced issue in this narrow fix. Browser/device/API not rerun; native/API/full UC01 scope still pending. Report section S supersedes R's open finding; ignored local lesson 52. Commit/push current branch only, no PR/merge; local checks are not feature-push CI evidence.
+
 ### 23/10/2026 — M6 registration review and feature-only delivery
 
 - Re-read UC01/UC08/Table 3.4-3 and registration plus shared session/profile/recovery/preferences source. Fresh OMTS-155/151 reads return 404; no Jira/SRS/backend writes, no runtime changes in this review.

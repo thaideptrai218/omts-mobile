@@ -125,9 +125,14 @@ export function useRegistrationFlowController(
           setState(initial());
           setIdentifiers({ email: "", phone: "" });
           setFeedback(
-            resolveKnownMessage(
-              result.status === "unavailable" ? "MSG14" : "MSG16",
-            ),
+            result.status === "unavailable"
+              ? resolveKnownMessage("MSG14")
+              : {
+                  ...resolveKnownMessage("MSG16"),
+                  title: "Cần đăng ký lại",
+                  message:
+                    "Xác nhận đăng ký không còn hiệu lực. Vui lòng nhập lại thông tin và xác minh để tiếp tục.",
+                },
           );
         }
       }
