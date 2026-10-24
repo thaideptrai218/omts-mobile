@@ -1,29 +1,52 @@
 # omts-mobile
 
-Mobile app for **OMTS — Oyster Management and Traceability System** for Trung Nam Aquaculture Cooperative (SEP490_G83):
-field workflows for Staff and Zone Managers within their permitted farming-zone scope (cultivation, environment readings, harvest, and attendance).
+Mobile app for **OMTS — Oyster Management and Traceability System** for Trung Nam Aquaculture Cooperative (SEP490_G83),
+delivered as a **Zalo Mini App**: role-based dashboards for cooperative staff and traders, and public traceability by QR code.
 Sibling repos: [omts-backend](https://github.com/thaideptrai218/omts-backend) · [omts-web](https://github.com/thaideptrai218/omts-web)
 
 ## Stack
 
-Expo · React Native · Expo Router · TypeScript
+Zalo Mini App · React 18 · TypeScript · Vite · ZaUI (`zmp-ui`) · ZMP SDK (`zmp-sdk`) · Tailwind CSS · Jotai
 
 ## Getting started
 
-Prerequisites: Node.js (version in `.nvmrc`), npm, the **Expo Go** app on your phone.
+Prerequisites: Node.js (version in `.nvmrc`), npm, Zalo Mini App CLI, and the Zalo app on your phone for device testing.
 
 ```bash
+npm install -g zmp-cli
 npm ci
-cp .env.example .env.local   # set EXPO_PUBLIC_API_BASE_URL to your machine's LAN IP
-npx expo start               # scan the QR code with Expo Go
+cp .env.example .env     # fill APP_ID; ZMP_TOKEN is written by `npm run login`
+npm run login
+npm start                # zmp start --no-frame, then open the printed localhost URL
 ```
 
-Add dependencies with `npx expo install <package>` (picks SDK-compatible versions).
+Preview inside the **Zalo Mini App** VS Code extension simulator, or deploy a Development build and scan its QR code with Zalo.
+APIs such as `getAccessToken`, `getPhoneNumber` and Checkout SDK only work inside Zalo, not in a desktop browser.
 
 | Script | Purpose |
 |---|---|
-| `npm run lint` | `expo lint` |
+| `npm start` | Dev server without the zmp-cli phone frame |
+| `npm run lint` | ESLint (TypeScript + React Hooks rules) |
 | `npm run typecheck` | `tsc --noEmit` |
+| `npm run build` | Production build into `www/` |
+| `npm run deploy` | `zmp deploy` (Development or Testing build) |
+
+## Project layout
+
+```
+src/
+  app.ts            entry point, mounts the app into #app
+  components/       layout, splash, dashboard pieces, bottom navigation
+  pages/            Overview, Traceability, Notifications, Account, feature detail
+  data/             mock data for roles, features, notices and a sample traceability lot
+  state/            Jotai atoms
+  static/images/    all images, imported so Vite bundles them
+app-config.json     Zalo Mini App window config
+```
+
+## Rules
+
+Zalo review policy, data and payment rules, and technical limits are collected in [CLAUDE.md](CLAUDE.md). Read it before adding features.
 
 ## Contributing
 

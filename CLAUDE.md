@@ -117,9 +117,8 @@ Khi Zalo cập nhật tài liệu hoặc dự án đổi hướng, sửa lại f
   phải thử bên trong Zalo (Device mode hoặc `zmp deploy` rồi quét QR).
 - `app-config.json`: `title` bắt buộc; `actionBarHidden: true` đang bật nên header do app tự vẽ;
   `selfControlLoading: true` + `closeLoading()` cho phép app tự quyết lúc tắt màn hình tải của Zalo.
-- **Vị trí code**: app nằm trong thư mục `zalo-mini-app/` của repo `thaideptrai218/omts-mobile`, cạnh app Expo
-  ở thư mục gốc. Chạy `npm install`, `npm start` ngay trong `zalo-mini-app/`. `tsconfig.json` và
-  `eslint.config.js` ở thư mục gốc đã loại `zalo-mini-app` để CI của app Expo không quét code Zalo.
+- **Vị trí code**: app nằm ở thư mục gốc của repo `thaideptrai218/omts-mobile` (app Expo cũ đã được gỡ).
+  CI chạy `npm run lint` (ESLint, cấu hình ở `eslint.config.mjs`) và `npm run typecheck` trên mọi PR.
   Làm việc theo nhánh từ `develop` rồi mở PR, không push thẳng vào `develop` hay `main`.
 - **Chạy dev**: `npm start` = `zmp start --no-frame`, chỉ mở một cổng và trả về app trần.
   Không chạy `zmp start` trần rồi mở trong simulator của extension Zalo: `zmp start` mặc định bọc app

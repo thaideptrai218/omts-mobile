@@ -1,45 +1,56 @@
-# Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
 
-# dependencies
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Dependency directories
 node_modules/
 
-# Expo
-.expo/
-dist/
-web-build/
-expo-env.d.ts
+# Optional npm cache directory
+.npm
 
-# Native
-.kotlin/
-*.orig.*
-*.jks
-*.p8
-*.p12
-*.key
-*.mobileprovision
+# Optional eslint cache
+.eslintcache
 
-# Metro
-.metro-health-check*
+# Optional REPL history
+.node_repl_history
 
-# debug
-npm-debug.*
-yarn-debug.*
-yarn-error.*
+# Yarn Integrity file
+.yarn-integrity
 
-# macOS
-.DS_Store
-*.pem
-
-# local env files
+# dotenv environment variables file
 .env
+
+# Misc
+.DS_Store
+Thumbs.db
+
+# Production build
+www/
+
+# Environment files: keep only the example
 .env.*
 !.env.example
+*.local
 
-# typescript
+# Build output and tool caches
+dist/
+.vite/
+coverage/
 *.tsbuildinfo
 
-example
-
-# generated native folders
-/ios
-/android
+# Editors and local tool settings
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.swp
+.claude/settings.local.json

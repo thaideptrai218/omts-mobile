@@ -1,29 +1,37 @@
 {
-  "extends": "expo/tsconfig.base",
   "compilerOptions": {
+    "noEmit": true,
+    "target": "es6",
+    "module": "esnext",
+    "noImplicitAny": false,
+    "preserveConstEnums": true,
+    "jsx": "react-jsx",
+    "lib": ["dom", "es5", "es6", "es7", "es2017"],
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "allowJs": true,
+    "skipLibCheck": true,
+    "declaration": false,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "forceConsistentCasingInFileNames": true,
+    "moduleResolution": "node",
+    "noEmitOnError": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitReturns": true,
+    "noImplicitThis": true,
+    "noUnusedLocals": false,
     "strict": true,
+    "strictFunctionTypes": false,
+    "pretty": true,
+    "removeComments": true,
+    "sourceMap": true,
+    "resolveJsonModule": true,
+    "types": ["vite/client"],
     "paths": {
-      "@/*": [
-        "./src/*"
-      ],
-      "@/assets/*": [
-        "./assets/*"
-      ]
+      "@/*": ["./src/*"]
     }
   },
-  "include": [
-    "**/*.ts",
-    "**/*.tsx",
-    ".expo/types/**/*.ts",
-    "expo-env.d.ts"
-  ],
-  "exclude": [
-    "node_modules",
-    "babel.config.js",
-    "metro.config.js",
-    "jest.config.js",
-    "android",
-    "ios",
-    "zalo-mini-app"
-  ]
+  "exclude": ["node_modules"],
+  "include": ["src"]
 }
