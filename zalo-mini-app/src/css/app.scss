@@ -1,16 +1,755 @@
-.page {
-  padding: 16px 16px 96px 16px;
+/* Bộ màu lấy từ ảnh splash: biển sâu, thủy triều, sương sớm trên vịnh. */
+:root {
+  --sea-deep: #0b4f6c;
+  --tide: #0a8f8f;
+  --tide-pressed: #077575;
+  --tide-soft: #e1f2f1;
+  --mist: #eef3f5;
+  --surface: #ffffff;
+  --ink: #14232b;
+  --ink-2: #5b6e79;
+  --line: #dce5ea;
+  --ok: #1f8a4c;
+  --warn: #b26a00;
+  --danger: #c8261e;
+
+  /* Chừa chỗ cho nút menu cố định của Zalo ở góc trên bên phải. */
+  --capsule-space: 104px;
+  /* Thanh trạng thái trong suốt: lấy safe area, tối thiểu 28px cho máy Android không báo safe area. */
+  --top-safe: max(var(--zaui-safe-area-inset-top, 0px), 28px);
+  --radius: 16px;
+
+  /* Đưa màu chủ đạo vào component ZaUI. */
+  --zaui-light-button-primary-background: var(--tide);
+  --zaui-light-button-primary-background-pressed: var(--tide-pressed);
+  --zaui-light-button-secondary-background: var(--tide-soft);
+  --zaui-light-button-secondary-text: var(--tide-pressed);
+  --zaui-light-bottom-navigation-active-color: var(--tide);
+  --zaui-light-input-hover-border-color: var(--tide);
 }
 
-.section-container {
-  padding: 16px;
-  background: #ffffff;
-  border-radius: 8px;
-  margin-bottom: 24px;
+body[zaui-theme="dark"] {
+  --sea-deep: #0a3a4f;
+  --tide-soft: #123a3b;
+  --mist: #0f1a20;
+  --surface: #18252c;
+  --ink: #e8eef1;
+  --ink-2: #9db0ba;
+  --line: #2a3a43;
+  --ok: #4cc283;
+  --warn: #e0a440;
+  --danger: #f0726b;
+  --zaui-dark-button-primary-background: var(--tide);
+  --zaui-dark-button-primary-background-pressed: var(--tide-pressed);
+  --zaui-dark-bottom-navigation-active-color: #3cc0bd;
+}
+
+body {
+  background: var(--mist);
+}
+
+button:focus-visible {
+  outline: 2px solid var(--tide);
+  outline-offset: 2px;
 }
 
 .zaui-list-item {
   cursor: pointer;
+}
+
+/* Khung chung của mỗi màn hình */
+.screen {
+  background: var(--mist);
+  color: var(--ink);
+}
+
+.screen--with-nav {
+  padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px));
+}
+
+.screen__body {
+  padding: 0 16px 24px;
+}
+
+.screen__note {
+  margin-top: 16px;
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--ink-2);
+  text-align: center;
+}
+
+.tone-neutral {
+  color: var(--tide);
+}
+.tone-success {
+  color: var(--ok);
+}
+.tone-warning {
+  color: var(--warn);
+}
+.tone-danger {
+  color: var(--danger);
+}
+
+/* Dải đầu trang: điểm nhấn duy nhất của giao diện */
+.tide {
+  position: relative;
+  background: var(--sea-deep);
+  color: #fff;
+  padding-bottom: 36px;
+}
+
+.tide__inner {
+  padding: calc(var(--top-safe) + 12px) 16px 0;
+}
+
+.tide__kicker,
+.tide__title {
+  padding-right: var(--capsule-space);
+}
+
+.tide__kicker {
+  font-size: 14px;
+  line-height: 20px;
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.tide__title {
+  margin-top: 2px;
+  font-size: 20px;
+  line-height: 26px;
+  font-weight: 600;
+}
+
+.tide__lead {
+  margin-top: 8px;
+  max-width: 34ch;
+  font-size: 15px;
+  line-height: 20px;
+  color: rgba(255, 255, 255, 0.86);
+}
+
+.tide__wave {
+  position: absolute;
+  left: 0;
+  bottom: -1px;
+  width: 100%;
+  height: 28px;
+  fill: var(--mist);
+}
+
+.role-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  min-height: 36px;
+  padding: 0 12px;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.role-chip__label {
+  font-weight: 600;
+}
+
+.role-chip__scope {
+  padding-left: 8px;
+  border-left: 1px solid rgba(255, 255, 255, 0.35);
+  color: rgba(255, 255, 255, 0.82);
+}
+
+/* Bảng số liệu: một khối, chia ô bằng đường kẻ */
+.stats {
+  position: relative;
+  z-index: 1;
+  margin-top: 4px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.stats__cell {
+  padding: 14px 16px;
+}
+
+.stats__cell:nth-child(odd) {
+  border-right: 1px solid var(--line);
+}
+
+.stats__cell:nth-child(-n + 2) {
+  border-bottom: 1px solid var(--line);
+}
+
+.stats__label {
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--ink-2);
+}
+
+.stats__value {
+  margin-top: 4px;
+  font-size: 20px;
+  line-height: 26px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.stats__unit {
+  margin-left: 4px;
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--ink-2);
+}
+
+.stats__note {
+  margin-top: 2px;
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.stats__note.tone-neutral {
+  color: var(--ink-2);
+}
+
+/* Các khối nội dung */
+.block {
+  margin-top: 24px;
+}
+
+.block__title {
+  margin-bottom: 10px;
+  font-size: 16px;
+  line-height: 22px;
+  font-weight: 600;
+}
+
+.block--raised {
+  position: relative;
+  z-index: 1;
+  margin-top: 4px;
+  padding: 16px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.screen--plain .block--raised {
+  margin-top: 0;
+}
+
+/* Việc cần làm */
+.tasks,
+.notices,
+.menu {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.tasks li + li,
+.notices__item + .notices__item,
+.menu li + li {
+  border-top: 1px solid var(--line);
+}
+
+.tasks__row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 64px;
+  padding: 12px 12px 12px 20px;
+  text-align: left;
+  color: var(--ink);
+}
+
+.tasks__row::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 14px;
+  bottom: 14px;
+  width: 4px;
+  border-radius: 0 4px 4px 0;
+  background: var(--tide);
+}
+
+.tone-bar-success::before {
+  background: var(--ok);
+}
+.tone-bar-warning::before {
+  background: var(--warn);
+}
+.tone-bar-danger::before {
+  background: var(--danger);
+}
+
+.tasks__text {
+  flex: 1;
+  min-width: 0;
+}
+
+.tasks__title {
+  display: block;
+  font-size: 15px;
+  line-height: 20px;
+  font-weight: 500;
+}
+
+.tasks__detail {
+  display: block;
+  margin-top: 2px;
+  font-size: 14px;
+  line-height: 18px;
+  color: var(--ink-2);
+}
+
+.tasks__chevron,
+.menu__chevron {
+  color: var(--ink-2);
+}
+
+/* Lưới chức năng */
+.actions {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px 4px;
+  padding: 16px 8px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.actions__item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  min-height: 76px;
+  padding: 4px 2px;
+  border-radius: 12px;
+  color: var(--ink);
+}
+
+.actions__item:active {
+  background: var(--mist);
+}
+
+.actions__icon {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: var(--tide-soft);
+  color: var(--tide);
+}
+
+.actions__label {
+  font-size: 12px;
+  line-height: 16px;
+  text-align: center;
+}
+
+/* Tiêu đề các tab còn lại */
+.screen-title {
+  padding: calc(var(--top-safe) + 12px) 16px 16px;
+}
+
+.screen-title__text {
+  padding-right: var(--capsule-space);
+  font-size: 20px;
+  line-height: 26px;
+  font-weight: 600;
+}
+
+.screen-title__sub {
+  margin-top: 4px;
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--ink-2);
+}
+
+/* Trang chi tiết dùng Header của ZaUI (cố định ở đỉnh) */
+.detail-header.zaui-header {
+  height: calc(var(--top-safe) + 44px);
+  padding-top: var(--top-safe);
+  padding-right: var(--capsule-space);
+}
+
+.screen--detail .screen__body {
+  padding-top: calc(var(--top-safe) + 44px);
+}
+
+/* Truy xuất */
+.trace__buttons {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.lot {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+
+.lot__code {
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--ink-2);
+}
+
+.lot__product {
+  margin-top: 2px;
+  font-size: 18px;
+  line-height: 24px;
+  font-weight: 600;
+}
+
+.lot__verified {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 4px;
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--ok);
+}
+
+.lot__facts {
+  display: grid;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.lot__facts div {
+  display: grid;
+  grid-template-columns: 112px 1fr;
+  gap: 8px;
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.lot__facts dt {
+  color: var(--ink-2);
+}
+
+.lot__journey-title {
+  margin: 20px 0 12px;
+  font-size: 16px;
+  line-height: 22px;
+  font-weight: 600;
+}
+
+/* Hành trình là một chuỗi thời gian thật nên dùng dạng dòng thời gian */
+.journey__step {
+  position: relative;
+  padding: 0 0 16px 24px;
+}
+
+.journey__step::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 5px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 2px solid var(--tide);
+  background: var(--surface);
+}
+
+.journey__step::after {
+  content: "";
+  position: absolute;
+  left: 4px;
+  top: 17px;
+  bottom: 0;
+  width: 2px;
+  background: var(--line);
+}
+
+.journey__step:last-child::after {
+  display: none;
+}
+
+.journey__title {
+  font-size: 15px;
+  line-height: 20px;
+  font-weight: 600;
+}
+
+.journey__date {
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--ink-2);
+}
+
+.journey__detail {
+  margin-top: 2px;
+  font-size: 14px;
+  line-height: 20px;
+}
+
+/* Thông báo */
+.notices__item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+}
+
+.notices__icon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--tide-soft);
+}
+
+.notices__text {
+  flex: 1;
+  min-width: 0;
+}
+
+.notices__title {
+  display: block;
+  font-size: 15px;
+  line-height: 20px;
+}
+
+.notices__item.is-unread .notices__title {
+  font-weight: 600;
+}
+
+.notices__body {
+  display: block;
+  margin-top: 2px;
+  font-size: 14px;
+  line-height: 18px;
+  color: var(--ink-2);
+}
+
+.notices__time {
+  flex: none;
+  font-size: 12px;
+  line-height: 20px;
+  color: var(--ink-2);
+}
+
+/* Trạng thái trống */
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 48px 24px;
+  text-align: center;
+  color: var(--ink-2);
+}
+
+.empty__badge {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--tide-soft);
+  color: var(--tide);
+}
+
+.empty__title {
+  font-size: 16px;
+  line-height: 22px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.empty__text {
+  max-width: 34ch;
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.empty__hint {
+  margin-top: 8px;
+  font-size: 12px;
+  line-height: 16px;
+}
+
+/* Tài khoản */
+.profile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.profile__avatar {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--sea-deep);
+  color: #fff;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.profile__name {
+  display: block;
+  font-size: 16px;
+  line-height: 22px;
+  font-weight: 600;
+}
+
+.profile__role {
+  display: block;
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--ink-2);
+}
+
+.link-box {
+  margin-top: 12px;
+  padding: 16px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.link-box__text {
+  margin-bottom: 12px;
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--ink-2);
+}
+
+.linked {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 12px;
+  padding: 0 4px;
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--ok);
+}
+
+.menu {
+  margin-top: 16px;
+}
+
+.menu__row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 52px;
+  padding: 12px 16px;
+  font-size: 15px;
+  line-height: 20px;
+  color: var(--ink);
+}
+
+.menu__label {
+  flex: 1;
+  text-align: left;
+}
+
+.info {
+  padding: 0 16px 24px;
+}
+
+.info div {
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.info div:last-child {
+  border-bottom: 0;
+}
+
+.info dt {
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--ink-2);
+}
+
+.info dd {
+  margin-top: 2px;
+  font-size: 15px;
+  line-height: 20px;
+}
+
+.policy p {
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.policy p + p {
+  margin-top: 8px;
+}
+
+/* Chọn vai trò */
+.role-sheet {
+  padding: 0 16px 16px;
+}
+
+.role-sheet__hint {
+  margin-bottom: 8px;
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--ink-2);
+}
+
+.role-sheet__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-height: 56px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  color: var(--ink);
+}
+
+.role-sheet__item.is-active {
+  color: var(--tide);
+}
+
+.role-sheet__name {
+  display: block;
+  font-size: 15px;
+  line-height: 20px;
+  font-weight: 600;
+}
+
+.role-sheet__scope {
+  display: block;
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--ink-2);
 }
 
 /* Màn hình mở đầu */

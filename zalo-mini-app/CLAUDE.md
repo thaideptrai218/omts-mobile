@@ -117,6 +117,10 @@ Khi Zalo cập nhật tài liệu hoặc dự án đổi hướng, sửa lại f
   phải thử bên trong Zalo (Device mode hoặc `zmp deploy` rồi quét QR).
 - `app-config.json`: `title` bắt buộc; `actionBarHidden: true` đang bật nên header do app tự vẽ;
   `selfControlLoading: true` + `closeLoading()` cho phép app tự quyết lúc tắt màn hình tải của Zalo.
+- **Vị trí code**: app nằm trong thư mục `zalo-mini-app/` của repo `thaideptrai218/omts-mobile`, cạnh app Expo
+  ở thư mục gốc. Chạy `npm install`, `npm start` ngay trong `zalo-mini-app/`. `tsconfig.json` và
+  `eslint.config.js` ở thư mục gốc đã loại `zalo-mini-app` để CI của app Expo không quét code Zalo.
+  Làm việc theo nhánh từ `develop` rồi mở PR, không push thẳng vào `develop` hay `main`.
 - **Chạy dev**: `npm start` = `zmp start --no-frame`, chỉ mở một cổng và trả về app trần.
   Không chạy `zmp start` trần rồi mở trong simulator của extension Zalo: `zmp start` mặc định bọc app
   trong một trang khung giả (thanh trạng thái ghi cố định "12:00", nút menu có biểu tượng nguồn),
@@ -227,6 +231,12 @@ Khi Zalo cập nhật tài liệu hoặc dự án đổi hướng, sửa lại f
   xác nhận thanh toán.
 
 ## 11. Việc còn tồn đọng
+
+- Dashboard mới có giao diện với dữ liệu mẫu trong `src/data` (`roles.ts`, `features.ts`, `content.ts`).
+  Vai trò đang xem nằm ở `src/state/role.ts` và đổi bằng nút chọn vai trò để xem thử; khi có đăng nhập,
+  vai trò phải lấy từ quyền tài khoản do backend trả về và bỏ nút xem thử.
+- Thông tin HTX trong `src/data/content.ts` (mã số, địa chỉ, điện thoại, kênh hỗ trợ) là dữ liệu mẫu,
+  phải thay bằng thông tin thật trước khi gửi duyệt (xem mục 4).
 
 - Splash (`src/components/splash.tsx`) giữ khoảng 1,8 giây rồi mờ dần 0,7 giây, cộng thêm màn hình tải
   của Zalo. Nên rút xuống dưới 1 giây, bỏ qua khi mở từ QR truy xuất, và cân nhắc `selfControlLoading`
