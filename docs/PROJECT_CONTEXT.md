@@ -15,7 +15,7 @@ Internal Staff accounts can receive multiple zone-role grants. An account can th
 OMTS uses three official repositories:
 
 - `thaideptrai218/omts-web`: Next.js Web portal and public QR provenance.
-- `thaideptrai218/omts-mobile`: this Expo/React Native field application.
+- `thaideptrai218/omts-mobile`: this Zalo Mini App (React + Vite + ZaUI), replacing the earlier Expo/React Native scaffold.
 - `thaideptrai218/omts-backend`: .NET backend API.
 
 The repositories release independently. Shared contracts require an explicit team-approved synchronization mechanism; they cannot be imported from an assumed local monorepo.
@@ -28,26 +28,23 @@ The repositories release independently. Shared contracts require an explicit tea
 4. OMTS Figma: visual structure and screen flow; it does not override business rules.
 5. Historical reports/tracking: background only when they conflict with current sources.
 
-## Confirmed Mobile foundation target
+## Platform change (October 2026)
 
-Jira `OMTS-133` requires:
+The mobile channel moved from an Expo/React Native app to a **Zalo Mini App**. The Expo scaffold was removed from this repository.
+Jira `OMTS-133` (Mobile foundation) was written for Expo: secure storage via `expo-secure-store`, Expo Router route groups and Expo Go builds.
+Its acceptance criteria must be re-mapped to Zalo Mini App equivalents before it can be reported as done:
 
-- Expo Router auth and app route groups.
-- Token storage using `expo-secure-store`.
-- API client with refresh behavior.
-- Navigation based on permissions.
-- Shared message catalog behavior.
-- Offline banner for `MSG07`.
-- A build that runs in Expo Go against the QA API, with lint and typecheck passing.
+- Login via Zalo account linking instead of a username/password form (see `CLAUDE.md`).
+- Token kept in memory or ZMP `nativeStorage`; Zalo Mini Apps have no `localStorage`, `sessionStorage` or cookies.
+- Routes with ZaUI `ZMPRouter`; permission-based navigation; shared message catalog; `MSG07` offline banner.
+- Builds deployed with `zmp deploy` and tested inside Zalo; lint and typecheck passing in CI.
 
 ## Current code status
 
-- Expo 57, React Native 0.86, Expo Router, and strict TypeScript are configured.
-- Typed routes and React Compiler are enabled.
-- The root layout currently renders a plain Stack and the root screen is placeholder content.
-- Secure token storage, session bootstrap, API client, refresh flow, route groups, permission navigation, message catalog, and offline banner are not implemented yet.
-
-Do not report `OMTS-133` as complete based on the scaffold alone.
+- Zalo Mini App with React 18, TypeScript, Vite, ZaUI, ZMP SDK, Tailwind CSS and Jotai.
+- Launch splash, bottom navigation and a role-based dashboard for all seven SRS actors, using **mock data** only (`src/data/`).
+- Traceability lookup by lot code or QR scan, with a sample lot; Account page with cooperative info and privacy policy required by Zalo.
+- A role switcher exists for UI preview only. Zalo login/account linking, API client, permission payloads, message catalog and offline banner are not implemented yet.
 
 ## Current Mobile critical path
 
