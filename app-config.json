@@ -2,7 +2,7 @@
   "app": {
     "title": "OTMS",
     "textColor": {
-      "light": "black",
+      "light": "white",
       "dark": "white"
     },
     "statusBar": "transparent",

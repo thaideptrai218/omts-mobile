@@ -20,9 +20,9 @@ type Phase = "loading" | "hold" | "fade" | "done";
  * Chỉ bắt đầu đếm giờ khi ảnh đã tải xong; tự gỡ khỏi DOM khi kết thúc.
  */
 function Splash({
-  holdMs = 1800,
-  fadeMs = 700,
-  maxWaitMs = 3000,
+  holdMs = 600,
+  fadeMs = 300,
+  maxWaitMs = 1500,
   onDone,
 }: Props) {
   const [phase, setPhase] = useState<Phase>("loading");

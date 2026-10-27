@@ -1,0 +1,27 @@
+import { ReactNode } from "react";
+
+type Props = {
+  /** Dòng nhỏ phía trên tiêu đề, ví dụ lời chào. */
+  kicker?: string;
+  title: string;
+  subtitle?: string;
+  children?: ReactNode;
+};
+
+/**
+ * Dải đầu trang màu xanh Zalo, dùng chung cho mọi tab.
+ * Nền xanh đậm giúp chữ trắng của thanh trạng thái và menu Zalo (app-config `textColor: white`) luôn đủ tương phản.
+ * Góc trên bên phải được chừa trống cho nút menu cố định của Zalo.
+ */
+function PageHeader({ kicker, title, subtitle, children }: Props) {
+  return (
+    <header className="page-header">
+      {kicker && <p className="page-header__kicker">{kicker}</p>}
+      <h1 className="page-header__title">{title}</h1>
+      {subtitle && <p className="page-header__sub">{subtitle}</p>}
+      {children}
+    </header>
+  );
+}
+
+export default PageHeader;

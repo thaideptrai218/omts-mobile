@@ -3,30 +3,31 @@ import { Icon } from "zmp-ui";
 import type { Task } from "@/data/roles";
 import { useOpenFeature } from "@/hooks/use-open-feature";
 
+/** Nhãn mức độ hiện bằng chữ, không chỉ dựa vào màu, để người khó phân biệt màu vẫn đọc được. */
 const TONE_TEXT = {
-  neutral: "Thông tin",
+  neutral: "",
   success: "Hoàn tất",
   warning: "Cần chú ý",
   danger: "Gấp",
 } as const;
 
-/** Danh sách việc cần làm. Mỗi dòng có vạch màu bên trái theo mức độ gấp. */
+/** Danh sách việc cần làm. Mỗi dòng có vạch màu bên trái và nhãn chữ theo mức độ gấp. */
 function TaskList({ title, tasks }: { title: string; tasks: Task[] }) {
   const openFeature = useOpenFeature();
   if (tasks.length === 0) return null;
   return (
     <section className="block">
       <h2 className="block__title">{title}</h2>
-      <ul className="tasks">
+      <ul className="list">
         {tasks.map((t) => (
           <li key={t.id}>
-            <button type="button" className={`tasks__row tone-bar-${t.tone}`} onClick={() => openFeature(t.feature)}>
-              <span className="tasks__text">
-                <span className="tasks__title">{t.title}</span>
-                <span className="tasks__detail">{t.detail}</span>
+            <button type="button" className={`task tone-bar-${t.tone}`} onClick={() => openFeature(t.feature)}>
+              <span className="task__text">
+                {TONE_TEXT[t.tone] && <span className={`badge badge--${t.tone}`}>{TONE_TEXT[t.tone]}</span>}
+                <span className="task__title">{t.title}</span>
+                <span className="task__detail">{t.detail}</span>
               </span>
-              <span className="sr-only">{TONE_TEXT[t.tone]}</span>
-              <Icon icon="zi-chevron-right" className="tasks__chevron" />
+              <Icon icon="zi-chevron-right" className="chevron" />
             </button>
           </li>
         ))}

@@ -44,7 +44,8 @@ Its acceptance criteria must be re-mapped to Zalo Mini App equivalents before it
 - Zalo Mini App with React 18, TypeScript, Vite, ZaUI, ZMP SDK, Tailwind CSS and Jotai.
 - Launch splash, bottom navigation and a role-based dashboard for all seven SRS actors, using **mock data** only (`src/data/`).
 - Traceability lookup by lot code or QR scan, with a sample lot; Account page with cooperative info and privacy policy required by Zalo.
-- A role switcher exists for UI preview only. Zalo login/account linking, API client, permission payloads, message catalog and offline banner are not implemented yet.
+- Account module (ACS-01…07, 28/10/2026): API client with token refresh, session in memory + `nativeStorage`, permission-based dashboard, `MSG07` offline banner, shared verification screen, account linking by Zalo phone number (`/link`, no username/password form), temporary-password and phone gates, password recovery and change, personal profile with verified contact changes, notification preferences (push waits for the OMTS-215 channel decision), online/offline logout with a queued server revoke. The role switcher was removed.
+- Backend `develop` still lacks the Zalo linking endpoints; the proposed contract is in `docs/zalo-account-linking.md`. Every other ACS screen runs against the real backend.
 
 ## Current Mobile critical path
 
@@ -56,9 +57,9 @@ Its acceptance criteria must be re-mapped to Zalo Mini App equivalents before it
 ## Decisions still requiring confirmation
 
 - QA API base URL and current OpenAPI/response contracts.
-- Access/refresh token response shape, lifetime, and refresh endpoint behavior.
-- `/me/permissions` payload, especially zone scope and all-zone access.
-- Canonical Vietnamese/English message catalog.
+- Zalo linking endpoints (`POST api/auth/zalo/link`, `POST api/auth/zalo/login`, `DELETE api/me/zalo-link`): the backend owner must confirm the contract in `docs/zalo-account-linking.md` and add CORS for `https://h5.zdn.vn`.
+- Canonical Vietnamese/English message catalog: Mobile currently shows the SRS English texts verbatim (`src/services/acs/messages.ts`).
+- Push channel (Zalo OA/ZNS vs Mini App notifications): `PUSH_PROVIDER` in `src/config.ts`.
 - Required offline behavior beyond showing `MSG07`; no mutation queue or conflict policy is assumed.
 - Which screens are Mobile-native versus Web-only when Jira has not assigned a channel.
 

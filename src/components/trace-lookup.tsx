@@ -51,9 +51,15 @@ function TraceLookup() {
 
   return (
     <div className="trace">
+      {/* Quét QR là cách dễ nhất cho người lớn tuổi nên đặt lên đầu, nhập mã là cách dự phòng. */}
+      <Button size="large" fullWidth prefixIcon={<Icon icon="zi-qrline" size={28} />} onClick={onScan}>
+        Quét mã QR
+      </Button>
+      <p className="trace__or">hoặc nhập mã lô in bên dưới mã QR</p>
       <form className="trace__form" onSubmit={onSubmit}>
         <Input
           label="Mã lô"
+          size="large"
           placeholder="Ví dụ TN-2410-07"
           value={code}
           onChange={(e) => setCode(e.target.value)}
@@ -62,14 +68,9 @@ function TraceLookup() {
           status={error ? "error" : undefined}
           clearable
         />
-        <div className="trace__buttons">
-          <Button htmlType="submit" fullWidth>
-            Tra cứu
-          </Button>
-          <Button variant="secondary" fullWidth prefixIcon={<Icon icon="zi-qrline" />} onClick={onScan}>
-            Quét mã QR
-          </Button>
-        </div>
+        <Button htmlType="submit" size="large" variant="secondary" fullWidth className="trace__submit">
+          Tra cứu
+        </Button>
       </form>
 
       {lot && <TraceResult lot={lot} />}
@@ -84,7 +85,7 @@ function TraceResult({ lot }: { lot: TraceLot }) {
         <p className="lot__code">Lô {lot.code}</p>
         <h2 className="lot__product">{lot.product}</h2>
         <p className="lot__verified">
-          <Icon icon="zi-check-circle-solid" size={16} />
+          <Icon icon="zi-check-circle-solid" size={20} />
           Thông tin do HTX Thủy sản Trung Nam công bố
         </p>
       </div>

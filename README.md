@@ -15,7 +15,7 @@ Prerequisites: Node.js (version in `.nvmrc`), npm, Zalo Mini App CLI, and the Za
 ```bash
 npm install -g zmp-cli
 npm ci
-cp .env.example .env     # fill APP_ID; ZMP_TOKEN is written by `npm run login`
+cp .env.example .env     # fill APP_ID; ZMP_TOKEN is written by `npm run login`; empty VITE_API_BASE_URL = proxy to the local backend
 npm run login
 npm start                # zmp start --no-frame, then open the printed localhost URL
 ```
@@ -35,12 +35,15 @@ APIs such as `getAccessToken`, `getPhoneNumber` and Checkout SDK only work insid
 
 ```
 src/
-  app.ts            entry point, mounts the app into #app
-  components/       layout, splash, dashboard pieces, bottom navigation
-  pages/            Overview, Traceability, Notifications, Account, feature detail
-  data/             mock data for roles, features, notices and a sample traceability lot
-  state/            Jotai atoms
+  app.ts            entry point: restores the session, starts the connectivity watch, mounts into #app
+  components/       layout, session guard, offline banner, splash, dashboard pieces, bottom navigation
+  pages/            Overview, Traceability, Notifications, Account; pages/auth (link, verify, recover, phone gate),
+                    pages/account (profile, change password, notification preferences)
+  services/         api client, session store, Zalo bridge, ACS use-case calls and the SRS message catalog
+  data/             features and their permission mapping; mock stats, tasks, notices and a sample lot
+  state/            Jotai atoms (session, permissions, connectivity, pending verification, text size)
   static/images/    all images, imported so Vite bundles them
+docs/zalo-account-linking.md  proposed backend contract for account linking by Zalo phone number
 app-config.json     Zalo Mini App window config
 ```
 

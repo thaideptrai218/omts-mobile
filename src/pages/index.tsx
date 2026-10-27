@@ -1,16 +1,15 @@
 import { useAtomValue } from "jotai";
-import { useState } from "react";
-import { Icon, Page } from "zmp-ui";
+import { Button, Icon, Page, useNavigate } from "zmp-ui";
 
 import ActionGrid from "@/components/action-grid";
-import RoleSheet from "@/components/role-sheet";
+import PageHeader from "@/components/page-header";
 import StatPanel from "@/components/stat-panel";
 import TaskList from "@/components/task-list";
-import TideHeader from "@/components/tide-header";
 import TraceLookup from "@/components/trace-lookup";
 import { COOPERATIVE } from "@/data/content";
+import { canUseFeature, describeGrants, roleKeyFor } from "@/data/feature-access";
 import { ROLES } from "@/data/roles";
-import { roleAtom } from "@/state/role";
+import { permissionsAtom, sessionAtom } from "@/state/session";
 
 const TZ = "Asia/Ho_Chi_Minh";
 
@@ -26,51 +25,70 @@ function today(now: Date) {
   return now.toLocaleDateString("vi-VN", { weekday: "long", day: "2-digit", month: "2-digit", year: "numeric", timeZone: TZ });
 }
 
-/** Tổng quan: nội dung thay đổi theo vai trò đang xem. */
+/**
+ * Tổng quan. Chưa liên kết: tra cứu truy xuất công khai và lối vào liên kết tài khoản. Đã đăng nhập: chức năng
+ * lọc theo `GET api/me/permissions`; số liệu và việc cần làm vẫn là dữ liệu mẫu theo vai trò gần nhất
+ * cho tới khi các module đó nối API.
+ */
 function HomePage() {
-  const roleKey = useAtomValue(roleAtom);
-  const role = ROLES[roleKey];
-  const [sheetOpen, setSheetOpen] = useState(false);
+  const navigate = useNavigate();
+  const session = useAtomValue(sessionAtom);
+  const permissions = useAtomValue(permissionsAtom);
   const now = new Date();
-  const isPublic = roleKey === "viewer";
 
-  const roleChip = (
-    <button type="button" className="role-chip" onClick={() => setSheetOpen(true)}>
-      <span className="role-chip__label">{role.label}</span>
-      <span className="role-chip__scope">{role.scope}</span>
-      <Icon icon="zi-chevron-down" size={16} />
-    </button>
-  );
+  if (!session) {
+    return (
+      <Page className="screen screen--with-nav" hideScrollbar>
+        <PageHeader
+          kicker={COOPERATIVE.shortName}
+          title="Truy xuất nguồn gốc hàu"
+          subtitle="Quét mã QR trên bao bì để xem hàu được nuôi ở đâu và thu hoạch khi nào."
+        />
+        <div className="screen__body">
+          <div className="card">
+            <TraceLookup />
+          </div>
+          <div className="card link-box">
+            <p className="link-box__text">
+              Nhân viên HTX và thương lái: liên kết tài khoản Zalo một lần để xem công việc, đơn hàng và công nợ của mình.
+            </p>
+            <Button fullWidth size="large" onClick={() => navigate("/link")}>
+              Liên kết tài khoản
+            </Button>
+          </div>
+        </div>
+      </Page>
+    );
+  }
+
+  const role = permissions ? ROLES[roleKeyFor(permissions)] : null;
+  const actions = permissions && role ? role.actions.filter((key) => canUseFeature(permissions, key)) : [];
+  const tasks = permissions && role ? role.tasks.filter((t) => canUseFeature(permissions, t.feature)) : [];
 
   return (
     <Page className="screen screen--with-nav" hideScrollbar>
-      {isPublic ? (
-        <TideHeader kicker={COOPERATIVE.shortName} title="Truy xuất nguồn gốc hàu">
-          <p className="tide__lead">Quét mã QR trên bao bì để xem hàu được nuôi ở đâu và thu hoạch khi nào.</p>
-          {roleChip}
-        </TideHeader>
-      ) : (
-        <TideHeader kicker={`${greeting(now)}, ${today(now)}`} title={role.person}>
-          {roleChip}
-        </TideHeader>
-      )}
-
+      <PageHeader kicker={`${greeting(now)}, ${today(now)}`} title={session.displayName} subtitle={permissions ? describeGrants(permissions) : undefined} />
       <div className="screen__body">
-        {isPublic ? (
-          <div className="block block--raised">
-            <TraceLookup />
-          </div>
+        {!permissions || !role ? (
+          <div className="skeleton skeleton--dashboard" aria-busy />
         ) : (
           <>
+            <TaskList title={role.tasksTitle} tasks={tasks} />
+            <ActionGrid actions={actions} />
+            {actions.length === 0 && (
+              <div className="empty">
+                <span className="empty__badge">
+                  <Icon icon="zi-lock" size={32} />
+                </span>
+                <p className="empty__title">Chưa có chức năng nào</p>
+                <p className="empty__text">Tài khoản của bạn chưa được cấp quyền. Liên hệ Chủ HTX để được phân công.</p>
+              </div>
+            )}
             <StatPanel stats={role.stats} />
-            <TaskList title={role.tasksTitle} tasks={role.tasks} />
-            <ActionGrid actions={role.actions} />
             {role.note && <p className="screen__note">{role.note}</p>}
           </>
         )}
       </div>
-
-      <RoleSheet visible={sheetOpen} onClose={() => setSheetOpen(false)} />
     </Page>
   );
 }

@@ -1,37 +1,54 @@
 import { useAtomValue } from "jotai";
-import { Icon, Page } from "zmp-ui";
+import { Button, Icon, Page, useNavigate } from "zmp-ui";
 
-import ScreenTitle from "@/components/screen-title";
+import PageHeader from "@/components/page-header";
 import { NOTICES } from "@/data/content";
-import { roleAtom } from "@/state/role";
+import { roleKeyFor } from "@/data/feature-access";
+import { permissionsAtom, sessionAtom } from "@/state/session";
 
+/** Danh sách thông báo. Vẫn là dữ liệu mẫu theo vai trò gần nhất; module thông báo sẽ nối API sau. */
 function NotificationsPage() {
-  const role = useAtomValue(roleAtom);
-  const notices = NOTICES[role];
+  const navigate = useNavigate();
+  const session = useAtomValue(sessionAtom);
+  const permissions = useAtomValue(permissionsAtom);
+  const notices = session && permissions ? NOTICES[roleKeyFor(permissions)] : [];
   const unread = notices.filter((n) => n.unread).length;
 
   return (
-    <Page className="screen screen--with-nav screen--plain" hideScrollbar>
-      <ScreenTitle title="Thông báo" subtitle={unread > 0 ? `${unread} thông báo chưa đọc` : undefined} />
+    <Page className="screen screen--with-nav" hideScrollbar>
+      <PageHeader title="Thông báo" subtitle={unread > 0 ? `Có ${unread} thông báo mới` : undefined} />
       <div className="screen__body">
-        {notices.length === 0 ? (
+        {!session ? (
           <div className="empty">
-            <Icon icon="zi-notif-off" size={32} />
+            <span className="empty__badge">
+              <Icon icon="zi-notif-off" size={32} />
+            </span>
             <p className="empty__title">Chưa có thông báo</p>
-            <p className="empty__text">Liên kết tài khoản trong mục Tài khoản để nhận thông báo về đơn hàng và lịch làm việc.</p>
+            <p className="empty__text">Liên kết tài khoản để nhận thông báo về đơn hàng, công việc và cảnh báo nước.</p>
+            <Button size="large" onClick={() => navigate("/link")}>
+              Liên kết tài khoản
+            </Button>
+          </div>
+        ) : notices.length === 0 ? (
+          <div className="empty">
+            <span className="empty__badge">
+              <Icon icon="zi-notif-off" size={32} />
+            </span>
+            <p className="empty__title">Chưa có thông báo</p>
           </div>
         ) : (
-          <ul className="notices">
+          <ul className="list">
             {notices.map((n) => (
-              <li key={n.id} className={`notices__item${n.unread ? " is-unread" : ""}`}>
-                <span className={`notices__icon tone-${n.tone}`}>
-                  <Icon icon={n.icon} size={20} />
+              <li key={n.id} className={`notice${n.unread ? " is-unread" : ""}`}>
+                <span className={`notice__icon tone-${n.tone}`}>
+                  <Icon icon={n.icon} size={24} />
                 </span>
-                <span className="notices__text">
-                  <span className="notices__title">{n.title}</span>
-                  <span className="notices__body">{n.body}</span>
+                <span className="notice__text">
+                  {n.unread && <span className="badge badge--new">Mới</span>}
+                  <span className="notice__title">{n.title}</span>
+                  <span className="notice__body">{n.body}</span>
+                  <span className="notice__time">{n.time}</span>
                 </span>
-                <span className="notices__time">{n.time}</span>
               </li>
             ))}
           </ul>
