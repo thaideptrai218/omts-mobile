@@ -67,7 +67,7 @@ function HomePage() {
 
   return (
     <Page className="screen screen--with-nav" hideScrollbar>
-      <PageHeader kicker={`${greeting(now)}, ${today(now)}`} title={session.displayName} subtitle={permissions ? describeGrants(permissions) : undefined} />
+      <PageHeader bell kicker={`${greeting(now)}, ${today(now)}`} title={session.displayName} subtitle={permissions ? describeGrants(permissions) : undefined} />
       <div className="screen__body">
         {!permissions || !role ? (
           <div className="skeleton skeleton--dashboard" aria-busy />

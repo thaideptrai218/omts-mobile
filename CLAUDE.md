@@ -188,7 +188,11 @@ nằm trong AGENTS.md, được nạp ở đây:
 - **Menu của Zalo cố định ở góc trên bên phải** mọi màn hình. Không đặt nút hay thông tin dưới
   vùng đó; chọn màu sáng/tối cho menu sao cho đủ tương phản.
 - Giữ nút "trở lại" ở góc trên bên trái các trang phụ (Android); iOS vuốt từ mép trái.
-- Bottom navigation tối đa 4 tab.
+- Bottom navigation tối đa 4 tab. OMTS dùng (chốt 28/10/2026) `src/components/bottom-nav.tsx`: Tổng quan | nút quét
+  QR tròn nổi ở giữa | Tài khoản. Nút giữa là hành động, không phải tab: quét bằng `scanQr` rồi mở màn theo loại mã
+  (`src/services/scan-targets.ts`, hiện có mã truy xuất; điểm danh và loại khác thêm quy tắc ở đó). Thông báo mở từ
+  chuông góc trên bên trái của các trang chính (`PageHeader bell`), không phải tab. Truy xuất và Thông báo là trang chi
+  tiết. Quét QR của Zalo cần quyền được Zalo duyệt (mục 5).
 - Luôn có trạng thái đang tải, lỗi, mất kết nối. Phản hồi kết quả bằng modal, popup hoặc trang kết quả;
   modal thông báo thành công tự tắt sau 1,5 giây.
 - Vùng chạm 7 đến 9 mm; ưu tiên component ZaUI (`zmp-ui`).

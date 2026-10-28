@@ -1,4 +1,4 @@
-import { getAccessToken, getPhoneNumber, openPermissionSetting } from "zmp-sdk/apis";
+import { getAccessToken, getPhoneNumber, openPermissionSetting, scanQRCode } from "zmp-sdk/apis";
 
 /**
  * Cầu nối tới các API định danh của Zalo (CLAUDE.md mục 9). Chỉ chạy được bên trong Zalo; ngoài Zalo
@@ -7,7 +7,7 @@ import { getAccessToken, getPhoneNumber, openPermissionSetting } from "zmp-sdk/a
  * khỏi bản build production.
  */
 
-type FakeZalo = { accessToken?: string; phoneToken?: string; declinePhone?: boolean };
+type FakeZalo = { accessToken?: string; phoneToken?: string; declinePhone?: boolean; scan?: string };
 
 function fake(): FakeZalo | null {
   if (!import.meta.env.DEV) return null;
@@ -75,6 +75,30 @@ export async function openZaloPermissionSetting(): Promise<void> {
   } catch {
     // Ngoài Zalo hoặc bản Zalo quá cũ: không có màn này.
   }
+}
+
+/** Không mở được máy quét hoặc người dùng đóng nó mà không quét gì. */
+export class ScanUnavailable extends Error {
+  constructor(readonly insideZalo: boolean) {
+    super("SCAN_UNAVAILABLE");
+    this.name = "ScanUnavailable";
+  }
+}
+
+/**
+ * Mở máy quét QR của Zalo và trả nội dung mã. Quyền "quét QR của Zalo" phải được Zalo duyệt theo Mini App ID
+ * (CLAUDE.md mục 5). Khi dev ngoài Zalo có thể đặt `window.__OMTS_FAKE_ZALO__.scan` để giả nội dung quét được.
+ */
+export async function scanQr(): Promise<string> {
+  const f = fake();
+  if (f?.scan) return f.scan;
+  try {
+    const { content } = await scanQRCode({});
+    if (content) return content;
+  } catch {
+    // Đóng máy quét, chưa được cấp quyền, hoặc ngoài Zalo: phân biệt bên dưới.
+  }
+  throw new ScanUnavailable(await zaloAvailable());
 }
 
 /** Đang chạy bên trong Zalo (hoặc có bản giả khi dev) nên gọi được các API trên. */

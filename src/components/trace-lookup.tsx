@@ -1,18 +1,18 @@
-import { FormEvent, useState } from "react";
-import { scanQRCode } from "zmp-sdk/apis";
+import { FormEvent, useEffect, useState } from "react";
 import { Button, Icon, Input, useSnackbar } from "zmp-ui";
 
 import { SAMPLE_LOT, TraceLot } from "@/data/content";
+import { lotCodeFrom as lotCodeInQr } from "@/services/scan-targets";
+import { scanQr, ScanUnavailable } from "@/services/zalo";
 
-/** Tách mã lô từ nội dung QR, chấp nhận cả deeplink kiểu https://zalo.me/s/<id>/?lot=TN-2410-07. */
+/** Mã lô từ nội dung QR (deeplink `?lot=` hoặc chính mã lô) hoặc từ ô nhập tay. */
 function lotCodeFrom(text: string) {
-  const match = text.match(/lot=([A-Za-z0-9-]+)/);
-  return (match ? match[1] : text).trim().toUpperCase();
+  return lotCodeInQr(text) ?? text.trim().toUpperCase();
 }
 
-/** Ô tra cứu mã lô, nút quét QR và kết quả truy xuất. Không cần đăng nhập. */
-function TraceLookup() {
-  const [code, setCode] = useState("");
+/** Ô tra cứu mã lô, nút quét QR và kết quả truy xuất. Không cần đăng nhập. `initialCode`: tra ngay khi mở. */
+function TraceLookup({ initialCode }: { initialCode?: string }) {
+  const [code, setCode] = useState(initialCode ?? "");
   const [lot, setLot] = useState<TraceLot | null>(null);
   const [error, setError] = useState("");
   const { openSnackbar } = useSnackbar();
@@ -39,13 +39,21 @@ function TraceLookup() {
     lookup(code);
   };
 
+  useEffect(() => {
+    if (initialCode) lookup(initialCode);
+    // Chỉ tra một lần khi mở từ mã QR; mã khác thì trang tạo lại component (key).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const onScan = async () => {
     try {
-      const { content } = await scanQRCode({});
+      const content = await scanQr();
       setCode(lotCodeFrom(content));
       lookup(content);
-    } catch {
-      openSnackbar({ type: "info", text: "Chỉ quét được khi mở trong Zalo. Bạn có thể nhập mã lô." });
+    } catch (err) {
+      if (err instanceof ScanUnavailable && !err.insideZalo) {
+        openSnackbar({ type: "info", text: "Chỉ quét được khi mở trong Zalo. Bạn có thể nhập mã lô." });
+      }
     }
   };
 

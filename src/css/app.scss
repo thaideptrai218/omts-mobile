@@ -45,7 +45,6 @@ html[data-text-size="xlarge"] {
   --zaui-light-input-border-color: #8f9499;
   --zaui-light-input-placeholder-color: #767a7f;
   --zaui-light-input-helper-text-color: var(--ink-2);
-  --zaui-light-bottom-navigation-color: var(--ink-2);
 }
 
 body[zaui-theme="dark"] {
@@ -68,8 +67,6 @@ body[zaui-theme="dark"] {
   --zaui-dark-input-border-color: #8f9499;
   --zaui-dark-input-placeholder-color: #8f9499;
   --zaui-dark-input-helper-text-color: var(--ink-2);
-  --zaui-dark-bottom-navigation-color: var(--ink-2);
-  --zaui-dark-bottom-navigation-active-color: var(--brand-text);
 }
 
 body {
@@ -142,37 +139,129 @@ button:focus-visible {
   line-height: 1.5rem;
 }
 
-/* Thanh điều hướng dưới: cao hơn, chữ to hơn, tab đang chọn có nền xanh nhạt sau icon. */
-.bottom-nav .zaui-bottom-navigation-content {
-  height: calc(var(--bottom-safe) + var(--nav-height));
+/*
+ * Thanh điều hướng dưới: Tổng quan | nút quét QR tròn nổi lên ở giữa | Tài khoản. Tab đang chọn có nền xanh nhạt
+ * sau icon; nút quét to, nổi trên thanh để người lớn tuổi dễ thấy và dễ bấm.
+ */
+.tabbar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 40;
+  display: grid;
+  grid-template-columns: 1fr 112px 1fr;
+  height: calc(var(--nav-height) + var(--bottom-safe));
+  padding-bottom: var(--bottom-safe);
+  background: var(--surface);
+  border-top: 1px solid var(--line);
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.06);
 }
 
-.bottom-nav .zaui-bottom-navigation-item {
-  justify-content: center;
-  height: 100%;
-}
-
-.bottom-nav .zaui-bottom-navigation-item .zaui-bottom-navigation-item-icon {
-  justify-content: center;
+.tabbar__item,
+.tabbar__scan {
+  display: flex;
+  flex-direction: column;
   align-items: center;
+  height: var(--nav-height);
+  color: var(--ink-2);
+}
+
+.tabbar__item {
+  justify-content: center;
+  gap: 2px;
+}
+
+.tabbar__icon {
+  display: grid;
+  place-items: center;
   width: 56px;
   height: 32px;
   border-radius: 16px;
   font-size: 26px;
 }
 
-.bottom-nav .zaui-bottom-navigation-item-active .zaui-bottom-navigation-item-icon {
-  background: var(--brand-soft);
-}
-
-.bottom-nav .zaui-bottom-navigation-item .zaui-bottom-navigation-item-label {
+.tabbar__label {
   font-size: 0.875rem;
   line-height: 1.25rem;
   font-weight: 500;
 }
 
-.bottom-nav .zaui-bottom-navigation-item-active .zaui-bottom-navigation-item-label {
+.tabbar__item.is-active {
+  color: var(--brand-text);
+}
+
+.tabbar__item.is-active .tabbar__icon {
+  background: var(--brand-soft);
+}
+
+.tabbar__item.is-active .tabbar__label,
+.tabbar__scan .tabbar__label {
   font-weight: 700;
+}
+
+.tabbar__scan {
+  justify-content: flex-end;
+  padding-bottom: 6px;
+  color: var(--brand-text);
+}
+
+.tabbar__scan-circle {
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  margin-top: -30px;
+  margin-bottom: 2px;
+  border-radius: 50%;
+  border: 4px solid var(--surface);
+  background: var(--brand);
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(0, 106, 245, 0.35);
+  transition: transform 0.1s ease;
+}
+
+.tabbar__scan:active .tabbar__scan-circle {
+  transform: scale(0.95);
+}
+
+/* Snackbar không đè lên thanh dưới và nút quét (trình duyệt không hỗ trợ :has thì giữ vị trí mặc định). */
+body:has(.tabbar) .zaui-snackbar-bottom {
+  bottom: calc(var(--nav-height) + var(--bottom-safe) + 40px);
+}
+
+/* Chuông thông báo ở góc trên bên trái đầu trang (góc phải là menu cố định của Zalo). */
+.page-header > .bell:first-child {
+  padding-right: 0;
+}
+
+.bell {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  margin: -6px 0 6px -6px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.16);
+  color: #fff;
+}
+
+.bell__badge {
+  position: absolute;
+  top: 0;
+  right: -4px;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  border-radius: 11px;
+  border: 2px solid var(--header-bg);
+  background: var(--danger);
+  color: #fff;
+  font-size: 0.75rem;
+  line-height: 18px;
+  font-weight: 700;
+  text-align: center;
 }
 
 /* ---------- Khung màn hình ---------- */
@@ -184,8 +273,9 @@ button:focus-visible {
   line-height: 1.5rem;
 }
 
+/* Chừa chỗ cho thanh dưới và phần nút quét nổi lên phía trên nó. */
 .screen--with-nav {
-  padding-bottom: calc(var(--nav-height) + var(--bottom-safe) + 16px);
+  padding-bottom: calc(var(--nav-height) + var(--bottom-safe) + 40px);
 }
 
 .screen__body {

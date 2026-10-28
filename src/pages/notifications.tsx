@@ -1,13 +1,13 @@
-import { useAtomValue } from "jotai";
+import { useAtom, useAtomValue } from "jotai";
 import { useCallback, useEffect, useState } from "react";
-import { Button, Icon, Page, useNavigate } from "zmp-ui";
+import { Button, Header, Icon, Page, useNavigate } from "zmp-ui";
 
-import PageHeader from "@/components/page-header";
 import type { IconName } from "@/data/features";
 import type { Tone } from "@/data/roles";
 import { listNotifications, markAllNotificationsRead, markNotificationRead } from "@/services/acs/inbox";
 import { errorText } from "@/services/acs/messages";
 import type { NotificationView } from "@/services/acs/types";
+import { unreadCountAtom } from "@/state/inbox";
 import { sessionAtom } from "@/state/session";
 
 type Kind = { title: string; body: (n: NotificationView) => string; icon: IconName; tone: Tone; to?: string };
@@ -59,7 +59,7 @@ function NotificationsPage() {
   const navigate = useNavigate();
   const session = useAtomValue(sessionAtom);
   const [items, setItems] = useState<NotificationView[] | null>(null);
-  const [unread, setUnread] = useState(0);
+  const [unread, setUnread] = useAtom(unreadCountAtom);
   const [error, setError] = useState("");
 
   const load = useCallback(async () => {
@@ -71,7 +71,7 @@ function NotificationsPage() {
     } catch (err) {
       setError(errorText(err));
     }
-  }, []);
+  }, [setUnread]);
 
   useEffect(() => {
     if (session) void load();
@@ -98,8 +98,8 @@ function NotificationsPage() {
   };
 
   return (
-    <Page className="screen screen--with-nav" hideScrollbar>
-      <PageHeader title="Thông báo" subtitle={unread > 0 ? `Có ${unread} thông báo mới` : undefined} />
+    <Page className="screen screen--detail" hideScrollbar>
+      <Header title={unread > 0 ? `Thông báo (${unread} mới)` : "Thông báo"} className="detail-header" />
       <div className="screen__body">
         {!session ? (
           <div className="empty">

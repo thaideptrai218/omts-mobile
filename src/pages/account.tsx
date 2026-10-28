@@ -74,7 +74,7 @@ function AccountPage() {
 
   return (
     <Page className="screen screen--with-nav" hideScrollbar>
-      <PageHeader title="Tài khoản" />
+      <PageHeader title="Tài khoản" bell />
       <div className="screen__body">
         <section className="card profile">
           <span className="profile__avatar" aria-hidden>

@@ -86,12 +86,12 @@ const shot = (name) => page.screenshot({ path: `${SHOTS}${name}.png` });
 /** Mở một mục trong tab Tài khoản bằng điều hướng trong app (tải lại trang sẽ mất phiên ngoài Zalo). */
 async function goAccount(rowText) {
   // Trang chi tiết không có thanh tab: lùi lịch sử (trong app, không tải lại) tới khi thấy thanh tab.
-  for (let i = 0; i < 5 && (await page.locator(".bottom-nav").count()) === 0; i++) {
+  for (let i = 0; i < 5 && (await page.locator(".tabbar").count()) === 0; i++) {
     await page.goBack({ waitUntil: "commit" }).catch(() => {});
     await sleep(500);
   }
   if (path() !== "/account") {
-    await page.locator(".bottom-nav .zaui-bottom-navigation-item:has-text('Tài khoản')").click();
+    await page.locator(".tabbar__item:has-text('Tài khoản')").click();
     await waitPath("/account");
     await sleep(400);
   }
