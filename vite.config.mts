@@ -1,3 +1,4 @@
+import { fileURLToPath } from "node:url";
 import { defineConfig } from "vite";
 import zaloMiniApp from "zmp-vite-plugin";
 import react from "@vitejs/plugin-react";
@@ -7,8 +8,9 @@ export default () => {
   return defineConfig({
     root: "./src",
     base: "",
-    // File .env nằm ở thư mục gốc dự án (root của Vite là ./src). Chỉ biến VITE_* vào bundle.
-    envDir: "..",
+    // File .env nằm ở thư mục gốc dự án, cạnh file này. Không viết "..": `vite build .` và `zmp deploy` truyền
+    // root là "." nên ".." sẽ trỏ ra ngoài dự án và VITE_API_BASE_URL bị bỏ trống. Chỉ biến VITE_* vào bundle.
+    envDir: fileURLToPath(new URL(".", import.meta.url)),
     plugins: [zaloMiniApp(), react()],
     build: {
       assetsInlineLimit: 0,
