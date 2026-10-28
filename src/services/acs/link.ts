@@ -6,33 +6,27 @@ import { deviceName } from "./auth";
 import type { ZaloLinkResult, ZaloLoginResult } from "./types";
 
 /**
- * "Liên kết tài khoản" (thay cho đăng nhập bằng mật khẩu, CLAUDE.md mục 5 và 9). Hợp đồng API đề xuất
- * cho backend, xem `docs/zalo-account-linking.md`; backend develop chưa có hai endpoint này.
+ * "Liên kết tài khoản": cách duy nhất để vào phần quản trị trên mobile (CLAUDE.md mục 5 và 9). Không có
+ * mật khẩu, mã xác minh, quên mật khẩu hay tự tạo tài khoản. Hợp đồng API đề xuất cho backend, xem
+ * `docs/zalo-account-linking.md`; backend develop chưa có các endpoint này.
  *
  * - `POST api/auth/zalo/link`: Zalo access token + token số điện thoại. Backend lấy Zalo ID và số thật,
- *   khớp số với tài khoản có số đó, gắn Zalo ID, phát phiên OMTS. Không có tài khoản: 404
- *   ZALO_PHONE_NOT_FOUND; gửi lại với `createTrader: true` thì tạo tài khoản thương lái từ số Zalo.
+ *   khớp số với tài khoản HTX đã tạo sẵn, gắn Zalo ID, phát phiên OMTS. Không có tài khoản: 404
+ *   ZALO_PHONE_NOT_FOUND, người dùng nhờ HTX nhập đúng số Zalo vào hồ sơ.
  * - `POST api/auth/zalo/login`: chỉ Zalo access token; tài khoản đã liên kết thì phát phiên ngay
  *   (mở lại app không phải liên kết lại). Chưa liên kết: 404 ZALO_NOT_LINKED.
  * - `DELETE api/me/zalo-link`: gỡ Zalo ID khỏi tài khoản.
  */
 
-export type LinkOutcome = { tokens: ZaloLinkResult; created: boolean; notice: string | null };
-
-export async function linkZaloAccount(options: { createTrader?: boolean } = {}): Promise<LinkOutcome> {
+/** Liên kết bằng số điện thoại Zalo; trả `notice` (MSG57) nếu server có lưu ý. */
+export async function linkZaloAccount(): Promise<string | null> {
   const [accessToken, phoneToken] = [await zaloAccessToken(), await zaloPhoneToken()];
   const result = await rawRequest<ZaloLinkResult>("/api/auth/zalo/link", {
     method: "POST",
-    body: {
-      zaloAccessToken: accessToken,
-      phoneToken,
-      createTrader: options.createTrader ?? false,
-      clientType: "Mobile",
-      deviceName: deviceName(),
-    },
+    body: { zaloAccessToken: accessToken, phoneToken, clientType: "Mobile", deviceName: deviceName() },
   });
   setSession(result);
-  return { tokens: result, created: result.created, notice: result.notice };
+  return result.notice;
 }
 
 /** Phiên OMTS cho tài khoản đã liên kết với người dùng Zalo này. */

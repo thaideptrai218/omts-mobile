@@ -1058,7 +1058,7 @@ button:focus-visible {
   white-space: nowrap;
 }
 
-/* Nút dạng chữ: vùng chạm 48px nhưng không viền, dùng cho "Quên mật khẩu", "Quay lại". */
+/* Nút dạng chữ: vùng chạm 48px nhưng không viền, dùng cho "Để sau", "Quay lại". */
 .link-button {
   min-height: 48px;
   padding: 8px 4px;
@@ -1073,16 +1073,6 @@ button:focus-visible {
 
 .link-button:disabled {
   opacity: 0.6;
-}
-
-.link-button--inline {
-  align-self: flex-start;
-  text-align: left;
-}
-
-.link-box__link {
-  width: 100%;
-  margin-top: 8px;
 }
 
 /* Dòng lỗi của form: icon đỏ kèm chữ, không chỉ dựa vào màu. */
@@ -1102,84 +1092,6 @@ button:focus-visible {
 .form-error .zaui-icon {
   flex: none;
   margin-top: 2px;
-}
-
-/* Ghi chú: thông báo trung tính, cảnh báo (MSG67, MSG57) hoặc thành công. */
-.form-note {
-  padding: 12px 14px;
-  border-radius: 12px;
-  background: var(--brand-soft);
-  color: var(--ink);
-  font-size: 1rem;
-  line-height: 1.5rem;
-}
-
-.form-note--warning {
-  background: var(--warn-soft);
-  color: var(--warn);
-  font-weight: 500;
-}
-
-.form-note--success {
-  display: flex;
-  gap: 8px;
-  align-items: flex-start;
-  background: var(--ok-soft);
-  color: var(--ok);
-  font-weight: 500;
-}
-
-/* Chọn kênh đăng ký (SMS / Email), hai nút ngang nhau. */
-.segmented {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 4px;
-  padding: 4px;
-  border-radius: 14px;
-  background: var(--brand-soft);
-}
-
-.segmented__item {
-  min-height: 48px;
-  padding: 8px 12px;
-  border-radius: 10px;
-  font-size: 1.0625rem;
-  line-height: 1.5rem;
-  font-weight: 600;
-  color: var(--brand-text);
-}
-
-.segmented__item.is-active {
-  background: var(--surface);
-  color: var(--ink);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
-}
-
-/* Ô nhập mã 6 số: chữ lớn, giãn cách đều, một input nên dán được. */
-.code-input {
-  width: 100%;
-  height: 72px;
-  padding: 0 8px 0 24px;
-  border: 2px solid var(--zaui-light-input-border-color, #8f9499);
-  border-radius: 16px;
-  background: var(--surface);
-  color: var(--ink);
-  font-size: 2rem;
-  line-height: 1;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-  letter-spacing: 0.6em;
-  text-align: center;
-}
-
-.code-input:focus {
-  outline: none;
-  border-color: var(--brand);
-}
-
-.code-input::placeholder {
-  color: var(--zaui-light-input-placeholder-color, #767a7f);
-  letter-spacing: 0.6em;
 }
 
 /* Băng mất mạng (MSG07): cố định ở đỉnh, chừa góc phải cho menu Zalo. */
@@ -1291,10 +1203,6 @@ button:focus-visible {
   line-height: 1.625rem;
   font-weight: 500;
   overflow-wrap: anywhere;
-}
-
-.contact-row .zaui-btn {
-  flex: none;
 }
 
 .sheet-form {

@@ -40,7 +40,7 @@ const SUBJECT_LABEL = {
   Trader: "Thương lái",
 } as const;
 
-/** Tài khoản: hồ sơ, mật khẩu, thông báo, đăng xuất (ACS-02…07) và các mục Zalo bắt buộc hiển thị. */
+/** Tài khoản: liên kết Zalo, hồ sơ, thông báo, đăng xuất và các mục Zalo bắt buộc hiển thị. Không có mật khẩu. */
 function AccountPage() {
   const navigate = useNavigate();
   const session = useAtomValue(sessionAtom);
@@ -93,7 +93,6 @@ function AccountPage() {
             <h2 className="block__title">Tài khoản của tôi</h2>
             <ul className="list">
               <MenuRow icon="zi-user" label="Hồ sơ cá nhân" onClick={() => navigate("/account/profile")} />
-              <MenuRow icon="zi-lock" label="Đổi mật khẩu" onClick={() => navigate("/account/password")} />
               <MenuRow icon="zi-notif" label="Tùy chọn thông báo" onClick={() => navigate("/account/notifications")} />
               <MenuRow icon="zi-leave" label="Đăng xuất" danger onClick={() => setLogoutOpen(true)} />
               <MenuRow icon="zi-link" label="Hủy liên kết Zalo" danger onClick={() => setUnlinkOpen(true)} />
@@ -108,9 +107,6 @@ function AccountPage() {
             <Button fullWidth size="large" onClick={() => navigate("/link")}>
               Liên kết tài khoản
             </Button>
-            <button type="button" className="link-button link-box__link" onClick={() => navigate("/recover")}>
-              Quên mật khẩu bản web
-            </button>
           </div>
         )}
 
@@ -176,8 +172,8 @@ function AccountPage() {
         <div className="policy">
           <p>Đây là chính sách bảo mật của Mini App OTMS do {COOPERATIVE.name} vận hành.</p>
           <p>
-            Ứng dụng chỉ dùng tên hiển thị, email và số điện thoại bạn đăng ký với HTX để đăng nhập, xác minh và gửi thông báo về công việc,
-            đơn hàng. Dữ liệu được lưu trên máy chủ đặt tại Việt Nam và không chia sẻ cho bên thứ ba khi chưa có sự đồng ý của bạn.
+            Ứng dụng chỉ dùng tên hiển thị, email và số điện thoại bạn đăng ký với HTX để liên kết tài khoản Zalo và gửi thông báo về công
+            việc, đơn hàng. Dữ liệu được lưu trên máy chủ đặt tại Việt Nam và không chia sẻ cho bên thứ ba khi chưa có sự đồng ý của bạn.
           </p>
           <p>Bạn có thể yêu cầu xóa dữ liệu của mình bất cứ lúc nào bằng cách liên hệ HTX qua số {COOPERATIVE.phone}.</p>
         </div>
@@ -194,8 +190,8 @@ function AccountPage() {
           <p>Đây là điều khoản sử dụng của Mini App OTMS do {COOPERATIVE.name} vận hành.</p>
           <p>Ai cũng có thể tra cứu nguồn gốc hàu bằng mã QR hoặc mã lô mà không cần đăng nhập. Thông tin truy xuất do HTX công bố và chịu trách nhiệm.</p>
           <p>
-            Các chức năng quản lý chỉ dành cho nhân viên và thương lái đã được HTX cấp tài khoản. Bạn chịu trách nhiệm về các thông tin mình nhập
-            vào ứng dụng và giữ kín mật khẩu của mình.
+            Các chức năng quản lý chỉ dành cho nhân viên và thương lái đã được HTX cấp tài khoản và đã liên kết với Zalo của mình. Bạn chịu trách
+            nhiệm về các thông tin mình nhập vào ứng dụng.
           </p>
           <p>Mọi thắc mắc và khiếu nại, vui lòng liên hệ: {COOPERATIVE.support}</p>
         </div>

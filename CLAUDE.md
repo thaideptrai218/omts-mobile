@@ -23,14 +23,16 @@ nằm trong AGENTS.md, được nạp ở đây:
   15 phút, một lần làm mới dùng chung cho các request song song, 401 sau làm mới → phiên hết hạn MSG19);
   `src/services/session/session.ts` giữ token trong atom + nativeStorage, hàng đợi thu hồi phiên khi đăng
   xuất offline, cờ "đã đăng xuất" để không tự vào lại; `src/services/acs/*` là các lời gọi API theo use case
-  (link, verification, recovery, password, profile, notifications, permissions, push), `messages.ts` giữ nguyên
+  (link, profile, notifications, permissions, push), `messages.ts` giữ nguyên
   văn thông báo SRS (MSGxx) và `types.ts` hợp đồng DTO. UI không gọi HTTP hay storage trực tiếp.
   `src/components/session-guard.tsx` (nằm trong `ZMPRouter`) điều hướng theo phiên: thử vào lại im lặng bằng
-  token Zalo, cổng mật khẩu tạm `/gate/password`, cổng số điện thoại `/gate/phone`, màn bảo vệ `/account/*`,
-  MSG19 khi hết hạn. Màn xác minh mã dùng chung `/verify` đọc `pendingVerificationAtom`
-  (`src/state/verification.ts`): luồng gọi đặt `resend` và `onVerified` rồi mở `/verify`.
-- **Không có form mật khẩu**: vào app bằng "Liên kết tài khoản" (`/link`, số điện thoại Zalo). Backend develop
-  chưa có endpoint này; hợp đồng đề xuất ở `docs/zalo-account-linking.md`. Khi dev ngoài Zalo đặt
+  token Zalo, màn bảo vệ `/account/*`, MSG19 khi hết hạn.
+- **Chỉ có "Liên kết tài khoản"** (`/link`): `getAccessToken` (vào lại nếu đã liên kết) rồi `getPhoneNumber`
+  (số điện thoại Zalo), backend khớp số với hồ sơ HTX đã tạo. Bị từ chối quyền số điện thoại thì mở
+  `openPermissionSetting` để người dùng tự bật lại. **Không làm** form mật khẩu, quên/đổi mật khẩu, mã xác minh
+  SMS/email, cổng mật khẩu tạm hay cổng số điện thoại, đổi email/số điện thoại, tự tạo tài khoản thương lái:
+  số chưa có trong OMTS thì nhờ HTX nhập số. Mật khẩu chỉ dùng cho bản web. Backend develop chưa có endpoint
+  liên kết; hợp đồng đề xuất ở `docs/zalo-account-linking.md`. Khi dev ngoài Zalo đặt
   `window.__OMTS_FAKE_ZALO__` (xem `src/services/zalo.ts`).
 - **Dashboard chạy theo quyền**: `GET api/me/permissions` → `permissionsAtom`; `src/data/feature-access.ts`
   quyết định `FeatureKey` nào hiện (mã chức năng của backend, chủ HTX, thương lái). `ROLES`

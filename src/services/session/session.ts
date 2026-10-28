@@ -5,7 +5,6 @@ import type { AuthTokens } from "@/services/acs/types";
 import { ApiError, NetworkError } from "@/services/api/errors";
 import { rawRequest, setAuthProvider } from "@/services/api/http";
 import { permissionsAtom, sessionAtom, sessionExpiredAtom } from "@/state/session";
-import { passwordCodeTokenAtom, pendingVerificationAtom, recoveryTokenAtom } from "@/state/verification";
 
 import { readJson, removeKey, writeJson } from "./storage";
 
@@ -69,13 +68,10 @@ export function patchSession(patch: Partial<AuthTokens>) {
   if (current) setSession({ ...current, ...patch });
 }
 
-/** Xóa phiên trên máy và mọi dữ liệu bảo vệ đang giữ trong bộ nhớ (quyền, luồng xác minh dở). */
+/** Xóa phiên trên máy và mọi dữ liệu bảo vệ đang giữ trong bộ nhớ (quyền). */
 export function clearSession() {
   store.set(sessionAtom, null);
   store.set(permissionsAtom, null);
-  store.set(pendingVerificationAtom, null);
-  store.set(passwordCodeTokenAtom, null);
-  store.set(recoveryTokenAtom, null);
   removeKey(SESSION_KEY);
 }
 

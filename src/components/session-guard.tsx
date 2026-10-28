@@ -5,26 +5,20 @@ import { useLocation, useNavigate, useSnackbar } from "zmp-ui";
 import { silentZaloLogin } from "@/services/acs/link";
 import { MESSAGES } from "@/services/acs/messages";
 import { loadPermissions } from "@/services/acs/permissions";
-import { flashMessageAtom, gateAtom, permissionsAtom, sessionAtom, sessionExpiredAtom } from "@/state/session";
+import { flashMessageAtom, permissionsAtom, sessionAtom, sessionExpiredAtom } from "@/state/session";
 
-/** Đường dẫn chỉ mở được khi đã đăng nhập. */
-const PROTECTED_PREFIXES = ["/account/", "/gate/"];
-/** Đường dẫn chỉ dành cho người chưa đăng nhập. */
-const LOGGED_OUT_ONLY = ["/link", "/recover", "/recover/reset"];
-/** Màn được mở trong lúc bị cổng chặn (ngoài màn của chính cổng đó). */
-const ALLOWED_DURING_GATE = ["/verify"];
+/** Đường dẫn chỉ mở được khi đã liên kết tài khoản. */
+const PROTECTED_PREFIX = "/account/";
 
 /**
  * Điều hướng theo trạng thái phiên, đặt ngay trong ZMPRouter nên có `useNavigate`:
  * - mở app không có phiên: thử vào lại im lặng bằng token Zalo (tài khoản đã liên kết);
- * - cổng mật khẩu / số điện thoại chặn toàn bộ app cho tới khi xong (ACS-02);
- * - màn bảo vệ cần phiên, màn liên kết/khôi phục ẩn khi đã đăng nhập;
+ * - màn bảo vệ cần phiên, màn liên kết ẩn khi đã có phiên;
  * - phiên hết hạn (làm mới token thất bại) thì về màn liên kết và báo MSG19;
- * - có phiên và không bị chặn thì tải quyền để dựng menu.
+ * - có phiên thì tải quyền để dựng menu.
  */
 function SessionGuard() {
   const session = useAtomValue(sessionAtom);
-  const gate = useAtomValue(gateAtom);
   const permissions = useAtomValue(permissionsAtom);
   const [expired, setExpired] = useAtom(sessionExpiredAtom);
   const [flash, setFlash] = useAtom(flashMessageAtom);
@@ -38,19 +32,14 @@ function SessionGuard() {
   }, []);
 
   useEffect(() => {
-    if (gate) {
-      const gatePath = gate === "password" ? "/gate/password" : "/gate/phone";
-      if (path !== gatePath && !ALLOWED_DURING_GATE.includes(path)) navigate(gatePath, { replace: true, animate: false });
-      return;
-    }
-    if (!session && PROTECTED_PREFIXES.some((p) => path.startsWith(p))) {
+    if (!session && path.startsWith(PROTECTED_PREFIX)) {
       navigate("/link", { replace: true, animate: false });
       return;
     }
-    if (session && LOGGED_OUT_ONLY.includes(path)) {
+    if (session && path === "/link") {
       navigate("/", { replace: true, animate: false });
     }
-  }, [gate, session, path, navigate]);
+  }, [session, path, navigate]);
 
   useEffect(() => {
     if (!expired) return;
@@ -67,11 +56,11 @@ function SessionGuard() {
 
   const accountId = session?.accountId;
   useEffect(() => {
-    if (!accountId || gate || permissions) return;
+    if (!accountId || permissions) return;
     loadPermissions().catch(() => {
-      // Lỗi mạng hoặc cổng chặn: trang chủ hiện trạng thái tương ứng, không cần xử lý thêm ở đây.
+      // Lỗi mạng: trang chủ hiện trạng thái tương ứng, không cần xử lý thêm ở đây.
     });
-  }, [accountId, gate, permissions]);
+  }, [accountId, permissions]);
 
   return null;
 }

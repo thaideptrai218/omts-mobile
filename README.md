@@ -37,11 +37,11 @@ APIs such as `getAccessToken`, `getPhoneNumber` and Checkout SDK only work insid
 src/
   app.ts            entry point: restores the session, starts the connectivity watch, mounts into #app
   components/       layout, session guard, offline banner, splash, dashboard pieces, bottom navigation
-  pages/            Overview, Traceability, Notifications, Account; pages/auth (link, verify, recover, phone gate),
-                    pages/account (profile, change password, notification preferences)
+  pages/            Overview, Traceability, Notifications, Account; pages/auth/link (account linking by Zalo phone),
+                    pages/account (profile, notification preferences)
   services/         api client, session store, Zalo bridge, ACS use-case calls and the SRS message catalog
   data/             features and their permission mapping; mock stats, tasks, notices and a sample lot
-  state/            Jotai atoms (session, permissions, connectivity, pending verification, text size)
+  state/            Jotai atoms (session, permissions, connectivity, text size)
   static/images/    all images, imported so Vite bundles them
 docs/zalo-account-linking.md  proposed backend contract for account linking by Zalo phone number
 app-config.json     Zalo Mini App window config

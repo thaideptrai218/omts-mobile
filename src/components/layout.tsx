@@ -15,13 +15,9 @@ import OfflineBanner from "@/components/offline-banner";
 import SessionGuard from "@/components/session-guard";
 import Splash from "@/components/splash";
 import AccountPage from "@/pages/account";
-import ChangePasswordPage from "@/pages/account/change-password";
 import NotificationPreferencesPage from "@/pages/account/notification-preferences";
 import ProfilePage from "@/pages/account/profile";
 import LinkAccountPage from "@/pages/auth/link";
-import PhoneGatePage from "@/pages/auth/phone-gate";
-import RecoverPage, { RecoverResetPage } from "@/pages/auth/recover";
-import VerifyPage from "@/pages/auth/verify";
 import FeaturePage from "@/pages/feature";
 import HomePage from "@/pages/index";
 import NotificationsPage from "@/pages/notifications";
@@ -40,7 +36,7 @@ const Layout = () => {
     <App theme={getSystemInfo().zaloTheme as AppProps["theme"]}>
       <SnackbarProvider>
         <ZMPRouter>
-          {/* Điều hướng theo phiên: cổng sau đăng nhập, màn bảo vệ, phiên hết hạn (MSG19). */}
+          {/* Điều hướng theo phiên: màn bảo vệ, phiên hết hạn (MSG19). */}
           <SessionGuard />
           <OfflineBanner />
           <AnimationRoutes>
@@ -50,15 +46,9 @@ const Layout = () => {
             <Route path="/notifications" element={<NotificationsPage />}></Route>
             <Route path="/account" element={<AccountPage />}></Route>
             <Route path="/feature/:key" element={<FeaturePage />}></Route>
-            {/* Tài khoản (ACS-01…07): vào bằng liên kết tài khoản Zalo, không có form mật khẩu. */}
+            {/* Tài khoản: chỉ vào bằng liên kết tài khoản qua số điện thoại Zalo, không có mật khẩu hay mã xác minh. */}
             <Route path="/link" element={<LinkAccountPage />}></Route>
-            <Route path="/verify" element={<VerifyPage />}></Route>
-            <Route path="/recover" element={<RecoverPage />}></Route>
-            <Route path="/recover/reset" element={<RecoverResetPage />}></Route>
-            <Route path="/gate/password" element={<ChangePasswordPage forced />}></Route>
-            <Route path="/gate/phone" element={<PhoneGatePage />}></Route>
             <Route path="/account/profile" element={<ProfilePage />}></Route>
-            <Route path="/account/password" element={<ChangePasswordPage />}></Route>
             <Route path="/account/notifications" element={<NotificationPreferencesPage />}></Route>
           </AnimationRoutes>
           <BottomNav />

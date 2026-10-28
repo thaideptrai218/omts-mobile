@@ -1,4 +1,4 @@
-import { getAccessToken, getPhoneNumber } from "zmp-sdk/apis";
+import { getAccessToken, getPhoneNumber, openPermissionSetting } from "zmp-sdk/apis";
 
 /**
  * Cầu nối tới các API định danh của Zalo (CLAUDE.md mục 9). Chỉ chạy được bên trong Zalo; ngoài Zalo
@@ -61,6 +61,19 @@ export async function zaloPhoneToken(): Promise<string> {
     if (error instanceof PhonePermissionDeclined) throw error;
     // Mọi lỗi khác của SDK (từ chối, chưa được Zalo duyệt quyền, ngoài Zalo) đều coi như không có số.
     throw new PhonePermissionDeclined();
+  }
+}
+
+/**
+ * Zalo ghi nhớ lựa chọn cấp quyền: đã từ chối chia sẻ số điện thoại thì `getPhoneNumber` báo lỗi ngay, không
+ * hỏi lại. Mở màn quản lý quyền của Zalo để người dùng tự bật lại. Ngoài Zalo thì không làm gì.
+ */
+export async function openZaloPermissionSetting(): Promise<void> {
+  if (fake()) return;
+  try {
+    await openPermissionSetting();
+  } catch {
+    // Ngoài Zalo hoặc bản Zalo quá cũ: không có màn này.
   }
 }
 

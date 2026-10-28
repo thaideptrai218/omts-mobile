@@ -5,13 +5,15 @@
 
 export type ClientType = "Web" | "Mobile";
 
-export type VerificationChannel = "Sms" | "Email";
-
 export type SubjectType = "SystemAdministrator" | "CooperativeOwner" | "Staff" | "Trader";
 
 export type NotificationChannel = "InApp" | "Push" | "Email" | "Sms" | "Zalo";
 
-/** `POST api/auth/login`, `POST api/auth/refresh` và `tokens` của đổi mật khẩu. */
+/**
+ * Phiên OMTS: `POST api/auth/zalo/link`, `POST api/auth/zalo/login`, `POST api/auth/refresh`. Server còn trả
+ * `mustChangePassword`, `phoneVerificationRequired` cho bản web; mobile không dùng (không có mật khẩu,
+ * số điện thoại đã được Zalo xác minh lúc liên kết).
+ */
 export type AuthTokens = {
   accessToken: string;
   accessTokenExpiresAt: string;
@@ -20,65 +22,18 @@ export type AuthTokens = {
   accountId: string;
   displayName: string;
   subjectType: SubjectType;
-  mustChangePassword: boolean;
-  phoneVerificationRequired: boolean;
 };
 
 /**
  * `POST api/auth/zalo/link` (đề xuất, xem docs/zalo-account-linking.md): phiên OMTS sau khi liên kết.
- * `created`: vừa tạo tài khoản thương lái từ số Zalo; `oldDocumentsHidden`/`notice`: MSG57 khi nhiều hồ
- * sơ khách cũ trùng số.
+ * `notice`: chữ MSG57 khi nhiều hồ sơ khách cũ trùng số, ngược lại null.
  */
 export type ZaloLinkResult = AuthTokens & {
-  created: boolean;
-  oldDocumentsHidden: boolean;
   notice: string | null;
 };
 
 /** `POST api/auth/zalo/login` (đề xuất): phiên OMTS cho tài khoản đã liên kết. */
 export type ZaloLoginResult = AuthTokens;
-
-/** Một yêu cầu xác minh đã gửi mã (ACS-06). */
-export type VerificationStarted = {
-  verificationId: string;
-  maskedTarget: string;
-  expiresAt: string;
-  sendsLeft: number;
-  nextResendAt: string;
-};
-
-export type VerificationTokenIssued = {
-  verificationToken: string;
-  expiresAt: string;
-};
-
-export type TraderRegistered = {
-  accountId: string;
-  username: string;
-  oldDocumentsHidden: boolean;
-  notice: string | null;
-};
-
-export type RecoveryStarted = {
-  requestId: string;
-  message: string;
-};
-
-export type PasswordChanged = {
-  tokens: AuthTokens;
-  message: string;
-};
-
-export type ContactConfirmed = {
-  contact: string;
-  oldDocumentsHidden: boolean;
-  notice: string | null;
-};
-
-export type ContactChangeStarted = {
-  verification: VerificationStarted;
-  message: string;
-};
 
 export type ProfileGrantView = {
   role: string;
