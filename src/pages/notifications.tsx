@@ -10,17 +10,42 @@ import { errorText } from "@/services/acs/messages";
 import type { NotificationView } from "@/services/acs/types";
 import { sessionAtom } from "@/state/session";
 
+type Kind = { title: string; body: (n: NotificationView) => string; icon: IconName; tone: Tone; to?: string };
+
 /**
- * Cách hiện từng loại thông báo của backend (`NotificationTypes`). Tiêu đề server viết tiếng Anh; loại đã biết
- * thì hiện tiếng Việt, loại chưa biết thì hiện nguyên chữ server. `to`: màn mở ra khi bấm vào.
+ * Cách hiện từng loại thông báo của backend (`NotificationTypes`). Server viết tiêu đề và nội dung bằng tiếng
+ * Anh nên app không hiện chữ đó: mỗi loại có chữ tiếng Việt riêng, loại chưa biết hiện câu chung.
+ * `to`: màn mở ra khi bấm vào.
  */
-const KINDS: Record<string, { title: string; body?: string; icon: IconName; tone: Tone; to?: string }> = {
-  TRADER_ACCESS_REQUESTED: { title: "Thương lái xin tài khoản", body: "Có yêu cầu tài khoản thương lái mới từ Zalo. Bấm để xem và duyệt.", icon: "zi-user-check", tone: "warning", to: "/account/trader-requests" },
-  TRADER_ACCESS_APPROVED: { title: "Tài khoản đã được duyệt", body: "HTX đã duyệt tài khoản thương lái của bạn.", icon: "zi-check-circle", tone: "success" },
-  WATER_ALERT: { title: "Cảnh báo chất lượng nước", icon: "zi-warning", tone: "danger" },
-  WATER_MEASUREMENT_OVERDUE: { title: "Quá hạn đo nước", icon: "zi-clock-1", tone: "warning" },
-  ZONE_LICENSE_EXPIRY: { title: "Giấy phép vùng nuôi sắp hết hạn", icon: "zi-calendar", tone: "warning" },
+const KINDS: Record<string, Kind> = {
+  TRADER_ACCESS_REQUESTED: {
+    title: "Thương lái xin tài khoản",
+    body: () => "Có yêu cầu tài khoản thương lái mới từ Zalo. Bấm để xem và duyệt.",
+    icon: "zi-user-check",
+    tone: "warning",
+    to: "/account/trader-requests",
+  },
+  TRADER_ACCESS_APPROVED: {
+    title: "Tài khoản đã được duyệt",
+    body: () => "HTX đã duyệt tài khoản thương lái của bạn. Bạn đã dùng được các chức năng của thương lái.",
+    icon: "zi-check-circle",
+    tone: "success",
+  },
+  WATER_ALERT: { title: "Cảnh báo chất lượng nước", body: () => "Chỉ số nước tại vùng nuôi vượt ngưỡng đã đặt. Vui lòng kiểm tra ngay.", icon: "zi-warning", tone: "danger" },
+  WATER_MEASUREMENT_OVERDUE: {
+    title: "Quá hạn đo nước",
+    body: (n) => `Vùng ${n.relatedRecordCode ?? ""} đã hơn 1 tháng chưa có số đo nước được xác nhận. Vui lòng đo và ghi nhận.`,
+    icon: "zi-clock-1",
+    tone: "warning",
+  },
+  ZONE_LICENSE_EXPIRY: { title: "Giấy phép vùng nuôi sắp hết hạn", body: () => "Có giấy phép vùng nuôi sắp hết hạn hoặc đã hết hạn. Vui lòng gia hạn.", icon: "zi-calendar", tone: "warning" },
+  WORK_ASSIGNMENT: { title: "Công việc mới", body: () => "Bạn được giao công việc mới.", icon: "zi-list-1", tone: "neutral" },
+  PAYROLL_SENT_BACK: { title: "Bảng lương bị trả lại", body: () => "Bảng lương được gửi lại để chỉnh sửa.", icon: "zi-note", tone: "warning" },
+  NEW_ORDER: { title: "Đơn hàng mới", body: () => "Có đơn hàng mới cần xử lý.", icon: "zi-poll", tone: "neutral" },
+  TRACE_QR_SENT: { title: "Đã gửi mã QR truy xuất", body: () => "Mã QR truy xuất nguồn gốc đã được gửi.", icon: "zi-qrline", tone: "success" },
 };
+
+const OTHER: Kind = { title: "Thông báo mới", body: () => "Bạn có một thông báo mới từ HTX.", icon: "zi-notif", tone: "neutral" };
 
 function timeOf(value: string) {
   const at = new Date(value);
@@ -115,7 +140,7 @@ function NotificationsPage() {
             )}
             <ul className="list">
               {items.map((n) => {
-                const kind = KINDS[n.type] ?? { title: n.title, icon: "zi-notif" as IconName, tone: "neutral" as Tone };
+                const kind = KINDS[n.type] ?? OTHER;
                 return (
                   <li key={n.id}>
                     <button type="button" className={`notice${n.readAt ? "" : " is-unread"}`} onClick={() => open(n)}>
@@ -125,7 +150,7 @@ function NotificationsPage() {
                       <span className="notice__text">
                         {!n.readAt && <span className="badge badge--new">Mới</span>}
                         <span className="notice__title">{kind.title}</span>
-                        {(kind.body ?? n.body) && <span className="notice__body">{kind.body ?? n.body}</span>}
+                        <span className="notice__body">{kind.body(n)}</span>
                         <span className="notice__time">{timeOf(n.createdAt)}</span>
                       </span>
                     </button>

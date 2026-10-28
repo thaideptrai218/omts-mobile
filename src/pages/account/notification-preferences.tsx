@@ -17,7 +17,7 @@ const CATEGORY_LABEL: Record<string, string> = {
 };
 
 const CHANNELS: { key: NotificationChannel; label: string; name: string }[] = [
-  { key: "InApp", label: "Trong app", name: "In-app" },
+  { key: "InApp", label: "Trong app", name: "trong app" },
   { key: "Push", label: "Push", name: "Push" },
   { key: "Email", label: "Email", name: "Email" },
   { key: "Zalo", label: "Zalo OA", name: "Zalo OA" },
@@ -86,8 +86,8 @@ function NotificationPreferencesPage() {
     try {
       const saved = await saveNotificationPreferences(items);
       apply(saved.categories);
-      openSnackbar({ text: saved.message || MESSAGES.MSG10("Notification settings"), type: "success", duration: 4000 });
-      if (saved.notice) setNotice(saved.notice);
+      openSnackbar({ text: MESSAGES.MSG10("tùy chọn thông báo"), type: "success", duration: 4000 });
+      if (saved.notice) setNotice(MESSAGES.MSG22);
     } catch (err) {
       setError(errorText(err));
     } finally {

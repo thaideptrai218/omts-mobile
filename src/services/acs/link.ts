@@ -3,6 +3,7 @@ import { clearSession, getSession, isSignedOut, setSession } from "@/services/se
 import { zaloAccessToken, zaloAvailable, zaloPhoneToken } from "@/services/zalo";
 
 import { deviceName } from "./auth";
+import { MESSAGES } from "./messages";
 import type { TraderRequestSent, ZaloLinkResult, ZaloLoginResult } from "./types";
 
 /**
@@ -18,7 +19,7 @@ import type { TraderRequestSent, ZaloLinkResult, ZaloLoginResult } from "./types
  * - `DELETE api/me/zalo-link`: gỡ Zalo ID khỏi tài khoản.
  */
 
-/** Liên kết bằng số điện thoại Zalo; trả `notice` (MSG57) nếu server có lưu ý. */
+/** Liên kết bằng số điện thoại Zalo; trả lưu ý MSG57 (tiếng Việt) khi hồ sơ cũ bị tạm ẩn, ngược lại null. */
 export async function linkZaloAccount(): Promise<string | null> {
   const [accessToken, phoneToken] = [await zaloAccessToken(), await zaloPhoneToken()];
   const result = await rawRequest<ZaloLinkResult>("/api/auth/zalo/link", {
@@ -26,7 +27,7 @@ export async function linkZaloAccount(): Promise<string | null> {
     body: { zaloAccessToken: accessToken, phoneToken, clientType: "Mobile", deviceName: deviceName() },
   });
   setSession(result);
-  return result.notice;
+  return result.notice ? MESSAGES.MSG57 : null;
 }
 
 /**

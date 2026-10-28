@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Button, Header, Icon, Input, Modal, Page, Sheet, useSnackbar } from "zmp-ui";
 
 import FormError from "@/components/form-error";
-import { errorText, MESSAGES } from "@/services/acs/messages";
+import { errorText, FIELD, MESSAGES } from "@/services/acs/messages";
 import { approveTraderRequest, listTraderRequests, rejectTraderRequest } from "@/services/acs/trader-requests";
 import type { TraderRequestView } from "@/services/acs/types";
 
@@ -62,7 +62,7 @@ function TraderRequestsPage() {
     if (!rejecting) return;
     const text = reason.trim();
     if (!text || text.length > MAX_REASON) {
-      setError(MESSAGES.MSG01("Reason"));
+      setError(MESSAGES.MSG01(FIELD.reason));
       return;
     }
     setBusy(true);

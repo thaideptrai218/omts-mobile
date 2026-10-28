@@ -292,9 +292,12 @@ nằm trong AGENTS.md, được nạp ở đây:
 - Kênh Push chưa chốt (OMTS-215): `PUSH_PROVIDER` trong `src/config.ts` đang là `"none"`, màn tùy chọn thông
   báo hiện Push là chưa khả dụng; đổi sang `"zalo"` thì luồng xin quyền + đăng ký thiết bị trong
   `src/services/acs/push.ts` được bật.
-- Thông báo MSGxx hiện nguyên văn tiếng Anh như SRS/ticket (nghiệm thu so khớp từng ký tự); nhãn, nút và
-  hướng dẫn trên màn hình bằng tiếng Việt. Muốn Việt hóa thông báo thì đổi một chỗ: `src/services/acs/messages.ts`.
-- Số liệu và việc cần làm trên dashboard, danh sách thông báo vẫn là dữ liệu mẫu trong `src/data`
+- **Mọi chữ hiện cho người dùng bằng tiếng Việt** (chốt 28/10/2026), kể cả thông báo MSGxx: backend trả chữ tiếng
+  Anh trong `detail` nhưng app không hiện chữ đó, mà dịch theo `code` ở `errorText` (`src/services/acs/messages.ts`,
+  một chỗ duy nhất). Thêm mã lỗi mới ở backend thì thêm chữ tiếng Việt vào `SERVER_TEXT`; thêm loại thông báo
+  mới thì thêm vào `KINDS` của `src/pages/notifications.tsx`. Nghiệm thu so khớp MSGxx nguyên văn tiếng Anh
+  cần thống nhất lại với SRS.
+- Số liệu và việc cần làm trên dashboard vẫn là dữ liệu mẫu trong `src/data`
   (`roles.ts`, `content.ts`) cho tới khi các module đó nối API; chức năng hiện ra đã lọc theo quyền thật.
 - `nativeStorage` của zmp-sdk không ghi gì khi chạy ngoài Zalo (`npm start`): phiên chỉ sống trong một lần
   mở trang, tải lại trang là mất; trong Zalo cần quyền native storage được duyệt.

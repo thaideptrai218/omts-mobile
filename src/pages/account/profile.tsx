@@ -63,9 +63,9 @@ function ProfilePage() {
       const saved = await updateProfile(name, profile.rowVersion);
       setProfile(saved.profile);
       setDisplayName(saved.profile.displayName);
-      openSnackbar({ text: saved.message || MESSAGES.MSG10("Personal profile"), type: "success", duration: 4000 });
+      openSnackbar({ text: MESSAGES.MSG10("hồ sơ cá nhân"), type: "success", duration: 4000 });
     } catch (err) {
-      if (isApiError(err, "MSG06")) setConflict(err.message);
+      if (isApiError(err, "MSG06")) setConflict(errorText(err));
       else setError(errorText(err));
     } finally {
       setSaving(false);
@@ -157,14 +157,14 @@ function ProfilePage() {
         verticalActions
         actions={[
           {
-            text: "Reload",
+            text: "Tải lại",
             highLight: true,
             onClick: () => {
               setConflict("");
               void load();
             },
           },
-          { text: "Cancel", close: true },
+          { text: "Hủy", close: true },
         ]}
       />
     </Page>
