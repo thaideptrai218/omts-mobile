@@ -679,7 +679,46 @@ button:focus-visible {
   display: flex;
   align-items: flex-start;
   gap: 12px;
+  width: 100%;
   padding: 16px;
+  text-align: left;
+}
+
+/* Yêu cầu tài khoản thương lái (Chủ HTX duyệt) */
+.request-list {
+  display: grid;
+  gap: 12px;
+}
+
+.request {
+  display: grid;
+  gap: 6px;
+  padding: 16px;
+}
+
+.request__name {
+  font-size: 1.125rem;
+  line-height: 1.625rem;
+  font-weight: 600;
+}
+
+.request__meta {
+  font-size: 0.9375rem;
+  line-height: 1.375rem;
+  color: var(--ink-2);
+}
+
+.request__note {
+  font-size: 1rem;
+  line-height: 1.5rem;
+  overflow-wrap: anywhere;
+}
+
+.request__actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 8px;
 }
 
 .notice.is-unread {

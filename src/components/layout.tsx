@@ -17,6 +17,7 @@ import Splash from "@/components/splash";
 import AccountPage from "@/pages/account";
 import NotificationPreferencesPage from "@/pages/account/notification-preferences";
 import ProfilePage from "@/pages/account/profile";
+import TraderRequestsPage from "@/pages/account/trader-requests";
 import LinkAccountPage from "@/pages/auth/link";
 import FeaturePage from "@/pages/feature";
 import HomePage from "@/pages/index";
@@ -50,6 +51,7 @@ const Layout = () => {
             <Route path="/link" element={<LinkAccountPage />}></Route>
             <Route path="/account/profile" element={<ProfilePage />}></Route>
             <Route path="/account/notifications" element={<NotificationPreferencesPage />}></Route>
+            <Route path="/account/trader-requests" element={<TraderRequestsPage />}></Route>
           </AnimationRoutes>
           <BottomNav />
         </ZMPRouter>

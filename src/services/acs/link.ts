@@ -3,16 +3,16 @@ import { clearSession, getSession, isSignedOut, setSession } from "@/services/se
 import { zaloAccessToken, zaloAvailable, zaloPhoneToken } from "@/services/zalo";
 
 import { deviceName } from "./auth";
-import type { ZaloLinkResult, ZaloLoginResult } from "./types";
+import type { TraderRequestSent, ZaloLinkResult, ZaloLoginResult } from "./types";
 
 /**
  * "Liên kết tài khoản": cách duy nhất để vào phần quản trị trên mobile (CLAUDE.md mục 5 và 9). Không có
- * mật khẩu, mã xác minh, quên mật khẩu hay tự tạo tài khoản. Hợp đồng API đề xuất cho backend, xem
- * `docs/zalo-account-linking.md`; backend develop chưa có các endpoint này.
+ * mật khẩu, mã xác minh hay quên mật khẩu. Hợp đồng API ở `docs/zalo-account-linking.md`.
  *
  * - `POST api/auth/zalo/link`: Zalo access token + token số điện thoại. Backend lấy Zalo ID và số thật,
  *   khớp số với tài khoản HTX đã tạo sẵn, gắn Zalo ID, phát phiên OMTS. Không có tài khoản: 404
- *   ZALO_PHONE_NOT_FOUND, người dùng nhờ HTX nhập đúng số Zalo vào hồ sơ.
+ *   ZALO_PHONE_NOT_FOUND; thương lái gửi yêu cầu (`zalo/trader-requests`) và chờ Chủ HTX duyệt.
+ *   Đang chờ: 403 ZALO_APPROVAL_PENDING; bị từ chối: 403 ZALO_REQUEST_REJECTED kèm `reason`.
  * - `POST api/auth/zalo/login`: chỉ Zalo access token; tài khoản đã liên kết thì phát phiên ngay
  *   (mở lại app không phải liên kết lại). Chưa liên kết: 404 ZALO_NOT_LINKED.
  * - `DELETE api/me/zalo-link`: gỡ Zalo ID khỏi tài khoản.
@@ -27,6 +27,18 @@ export async function linkZaloAccount(): Promise<string | null> {
   });
   setSession(result);
   return result.notice;
+}
+
+/**
+ * Thương lái chưa có tài khoản gửi yêu cầu cho HTX. Token số điện thoại chỉ dùng được một lần nên xin lại
+ * (Zalo đã nhớ lựa chọn chia sẻ số nên không hỏi lại). Tài khoản chỉ dùng được khi Chủ HTX duyệt.
+ */
+export async function requestTraderAccess(input: { displayName: string; note: string }): Promise<TraderRequestSent> {
+  const [accessToken, phoneToken] = [await zaloAccessToken(), await zaloPhoneToken()];
+  return rawRequest<TraderRequestSent>("/api/auth/zalo/trader-requests", {
+    method: "POST",
+    body: { zaloAccessToken: accessToken, phoneToken, displayName: input.displayName, note: input.note || null },
+  });
 }
 
 /** Phiên OMTS cho tài khoản đã liên kết với người dùng Zalo này (vào lại im lặng khi mở app). */

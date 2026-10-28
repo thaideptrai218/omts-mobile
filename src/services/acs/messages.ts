@@ -36,7 +36,11 @@ export const LINK = {
   notInZalo: "Liên kết tài khoản chỉ thực hiện được khi mở app trong ứng dụng Zalo trên điện thoại.",
   notSupported: "Máy chủ OMTS chưa hỗ trợ liên kết tài khoản Zalo. Vui lòng thử lại sau.",
   phoneNotFound: (maskedPhone: string) =>
-    `Chưa có tài khoản OMTS nào dùng số ${maskedPhone}. Nhờ HTX nhập đúng số điện thoại Zalo của bạn vào hồ sơ rồi liên kết lại.`,
+    `Chưa có tài khoản OMTS nào dùng số ${maskedPhone}. Nếu bạn là thương lái, gửi yêu cầu để HTX duyệt. Nếu bạn là nhân viên HTX, nhờ Chủ HTX nhập đúng số Zalo vào hồ sơ rồi liên kết lại.`,
+  requestIntro: "HTX sẽ xem yêu cầu và duyệt tài khoản thương lái cho bạn. Số điện thoại Zalo được gửi kèm để HTX nhận ra bạn.",
+  requestSent: "Đã gửi yêu cầu. Khi HTX duyệt, bạn mở lại app là vào được ngay.",
+  pending: (name: string) => `Yêu cầu tài khoản thương lái của ${name || "bạn"} đang chờ HTX duyệt. Khi được duyệt, bạn mở lại app là vào được ngay.`,
+  rejected: (reason: string | null) => `HTX chưa duyệt yêu cầu của bạn.${reason ? ` Lý do: ${reason}.` : ""} Bạn có thể liên hệ HTX hoặc gửi lại yêu cầu.`,
   linked: "Đã liên kết tài khoản. Lần sau mở app không cần liên kết lại.",
 } as const;
 

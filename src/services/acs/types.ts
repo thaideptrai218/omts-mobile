@@ -32,8 +32,47 @@ export type ZaloLinkResult = AuthTokens & {
   notice: string | null;
 };
 
-/** `POST api/auth/zalo/login` (đề xuất): phiên OMTS cho tài khoản đã liên kết. */
+/** `POST api/auth/zalo/login`: phiên OMTS cho tài khoản đã liên kết. */
 export type ZaloLoginResult = AuthTokens;
+
+/** `POST api/auth/zalo/trader-requests` (202): yêu cầu tài khoản thương lái đang chờ Chủ HTX duyệt. */
+export type TraderRequestSent = {
+  status: "PENDING_APPROVAL";
+  displayName: string;
+  maskedPhone: string;
+};
+
+/** `GET api/trader-requests` (Chủ HTX): một yêu cầu tài khoản thương lái gửi từ Mini App. */
+export type TraderRequestView = {
+  accountId: string;
+  displayName: string;
+  phoneNumber: string | null;
+  note: string | null;
+  requestedAt: string | null;
+  /** PENDING_APPROVAL, REJECTED, hoặc ACTIVE ngay sau khi duyệt. */
+  status: string;
+  rejectionReason: string | null;
+};
+
+/** Một thông báo in-app của người đang đăng nhập; chưa đọc khi `readAt` rỗng. */
+export type NotificationView = {
+  id: string;
+  type: string;
+  title: string;
+  body: string | null;
+  relatedRecordType: string | null;
+  relatedRecordCode: string | null;
+  createdAt: string;
+  readAt: string | null;
+  isMandatory: boolean;
+};
+
+/** `GET api/me/notifications`: mới nhất trước, kèm số chưa đọc cho huy hiệu. */
+export type NotificationPage = {
+  items: NotificationView[];
+  total: number;
+  unreadCount: number;
+};
 
 export type ProfileGrantView = {
   role: string;

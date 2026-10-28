@@ -30,8 +30,10 @@ nằm trong AGENTS.md, được nạp ở đây:
 - **Chỉ có "Liên kết tài khoản"** (`/link`): `getAccessToken` (vào lại nếu đã liên kết) rồi `getPhoneNumber`
   (số điện thoại Zalo), backend khớp số với hồ sơ HTX đã tạo. Bị từ chối quyền số điện thoại thì mở
   `openPermissionSetting` để người dùng tự bật lại. **Không làm** form mật khẩu, quên/đổi mật khẩu, mã xác minh
-  SMS/email, cổng mật khẩu tạm hay cổng số điện thoại, đổi email/số điện thoại, tự tạo tài khoản thương lái:
-  số chưa có trong OMTS thì nhờ HTX nhập số. Mật khẩu chỉ dùng cho bản web. Hợp đồng API liên kết
+  SMS/email, cổng mật khẩu tạm hay cổng số điện thoại, đổi email/số điện thoại. Số chưa có trong OMTS: thương
+  lái nhập tên (và lời nhắn) gửi **yêu cầu** (`zalo/trader-requests`), tài khoản ở trạng thái Chờ duyệt cho tới khi
+  Chủ HTX duyệt ở mục "Duyệt thương lái" (`/account/trader-requests`, web cũng có API này); Chủ HTX nhận thông
+  báo in-app, thương lái nhận thông báo khi được duyệt. Mật khẩu chỉ dùng cho bản web. Hợp đồng API liên kết
   ở `docs/zalo-account-linking.md`. Khi dev ngoài Zalo đặt
   `window.__OMTS_FAKE_ZALO__` (xem `src/services/zalo.ts`).
 - **Dashboard chạy theo quyền**: `GET api/me/permissions` → `permissionsAtom`; `src/data/feature-access.ts`

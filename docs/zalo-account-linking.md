@@ -35,7 +35,12 @@ ký thương lái; các API đó chỉ còn cho bản web. Mobile chỉ dùng th
   thì mật khẩu tạm mất hiệu lực, `mustChangePassword = false`, nên không có cổng đổi mật khẩu. Muốn dùng web thì dùng
   Quên mật khẩu bằng số đã xác minh. Chủ HTX cấp lại mật khẩu tạm sau đó thì `zalo/login` vẫn trả MSG68 khi nó hết hạn.
 - Liên kết xong thì `PhoneVerifiedAt` có giá trị (Zalo đã xác minh số), nên không có cổng số điện thoại (MSG67).
-- Không tạo tài khoản từ mobile: số không có trong OMTS thì trả `ZALO_PHONE_NOT_FOUND`, HTX nhập số trên web.
+- Số không có trong OMTS: `zalo/link` trả `ZALO_PHONE_NOT_FOUND`. Thương lái nhập tên (+ lời nhắn) và gửi
+  `POST api/auth/zalo/trader-requests`: tạo tài khoản thương lái trạng thái **Chờ duyệt** (`PENDING_APPROVAL`, 303), đã
+  gắn Zalo, chưa đăng nhập được; Chủ HTX nhận thông báo in-app `TRADER_ACCESS_REQUESTED`. Chủ HTX duyệt (`ACTIVE`, hồ
+  sơ khách được gắn như ACS-01, thương lái nhận `TRADER_ACCESS_APPROVED`) hoặc từ chối kèm lý do (`REJECTED`, 304;
+  thương lái thấy lý do và gửi lại được) qua `api/trader-requests` (web và mini app). Hai trạng thái và ba bước
+  chuyển này chưa có trong SRS: cần cập nhật SRS.
 
 ### Để sau (không liên quan tới liên kết)
 
@@ -55,7 +60,8 @@ Mini App                                   OMTS.Api                             
    |                                          |  GET graph.zalo.me/v2.0/me/info ───────▶|  → số điện thoại
    |                                          |  tìm Account theo số, gắn ZaloAccountId  |
    |  ◀── 200 AuthTokens + notice             |                                          |
-   |  ◀── 404 ZALO_PHONE_NOT_FOUND (nhờ HTX nhập số, không tạo gì)                        |
+   |  ◀── 404 ZALO_PHONE_NOT_FOUND → thương lái nhập tên, gửi zalo/trader-requests (202) |
+   |  ◀── 403 ZALO_APPROVAL_PENDING / ZALO_REQUEST_REJECTED (+ reason)                    |
 ```
 
 - Bấm nút liên kết luôn đi thẳng `zalo/link`, kể cả Zalo đã liên kết sẵn với đúng tài khoản đó (backend chỉ phát phiên).
@@ -159,7 +165,11 @@ Thêm vào `UserMessages`. Chữ dưới đây là đề xuất, giữ phong cá
 |---|---|---|---|
 | `ZALO_TOKEN_INVALID` | 401 | The Zalo account could not be verified. Please open OMTS from Zalo and try again. | Hiện `detail` |
 | `ZALO_PHONE_TOKEN_INVALID` | 400 | The phone number could not be read from Zalo. Please try again. | Hiện `detail` |
-| `ZALO_PHONE_NOT_FOUND` | 404 | No OMTS account uses this phone number. (+ `maskedPhone`) | Hiện số đã che, nhờ HTX nhập đúng số Zalo vào hồ sơ |
+| `ZALO_PHONE_NOT_FOUND` | 404 | No OMTS account uses this phone number. (+ `maskedPhone`) | Form gửi yêu cầu cho HTX (tên, lời nhắn) |
+| `ZALO_APPROVAL_PENDING` | 403 | Your request has been sent. Please wait until the cooperative approves it. | Màn "Đang chờ HTX duyệt" |
+| `ZALO_REQUEST_REJECTED` | 403 | The cooperative did not approve your request. (+ `reason`) | Hiện lý do, nút "Gửi lại yêu cầu" |
+| `ZALO_ACCOUNT_EXISTS` | 409 | This phone number already has an OMTS account. Please link it instead. | Hiện `detail` |
+| `ZALO_PHONE_UNSUPPORTED` | 400 | OMTS accounts use Vietnamese phone numbers only. | Hiện `detail` |
 | `ZALO_PHONE_AMBIGUOUS` | 409 | Several OMTS accounts use this phone number. Please contact the support channel. | Hiện `detail` |
 | `ZALO_ALREADY_LINKED` | 409 | This Zalo account is already linked to another OMTS account. | Hiện `detail` |
 | `ZALO_NOT_LINKED` | 404 | This Zalo account is not linked to OMTS yet. | Không hiện; ở trạng thái khách |
@@ -267,7 +277,8 @@ Integration test cho backend (dùng `Fake`):
 - [ ] Số khớp nhân viên chưa xác minh SĐT → 200, `phoneVerificationRequired = false`, `ZaloAccountId` được gắn, `PhoneVerifiedAt` có giá trị.
 - [ ] Nhân viên có mật khẩu tạm (kể cả đã hết hạn) → vẫn 200, mật khẩu tạm bị hủy, không bị chặn.
 - [ ] Thương lái có nhiều hồ sơ khách cũ trùng số → 200, `notice` = MSG57.
-- [ ] Số không có tài khoản → 404 `ZALO_PHONE_NOT_FOUND` có `maskedPhone`, không tạo gì.
+- [ ] Số không có tài khoản → 404 `ZALO_PHONE_NOT_FOUND` có `maskedPhone`, không tạo gì; gửi yêu cầu → 202, Chờ duyệt.
+- [ ] Chủ HTX duyệt → thương lái `zalo/login` được, có thông báo; từ chối → 403 `ZALO_REQUEST_REJECTED` kèm lý do.
 - [ ] Tài khoản bị khóa → 403 MSG13.
 - [ ] Zalo ID đã gắn tài khoản khác → 409 `ZALO_ALREADY_LINKED`.
 - [ ] `zalo/login`: đã liên kết → 200; chưa liên kết → 404 `ZALO_NOT_LINKED`.

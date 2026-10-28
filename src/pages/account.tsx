@@ -93,6 +93,9 @@ function AccountPage() {
             <h2 className="block__title">Tài khoản của tôi</h2>
             <ul className="list">
               <MenuRow icon="zi-user" label="Hồ sơ cá nhân" onClick={() => navigate("/account/profile")} />
+              {permissions?.isCooperativeOwner && (
+                <MenuRow icon="zi-user-check" label="Duyệt thương lái" onClick={() => navigate("/account/trader-requests")} />
+              )}
               <MenuRow icon="zi-notif" label="Tùy chọn thông báo" onClick={() => navigate("/account/notifications")} />
               <MenuRow icon="zi-leave" label="Đăng xuất" danger onClick={() => setLogoutOpen(true)} />
               <MenuRow icon="zi-link" label="Hủy liên kết Zalo" danger onClick={() => setUnlinkOpen(true)} />
