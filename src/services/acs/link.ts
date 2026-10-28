@@ -29,7 +29,7 @@ export async function linkZaloAccount(): Promise<string | null> {
   return result.notice;
 }
 
-/** Phiên OMTS cho tài khoản đã liên kết với người dùng Zalo này. */
+/** Phiên OMTS cho tài khoản đã liên kết với người dùng Zalo này (vào lại im lặng khi mở app). */
 export async function loginWithZalo(): Promise<ZaloLoginResult> {
   const result = await rawRequest<ZaloLoginResult>("/api/auth/zalo/login", {
     method: "POST",

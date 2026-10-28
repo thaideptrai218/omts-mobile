@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Button, Header, Icon, Page, useNavigate } from "zmp-ui";
 
 import FormError from "@/components/form-error";
-import { linkZaloAccount, loginWithZalo } from "@/services/acs/link";
+import { linkZaloAccount } from "@/services/acs/link";
 import { maskPhone } from "@/services/acs/masking";
 import { errorText, LINK } from "@/services/acs/messages";
 import { isApiError } from "@/services/api/errors";
@@ -11,8 +11,9 @@ import { NotInZalo, openZaloPermissionSetting, PhonePermissionDeclined } from "@
 import { flashMessageAtom } from "@/state/session";
 
 /**
- * "Liên kết tài khoản": cách duy nhất để vào phần quản trị (CLAUDE.md mục 5). Giải thích lý do trước, rồi
- * mới xin số điện thoại Zalo; backend khớp số với hồ sơ HTX đã tạo và phát phiên. Không có mật khẩu, mã
+ * "Liên kết tài khoản": cách duy nhất để vào phần quản trị (CLAUDE.md mục 5). Giải thích lý do trước; bấm nút
+ * thì Zalo hỏi chia sẻ số điện thoại ngay (đã đồng ý trước đó thì Zalo không hỏi lại), rồi backend khớp số với
+ * hồ sơ HTX đã tạo và phát phiên. Zalo đã liên kết sẵn thì backend cũng chỉ phát phiên. Không có mật khẩu, mã
  * xác minh, quên mật khẩu hay tự tạo tài khoản: số chưa có trong OMTS thì người dùng nhờ HTX nhập số.
  */
 function LinkAccountPage() {
@@ -27,26 +28,11 @@ function LinkAccountPage() {
     navigate("/", { replace: true });
   };
 
-  /** Zalo này đã liên kết từ trước (ví dụ sau khi đăng xuất): vào lại ngay, không hỏi số điện thoại. */
-  const tryLogin = async () => {
-    try {
-      await loginWithZalo();
-      return true;
-    } catch (err) {
-      if (isApiError(err, "ZALO_NOT_LINKED")) return false;
-      throw err;
-    }
-  };
-
   const link = async () => {
     setBusy(true);
     setError("");
     setDeclined(false);
     try {
-      if (await tryLogin()) {
-        finish(null);
-        return;
-      }
       finish(await linkZaloAccount());
     } catch (err) {
       if (err instanceof NotInZalo) setError(LINK.notInZalo);

@@ -6,8 +6,9 @@ Mobile (Zalo Mini App) **không có form tên đăng nhập + mật khẩu**: Za
 app có form đó (`CLAUDE.md` mục 5). Nhân viên và thương lái vào app bằng **Liên kết tài khoản**: liên kết tài khoản
 Zalo **một lần** với hồ sơ OMTS qua **số điện thoại Zalo**, sau đó mở app là vào thẳng. Phía mobile đã viết xong
 và gọi đúng các endpoint dưới đây (`src/services/acs/link.ts`, `src/services/zalo.ts`, `src/pages/auth/link.tsx`).
-Backend `develop` (sau OMTS-198) **chưa có** các endpoint này. Hiện bấm "Liên kết bằng số điện thoại Zalo" sẽ báo
-"Máy chủ OMTS chưa hỗ trợ liên kết tài khoản Zalo".
+Backend đã làm các endpoint này (28/10/2026, `ZaloLinkService` trong `OMTS.Application/Features/Auth`, adapter
+`OMTS.Infrastructure/Zalo`), chờ mã Jira để mở PR vào `develop`. Backend chưa có chúng thì bấm "Liên kết bằng số điện
+thoại Zalo" sẽ báo "Máy chủ OMTS chưa hỗ trợ liên kết tài khoản Zalo".
 
 Liên kết bằng số điện thoại Zalo là **cách duy nhất** để vào phần quản trị trên mobile. Mobile **không** dùng mật khẩu,
 khôi phục/đổi mật khẩu, mã xác minh SMS/email, cổng mật khẩu tạm, cổng số điện thoại, đổi email/số điện thoại hay đăng
@@ -30,8 +31,9 @@ ký thương lái; các API đó chỉ còn cho bản web. Mobile chỉ dùng th
 
 ### Đã chốt (28/10/2026)
 
-- Liên kết bằng Zalo **không** bị cổng mật khẩu tạm: mật khẩu tạm/hết hạn không chặn `zalo/link`, `zalo/login`, và
-  `api/me/*` không trả `PASSWORD_CHANGE_REQUIRED` cho phiên tạo bằng Zalo. Mobile bỏ qua `mustChangePassword`.
+- Liên kết bằng Zalo **hủy mật khẩu tạm**: mật khẩu tạm (còn hạn hay đã hết hạn) không chặn `zalo/link`; liên kết xong
+  thì mật khẩu tạm mất hiệu lực, `mustChangePassword = false`, nên không có cổng đổi mật khẩu. Muốn dùng web thì dùng
+  Quên mật khẩu bằng số đã xác minh. Chủ HTX cấp lại mật khẩu tạm sau đó thì `zalo/login` vẫn trả MSG68 khi nó hết hạn.
 - Liên kết xong thì `PhoneVerifiedAt` có giá trị (Zalo đã xác minh số), nên không có cổng số điện thoại (MSG67).
 - Không tạo tài khoản từ mobile: số không có trong OMTS thì trả `ZALO_PHONE_NOT_FOUND`, HTX nhập số trên web.
 
@@ -47,12 +49,7 @@ ký thương lái; các API đó chỉ còn cho bản web. Mobile chỉ dùng th
 Mini App                                   OMTS.Api                                   Zalo
    |  bấm "Liên kết bằng số điện thoại Zalo"  |                                          |
    |  getAccessToken()  ─────────────────────────────────────────────────────────────▶  |  (không hỏi người dùng)
-   |  POST api/auth/zalo/login {zaloAccessToken}                                         |
-   |  ───────────────────────────────────────▶|  GET graph.zalo.me/v2.0/me  ───────────▶|  → id
-   |                                          |  tìm Account.ZaloAccountId = id          |
-   |  ◀── 200 AuthTokens (đã liên kết, xong)  |                                          |
-   |  ◀── 404 ZALO_NOT_LINKED (chưa liên kết) |                                          |
-   |  getPhoneNumber()  ─────────────────────────────────────────────────────────────▶  |  (Zalo hiện hộp thoại xin số)
+   |  getPhoneNumber()  ─────────────────────────────────────────────────────────────▶  |  (Zalo hiện hộp thoại xin số; đã đồng ý trước đó thì không hỏi lại)
    |  POST api/auth/zalo/link {zaloAccessToken, phoneToken}                              |
    |  ───────────────────────────────────────▶|  GET graph.zalo.me/v2.0/me ────────────▶|  → id
    |                                          |  GET graph.zalo.me/v2.0/me/info ───────▶|  → số điện thoại
@@ -61,6 +58,7 @@ Mini App                                   OMTS.Api                             
    |  ◀── 404 ZALO_PHONE_NOT_FOUND (nhờ HTX nhập số, không tạo gì)                        |
 ```
 
+- Bấm nút liên kết luôn đi thẳng `zalo/link`, kể cả Zalo đã liên kết sẵn với đúng tài khoản đó (backend chỉ phát phiên).
 - Mở app mà không còn phiên trên máy: mobile gọi `POST api/auth/zalo/login` **im lặng** (không bật hộp thoại nào),
   trừ khi người dùng vừa chủ động đăng xuất. Lỗi của lời gọi im lặng không hiện cho người dùng.
 - Mobile không có cổng nào sau liên kết: `mustChangePassword` bị bỏ qua, `phoneVerificationRequired` phải là `false`
@@ -106,7 +104,7 @@ Xử lý:
      số; với thương lái gọi `TraderCustomerLinker.ApplyVerifiedPhoneAsync`, trả MSG57 khi nhiều hồ sơ khách cũ trùng số);
      audit `Account.ZaloLinked`; phát phiên.
    - **Tìm thấy, Locked** → 403 MSG13 (`UserMessages.AccountUnusable`).
-   - Mật khẩu tạm (còn hạn hay hết hạn) **không** chặn: mật khẩu chỉ dùng cho web.
+   - Mật khẩu tạm (còn hạn hay hết hạn) **không** chặn, và bị hủy khi liên kết: mật khẩu chỉ dùng cho web.
    - **Không thấy** → 404 `ZALO_PHONE_NOT_FOUND` kèm `maskedPhone` (ví dụ `"09******89"`). Không tạo gì.
 5. Phát phiên bằng `AuthService.CreateSessionAsync(account, clientType, deviceName, client)` (như `PasswordChangeService`),
    cập nhật `LastLoginAt`.
@@ -142,8 +140,8 @@ Anonymous. Rate limit `Logins`.
 Lấy `zaloId` như mục 4.1, tìm `Account.ZaloAccountId == zaloId`:
 
 - Active → phát phiên như 3.1 bước 5, trả `AuthTokens` (không cần hai trường thêm).
-- Không có → 404 `ZALO_NOT_LINKED`. Mobile coi đây là bình thường và chuyển sang hỏi số điện thoại.
-- Locked → 403 MSG13. Token hỏng → 401 `ZALO_TOKEN_INVALID`. Mật khẩu tạm không chặn.
+- Không có → 404 `ZALO_NOT_LINKED`. Chỉ dùng cho lần vào lại im lặng khi mở app: mobile ở trạng thái khách, không báo gì.
+- Locked → 403 MSG13. Token hỏng → 401 `ZALO_TOKEN_INVALID`. Mật khẩu tạm cấp lại sau khi liên kết đã hết hạn → 403 MSG68.
 
 Không gọi `/v2.0/me/info`, không cần token số điện thoại.
 
@@ -164,7 +162,7 @@ Thêm vào `UserMessages`. Chữ dưới đây là đề xuất, giữ phong cá
 | `ZALO_PHONE_NOT_FOUND` | 404 | No OMTS account uses this phone number. (+ `maskedPhone`) | Hiện số đã che, nhờ HTX nhập đúng số Zalo vào hồ sơ |
 | `ZALO_PHONE_AMBIGUOUS` | 409 | Several OMTS accounts use this phone number. Please contact the support channel. | Hiện `detail` |
 | `ZALO_ALREADY_LINKED` | 409 | This Zalo account is already linked to another OMTS account. | Hiện `detail` |
-| `ZALO_NOT_LINKED` | 404 | This Zalo account is not linked to OMTS yet. | Không hiện; chuyển sang xin số điện thoại |
+| `ZALO_NOT_LINKED` | 404 | This Zalo account is not linked to OMTS yet. | Không hiện; ở trạng thái khách |
 
 Lưu ý: 404 **không kèm `code`** (đường dẫn không tồn tại) được mobile hiểu là "máy chủ chưa hỗ trợ liên kết". Vì vậy
 `ZALO_NOT_LINKED` và `ZALO_PHONE_NOT_FOUND` bắt buộc phải có `code`.
@@ -229,9 +227,8 @@ secret_key: <app secret>
 
 | Khóa | Ghi chú |
 |---|---|
-| `Zalo:Provider` | `Graph` (thật) hoặc `Fake`. Mặc định `Graph`; `appsettings.Development.json` đặt `Fake` |
-| `Zalo:AppId` | Zalo App ID (không phải Mini App ID) |
-| `Zalo:AppSecret` | Secret store / user-secrets. **Bắt buộc** khi `Graph`; thiếu thì khởi động báo lỗi rõ |
+| `Zalo:Provider` | `Graph` (thật) hoặc `Fake`. Mặc định để trống: liên kết trả MSG04; `appsettings.Development.json` đặt `Fake`, ngoài Development đặt `Fake` thì host không khởi động |
+| `Zalo:AppSecret` | Secret key của Zalo App (không phải Mini App). User-secrets / biến môi trường `Zalo__AppSecret`. **Bắt buộc** khi `Graph`; thiếu thì host không khởi động |
 | `Zalo:TimeoutSeconds` | Mặc định 10 |
 
 Bản `Fake` (giống `FakeSmsSender`, chỉ chạy ở Development):
@@ -268,7 +265,7 @@ rồi bấm "Liên kết bằng số điện thoại Zalo". Bản giả phía mo
 Integration test cho backend (dùng `Fake`):
 
 - [ ] Số khớp nhân viên chưa xác minh SĐT → 200, `phoneVerificationRequired = false`, `ZaloAccountId` được gắn, `PhoneVerifiedAt` có giá trị.
-- [ ] Nhân viên có mật khẩu tạm (kể cả đã hết hạn) → vẫn 200, không bị chặn.
+- [ ] Nhân viên có mật khẩu tạm (kể cả đã hết hạn) → vẫn 200, mật khẩu tạm bị hủy, không bị chặn.
 - [ ] Thương lái có nhiều hồ sơ khách cũ trùng số → 200, `notice` = MSG57.
 - [ ] Số không có tài khoản → 404 `ZALO_PHONE_NOT_FOUND` có `maskedPhone`, không tạo gì.
 - [ ] Tài khoản bị khóa → 403 MSG13.

@@ -31,8 +31,8 @@ nằm trong AGENTS.md, được nạp ở đây:
   (số điện thoại Zalo), backend khớp số với hồ sơ HTX đã tạo. Bị từ chối quyền số điện thoại thì mở
   `openPermissionSetting` để người dùng tự bật lại. **Không làm** form mật khẩu, quên/đổi mật khẩu, mã xác minh
   SMS/email, cổng mật khẩu tạm hay cổng số điện thoại, đổi email/số điện thoại, tự tạo tài khoản thương lái:
-  số chưa có trong OMTS thì nhờ HTX nhập số. Mật khẩu chỉ dùng cho bản web. Backend develop chưa có endpoint
-  liên kết; hợp đồng đề xuất ở `docs/zalo-account-linking.md`. Khi dev ngoài Zalo đặt
+  số chưa có trong OMTS thì nhờ HTX nhập số. Mật khẩu chỉ dùng cho bản web. Hợp đồng API liên kết
+  ở `docs/zalo-account-linking.md`. Khi dev ngoài Zalo đặt
   `window.__OMTS_FAKE_ZALO__` (xem `src/services/zalo.ts`).
 - **Dashboard chạy theo quyền**: `GET api/me/permissions` → `permissionsAtom`; `src/data/feature-access.ts`
   quyết định `FeatureKey` nào hiện (mã chức năng của backend, chủ HTX, thương lái). `ROLES`
@@ -284,9 +284,9 @@ nằm trong AGENTS.md, được nạp ở đây:
 
 ## 11. Việc còn tồn đọng
 
-- Backend chưa có `POST api/auth/zalo/link`, `POST api/auth/zalo/login`, `DELETE api/me/zalo-link`
-  (`docs/zalo-account-linking.md`), nên luồng liên kết mới chạy được với backend giả; mọi màn sau liên kết
-  đã chạy với backend develop thật. Backend cũng chưa trả CORS cho `https://h5.zdn.vn`.
+- `POST api/auth/zalo/link`, `POST api/auth/zalo/login`, `DELETE api/me/zalo-link` và CORS cho `https://h5.zdn.vn`
+  đã viết ở backend (28/10/2026) nhưng chưa vào `develop`: chờ mã Jira để mở PR. Development dùng `Zalo:Provider = Fake`
+  (token `fake:<id>`, `fake:<số>`); thử với Zalo thật cần `Zalo:Provider = Graph` và secret key của Zalo App.
 - Kênh Push chưa chốt (OMTS-215): `PUSH_PROVIDER` trong `src/config.ts` đang là `"none"`, màn tùy chọn thông
   báo hiện Push là chưa khả dụng; đổi sang `"zalo"` thì luồng xin quyền + đăng ký thiết bị trong
   `src/services/acs/push.ts` được bật.

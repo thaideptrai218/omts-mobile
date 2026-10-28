@@ -185,10 +185,8 @@ try {
   await btn("Liên kết tài khoản").click();
   await sleep(800);
   check("C after logout no silent login, on /link", path() === "/link" && mock.loginCalls === callsBefore, `path=${path()} calls=${mock.loginCalls - callsBefore}`);
-  await page.evaluate(() => { window.__OMTS_FAKE_ZALO__.declinePhone = true; });
   await btn("Liên kết bằng số điện thoại Zalo").click();
-  check("C relink without phone prompt → home", await waitPath("/"), path());
-  await page.evaluate(() => { window.__OMTS_FAKE_ZALO__.declinePhone = false; });
+  check("C relink → home", await waitPath("/"), path());
   await goAccount();
   await page.locator(".menu-row:has-text('Hủy liên kết Zalo')").click();
   await modalAction("Hủy liên kết");
