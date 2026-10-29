@@ -2,7 +2,10 @@ import { Header, Icon, Page, useParams } from "zmp-ui";
 
 import { FEATURES, FeatureKey } from "@/data/features";
 
-/** Trang chi tiết của một chức năng. Hiện mới có khung giao diện, chưa nối dữ liệu. */
+/**
+ * Trang của chức năng chưa có màn thật: backend OMTS.Api chưa có API cho chức năng này (danh sách ở
+ * docs/owner-features.md). Chức năng đã có màn mở thẳng màn đó (`FEATURE_ROUTES`).
+ */
 function FeaturePage() {
   const { key } = useParams();
   const feature = key && key in FEATURES ? FEATURES[key as FeatureKey] : null;
@@ -18,7 +21,7 @@ function FeaturePage() {
             </span>
             <p className="empty__title">{feature.title}</p>
             <p className="empty__text">{feature.description}</p>
-            <p className="empty__hint">Màn hình này đang được xây dựng.</p>
+            <p className="empty__hint">Hệ thống chưa có chức năng này. Màn hình sẽ mở được khi phần máy chủ hoàn thành.</p>
           </div>
         ) : (
           <div className="empty">

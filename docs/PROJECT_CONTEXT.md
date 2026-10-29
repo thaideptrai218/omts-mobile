@@ -41,11 +41,22 @@ Its acceptance criteria must be re-mapped to Zalo Mini App equivalents before it
 
 ## Current code status
 
+- Owner location/form input (30/10/2026): zone/raft create/edit already call real APIs. Added one-shot Zalo location lookup via authenticated Owner-only `POST /api/me/zalo-location`, confirmed map picking, and device-side Vietnamese OCR for labeled raft forms. OCR suggestions are reviewed before applying, never auto-saved. Zone coordinates center the new-raft map without silently becoming the raft position. Coordinates use a decimal-specific parser, independent of money/thousands parsing. Needs validation of Zalo location/camera permission and WebAssembly/worker behavior on real phones; basemap availability still depends on VIETMAP key/quota.
+
+- Trader purchase preview (30/10/2026, user-requested small UI trial): `/account/purchases`, trader-only; request form (sample product, positive kg, Vietnam pickup date, optional note), review/edit draft and invoice availability state. No sales API or submission; draft lives only in the mounted screen and is discarded on navigation away/account change. Trader home no longer renders mock debt figures or mock tasks. This is not completion of SALE-01/02/10 or OMTS-223/224.
+
 - Zalo Mini App with React 18, TypeScript, Vite, ZaUI, ZMP SDK, Tailwind CSS and Jotai.
 - Launch splash, bottom navigation and a role-based dashboard for all seven SRS actors, using **mock data** only (`src/data/`).
 - Traceability lookup by lot code or QR scan, with a sample lot; Account page with cooperative info and privacy policy required by Zalo.
 - Account module (ACS-01…07, 28/10/2026): API client with token refresh, session in memory + `nativeStorage`, permission-based dashboard, `MSG07` offline banner, account linking by Zalo phone number (`/link`) as the only way in: no password form, password recovery or change, verification codes, post-login gates, contact changes or self-created trader accounts (passwords are Web-only; 28/10/2026 decision), personal profile with read-only contacts, notification preferences (push waits for the OMTS-215 channel decision), online/offline logout with a queued server revoke. The role switcher was removed.
-- Backend `develop` still lacks the Zalo linking endpoints; the proposed contract is in `docs/zalo-account-linking.md`. Every other ACS screen runs against the real backend.
+- The local backend source implements Zalo linking, silent re-entry, unlinking and trader approval requests. Deployment availability must be checked separately; the contract is in `docs/zalo-account-linking.md`.
+
+### Account linking and API authentication
+
+- Mobile identifies the user through Zalo, with no username/password form or OTP flow. The backend resolves the phone number using Zalo tokens, matches it to an OMTS account and stores the Zalo user ID on that account.
+- Linking returns OMTS access/refresh tokens. These tokens are still required for protected API calls and zone permissions; removing password entry does not remove API authentication.
+- Subsequent app openings restore the OMTS session or obtain one using the linked Zalo identity (`api/auth/zalo/login`), without requesting the phone number again.
+- Keep session refresh, protected-route checks, logout/revocation and unlinking. They support the linked account and are not password-login leftovers.
 
 ## Current Mobile critical path
 
@@ -57,7 +68,7 @@ Its acceptance criteria must be re-mapped to Zalo Mini App equivalents before it
 ## Decisions still requiring confirmation
 
 - QA API base URL and current OpenAPI/response contracts.
-- Zalo linking endpoints (`POST api/auth/zalo/link`, `POST api/auth/zalo/login`, `DELETE api/me/zalo-link`): the backend owner must confirm the contract in `docs/zalo-account-linking.md` and add CORS for `https://h5.zdn.vn`.
+- Confirm that the QA deployment includes the locally implemented Zalo endpoints and CORS for `https://h5.zdn.vn`.
 - Canonical Vietnamese/English message catalog: Mobile currently shows the SRS English texts verbatim (`src/services/acs/messages.ts`).
 - Push channel (Zalo OA/ZNS vs Mini App notifications): `PUSH_PROVIDER` in `src/config.ts`.
 - Required offline behavior beyond showing `MSG07`; no mutation queue or conflict policy is assumed.

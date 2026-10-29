@@ -8,7 +8,7 @@ import { loadPermissions } from "@/services/acs/permissions";
 import { flashMessageAtom, permissionsAtom, sessionAtom, sessionExpiredAtom } from "@/state/session";
 
 /** Đường dẫn chỉ mở được khi đã liên kết tài khoản. */
-const PROTECTED_PREFIX = "/account/";
+const PROTECTED_PREFIXES = ["/account/", "/manage/"];
 
 /**
  * Điều hướng theo trạng thái phiên, đặt ngay trong ZMPRouter nên có `useNavigate`:
@@ -32,7 +32,7 @@ function SessionGuard() {
   }, []);
 
   useEffect(() => {
-    if (!session && path.startsWith(PROTECTED_PREFIX)) {
+    if (!session && PROTECTED_PREFIXES.some((p) => path.startsWith(p))) {
       navigate("/link", { replace: true, animate: false });
       return;
     }

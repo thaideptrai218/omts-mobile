@@ -19,3 +19,6 @@ export const PUSH_PROVIDER: "none" | "zalo" = "none";
 
 /** Làm mới access token khi còn ít hơn chừng này (ms) để request không rơi đúng lúc hết hạn. */
 export const ACCESS_TOKEN_SKEW_MS = 30_000;
+
+/** Khóa Tilemap công khai của bản đồ; đặt giới hạn sử dụng trong VIETMAP Console. */
+export const VIETMAP_API_KEY = (import.meta.env.VITE_VIETMAP_API_KEY ?? "").trim();

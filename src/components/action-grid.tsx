@@ -4,12 +4,12 @@ import { FEATURES, FeatureKey } from "@/data/features";
 import { useOpenFeature } from "@/hooks/use-open-feature";
 
 /** Lưới chức năng: ba ô mỗi hàng để icon và chữ đủ to, tên chức năng được xuống dòng thay vì bị cắt. */
-function ActionGrid({ actions }: { actions: FeatureKey[] }) {
+function ActionGrid({ actions, title = "Chức năng" }: { actions: FeatureKey[]; title?: string }) {
   const openFeature = useOpenFeature();
   if (actions.length === 0) return null;
   return (
     <section className="block">
-      <h2 className="block__title">Chức năng</h2>
+      <h2 className="block__title">{title}</h2>
       <div className="actions">
         {actions.map((key) => {
           const f = FEATURES[key];

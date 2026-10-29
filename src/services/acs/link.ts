@@ -4,7 +4,7 @@ import { zaloAccessToken, zaloAvailable, zaloPhoneToken } from "@/services/zalo"
 
 import { deviceName } from "./auth";
 import { MESSAGES } from "./messages";
-import type { TraderRequestSent, ZaloLinkResult, ZaloLoginResult } from "./types";
+import type { AuthTokens, TraderRequestSent, ZaloLinkResult } from "./types";
 
 /**
  * "Liên kết tài khoản": cách duy nhất để vào phần quản trị trên mobile (CLAUDE.md mục 5 và 9). Không có
@@ -43,8 +43,8 @@ export async function requestTraderAccess(input: { displayName: string; note: st
 }
 
 /** Phiên OMTS cho tài khoản đã liên kết với người dùng Zalo này (vào lại im lặng khi mở app). */
-export async function loginWithZalo(): Promise<ZaloLoginResult> {
-  const result = await rawRequest<ZaloLoginResult>("/api/auth/zalo/login", {
+async function loginWithZalo(): Promise<AuthTokens> {
+  const result = await rawRequest<AuthTokens>("/api/auth/zalo/login", {
     method: "POST",
     body: { zaloAccessToken: await zaloAccessToken(), clientType: "Mobile", deviceName: deviceName() },
   });

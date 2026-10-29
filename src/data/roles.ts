@@ -36,6 +36,8 @@ export type Role = {
   scope: string;
   stats: Stat[];
   actions: FeatureKey[];
+  /** Chia chức năng thành nhóm có tiêu đề khi vai trò có nhiều chức năng (Chủ HTX). Không có thì dùng `actions`. */
+  actionGroups?: { title: string; actions: FeatureKey[] }[];
   tasksTitle: string;
   tasks: Task[];
   note?: string;
@@ -55,6 +57,13 @@ export const ROLES: Record<RoleKey, Role> = {
       { label: "Công nợ phải thu", value: "312", unit: "triệu", note: "1 thương lái quá hạn", tone: "warning" },
     ],
     actions: ["zones", "cycles", "harvest", "salesOrders", "receivables", "staff", "trace", "reports"],
+    // Số liệu và việc cần làm của Chủ HTX lấy từ API (services/owner-summary.ts); stats/tasks bên dưới chỉ là mẫu cũ.
+    actionGroups: [
+      { title: "Vùng nuôi", actions: ["zones", "water", "raftMaterials", "trace"] },
+      { title: "Mua hàng", actions: ["purchases", "suppliers", "supplierPayments", "inputItems"] },
+      { title: "Tổ chức", actions: ["staff", "accounts", "permissions", "traderRequests", "cooperative"] },
+      { title: "Chưa có trên hệ thống", actions: ["cycles", "harvest", "salesOrders", "receivables", "payroll", "reports", "auditLog", "broadcast"] },
+    ],
     tasksTitle: "Cần anh xử lý",
     tasks: [
       { id: "o1", title: "3 đơn bán chờ duyệt", detail: "Tổng 4,8 tấn cho 2 thương lái", tone: "warning", feature: "salesOrders" },

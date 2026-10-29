@@ -154,7 +154,3 @@ export async function flushLogoutQueue() {
     flushing = false;
   }
 }
-
-export function hasQueuedLogout() {
-  return logoutQueue.length > 0;
-}

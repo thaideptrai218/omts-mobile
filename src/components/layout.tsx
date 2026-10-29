@@ -11,6 +11,7 @@ import {
 import { AppProps } from "zmp-ui/app";
 
 import BottomNav from "@/components/bottom-nav";
+import { lazyPage } from "@/components/manage/lazy";
 import OfflineBanner from "@/components/offline-banner";
 import SessionGuard from "@/components/session-guard";
 import Splash from "@/components/splash";
@@ -21,6 +22,9 @@ import TraderRequestsPage from "@/pages/account/trader-requests";
 import LinkAccountPage from "@/pages/auth/link";
 import FeaturePage from "@/pages/feature";
 import HomePage from "@/pages/index";
+import { ROUTES as FARM_ROUTES } from "@/pages/manage/farm/routes";
+import { ROUTES as ORG_ROUTES } from "@/pages/manage/org/routes";
+import { ROUTES as PURCHASING_ROUTES } from "@/pages/manage/purchasing/routes";
 import NotificationsPage from "@/pages/notifications";
 import TracePage from "@/pages/trace";
 import { textSizeAtom } from "@/state/text-size";
@@ -50,8 +54,13 @@ const Layout = () => {
             {/* Tài khoản: chỉ vào bằng liên kết tài khoản qua số điện thoại Zalo, không có mật khẩu hay mã xác minh. */}
             <Route path="/link" element={<LinkAccountPage />}></Route>
             <Route path="/account/profile" element={<ProfilePage />}></Route>
+            <Route path="/account/purchases" element={lazyPage(() => import("@/pages/trader/purchases"))}></Route>
             <Route path="/account/notifications" element={<NotificationPreferencesPage />}></Route>
             <Route path="/account/trader-requests" element={<TraderRequestsPage />}></Route>
+            {/* Quản lý của Chủ HTX: mỗi màn là một file tải riêng khi mở (lazyPage). */}
+            {[...FARM_ROUTES, ...PURCHASING_ROUTES, ...ORG_ROUTES].map((r) => (
+              <Route key={r.path} path={r.path} element={r.element}></Route>
+            ))}
           </AnimationRoutes>
           <BottomNav />
         </ZMPRouter>

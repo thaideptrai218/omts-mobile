@@ -1,4 +1,4 @@
-import { getAccessToken, getPhoneNumber, openPermissionSetting, scanQRCode } from "zmp-sdk/apis";
+import { chooseImage, getAccessToken, getLocation, getPhoneNumber, openPermissionSetting, scanQRCode } from "zmp-sdk/apis";
 
 /**
  * Cầu nối tới các API định danh của Zalo (CLAUDE.md mục 9). Chỉ chạy được bên trong Zalo; ngoài Zalo
@@ -7,7 +7,26 @@ import { getAccessToken, getPhoneNumber, openPermissionSetting, scanQRCode } fro
  * khỏi bản build production.
  */
 
-type FakeZalo = { accessToken?: string; phoneToken?: string; declinePhone?: boolean; scan?: string };
+type FakeZalo = { accessToken?: string; phoneToken?: string; declinePhone?: boolean; scan?: string; locationToken?: string; image?: string };
+
+/** Chỉ gọi sau khi người dùng bấm nút và đã được giải thích mục đích lấy vị trí. */
+export async function zaloLocationToken(): Promise<string> {
+  if (fake()?.locationToken) return fake()!.locationToken!;
+  try {
+    const { token } = await getLocation();
+    if (!token) throw new Error();
+    return token;
+  } catch {
+    throw new Error("Chưa lấy được vị trí. Vui lòng mở trong Zalo, cho phép chia sẻ vị trí và bật định vị trên điện thoại; hoặc chọn điểm trên bản đồ.");
+  }
+}
+
+/** Ảnh biểu mẫu do người dùng chủ động chọn; không tải lên server. */
+export async function chooseRaftFormImage(): Promise<string | null> {
+  if (fake()?.image) return fake()!.image!;
+  const { filePaths } = await chooseImage({ count: 1, sourceType: ["album", "camera"], cameraType: "back" });
+  return filePaths?.[0] ?? null;
+}
 
 function fake(): FakeZalo | null {
   if (!import.meta.env.DEV) return null;

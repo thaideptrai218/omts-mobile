@@ -1393,3 +1393,236 @@ body:has(.tabbar) .zaui-snackbar-bottom {
 .menu-row--danger .menu-row__icon {
   background: var(--danger-soft);
 }
+
+/* Màn quản lý của Chủ HTX (src/components/manage) */
+.info.card {
+  padding: 4px 16px;
+}
+
+.block__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.block__head .block__title {
+  margin-bottom: 0;
+}
+
+.rows {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.rows > li + li {
+  border-top: 1px solid var(--line);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 64px;
+  padding: 12px 16px;
+  text-align: left;
+  color: var(--ink);
+}
+
+button.row:active {
+  background: var(--brand-soft);
+}
+
+.row__text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.row__title {
+  font-size: 1.125rem;
+  line-height: 1.5rem;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.row__meta {
+  font-size: 0.9375rem;
+  line-height: 1.375rem;
+  color: var(--ink-2);
+  overflow-wrap: anywhere;
+}
+
+.row__badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.row__value {
+  flex: none;
+  max-width: 45%;
+  font-size: 1rem;
+  line-height: 1.5rem;
+  font-weight: 600;
+  text-align: right;
+}
+
+.chips {
+  display: flex;
+  gap: 8px;
+  margin: 0 -16px 16px;
+  padding: 0 16px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.chips::-webkit-scrollbar {
+  display: none;
+}
+
+.chip {
+  flex: none;
+  min-height: 40px;
+  padding: 0 16px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.chip.is-active {
+  border-color: var(--brand);
+  background: var(--brand);
+  color: #fff;
+}
+
+.search {
+  margin-bottom: 12px;
+}
+
+.action-row {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.action-row .zaui-btn {
+  margin: 0;
+}
+
+.screen--with-footer .screen__body {
+  padding-bottom: calc(96px + var(--bottom-safe));
+}
+
+.page-footer {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 10;
+  padding: 12px 16px calc(12px + var(--bottom-safe));
+  background: var(--surface);
+  border-top: 1px solid var(--line);
+}
+
+.page-footer .zaui-btn {
+  margin: 0;
+}
+
+.summary {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.summary__cell {
+  padding: 12px 14px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.summary__label {
+  display: block;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  color: var(--ink-2);
+}
+
+.summary__value {
+  display: block;
+  margin-top: 2px;
+  font-size: 1.25rem;
+  line-height: 1.75rem;
+  font-weight: 700;
+}
+
+.summary__cell.tone-danger .summary__value {
+  color: var(--danger);
+}
+
+.summary__cell.tone-warning .summary__value {
+  color: var(--warn);
+}
+
+.summary__cell.tone-success .summary__value {
+  color: var(--ok);
+}
+
+.text-danger {
+  color: var(--danger);
+}
+
+.text-muted {
+  color: var(--ink-2);
+}
+
+.more {
+  margin-top: 12px;
+}
+
+.line-item {
+  display: grid;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+
+.line-item__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-weight: 600;
+}
+
+.two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+/* Nút nhỏ ở đầu mục (Thêm bè, Cấp thêm…): chữ app to hơn mặc định của ZaUI nên để nút tự cao theo chữ. */
+.block__head .zaui-btn {
+  flex: none;
+  height: auto;
+  min-height: 40px;
+  margin: 0;
+  padding: 6px 14px;
+  line-height: 1.5rem;
+}
+// Giữ nhóm trường bè theo bố cục form, không thêm viền mặc định của fieldset.
+.raft-form-fields { border: 0; padding: 0; margin: 0; min-width: 0; display: flex; flex-direction: column; gap: 1rem; }

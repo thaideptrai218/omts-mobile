@@ -3,8 +3,6 @@
  * Tên trường theo camelCase như JSON server trả; enum đi bằng tên ("Sms", "Mobile", "Trader").
  */
 
-export type ClientType = "Web" | "Mobile";
-
 export type SubjectType = "SystemAdministrator" | "CooperativeOwner" | "Staff" | "Trader";
 
 export type NotificationChannel = "InApp" | "Push" | "Email" | "Sms" | "Zalo";
@@ -25,15 +23,12 @@ export type AuthTokens = {
 };
 
 /**
- * `POST api/auth/zalo/link` (đề xuất, xem docs/zalo-account-linking.md): phiên OMTS sau khi liên kết.
+ * `POST api/auth/zalo/link`: phiên OMTS sau khi liên kết (xem docs/zalo-account-linking.md).
  * `notice`: chữ MSG57 khi nhiều hồ sơ khách cũ trùng số, ngược lại null.
  */
 export type ZaloLinkResult = AuthTokens & {
   notice: string | null;
 };
-
-/** `POST api/auth/zalo/login`: phiên OMTS cho tài khoản đã liên kết. */
-export type ZaloLoginResult = AuthTokens;
 
 /** `POST api/auth/zalo/trader-requests` (202): yêu cầu tài khoản thương lái đang chờ Chủ HTX duyệt. */
 export type TraderRequestSent = {
@@ -154,8 +149,6 @@ export type MyPermissions = {
   accountId: string;
   subjectType: SubjectType;
   isCooperativeOwner: boolean;
-  requiresPasswordChange: boolean;
-  requiresPhoneVerification: boolean;
   functions: FunctionAccess[];
   grants: GrantView[];
 };

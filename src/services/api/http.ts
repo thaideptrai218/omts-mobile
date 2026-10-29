@@ -25,7 +25,7 @@ export function setAuthProvider(provider: AuthProvider) {
 export type RequestOptions = {
   method?: "GET" | "POST" | "PUT" | "DELETE";
   body?: unknown;
-  /** false: không gắn token (đăng nhập, đăng ký, khôi phục). Mặc định true. */
+  /** false: không gắn token cho API công khai. Mặc định true. */
   auth?: boolean;
   /** Token dùng riêng cho request này (đăng xuất, xả hàng đợi thu hồi phiên). */
   token?: string;

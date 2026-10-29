@@ -40,7 +40,7 @@ function LinkAccountPage() {
       setDeclined(true);
     } else if (isApiError(err, "ZALO_APPROVAL_PENDING")) setStep({ kind: "pending", name });
     else if (isApiError(err, "ZALO_REQUEST_REJECTED")) setStep({ kind: "rejected", reason: (err.details.reason as string | null) ?? null });
-    // Backend chưa có api/auth/zalo/* (docs/zalo-account-linking.md): server trả 404 không kèm mã.
+    // Hỗ trợ báo lỗi khi môi trường triển khai chưa có endpoint liên kết Zalo.
     else if (isApiError(err, "HTTP_404")) setError(LINK.notSupported);
     else setError(errorText(err));
   };

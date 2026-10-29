@@ -45,6 +45,12 @@ export const FEATURE_ACCESS: Record<FeatureKey, Access> = {
   auditLog: { owner: true },
   broadcast: { owner: true },
   settings: { owner: true },
+  suppliers: { owner: true },
+  purchases: { owner: true },
+  supplierPayments: { owner: true },
+  inputItems: { owner: true },
+  traderRequests: { owner: true },
+  cooperative: { owner: true },
   trace: { everyone: true },
 };
 

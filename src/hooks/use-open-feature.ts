@@ -1,15 +1,9 @@
 import { useNavigate } from "zmp-ui";
 
-import type { FeatureKey } from "@/data/features";
+import { FEATURE_ROUTES, type FeatureKey } from "@/data/features";
 
-/** Mở một chức năng: truy xuất có màn riêng (cũng mở từ nút quét QR), các chức năng khác mở trang chi tiết. */
+/** Mở một chức năng: chức năng đã có màn thật mở màn đó, chức năng chưa có mở trang giải thích. */
 export function useOpenFeature() {
   const navigate = useNavigate();
-  return (key: FeatureKey) => {
-    if (key === "trace") {
-      navigate("/trace");
-      return;
-    }
-    navigate(`/feature/${key}`);
-  };
+  return (key: FeatureKey) => navigate(FEATURE_ROUTES[key] ?? `/feature/${key}`);
 }

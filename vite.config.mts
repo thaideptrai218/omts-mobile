@@ -16,9 +16,11 @@ export default () => {
       assetsInlineLimit: 0,
     },
     resolve: {
-      alias: {
-        "@": "/src",
-      },
+      alias: [
+        // Gói VIETMAP không khai báo main/module; trỏ đúng bản phân phối cho Vite.
+        { find: /^@vietmap\/vietmap-gl-js$/, replacement: fileURLToPath(new URL("./node_modules/@vietmap/vietmap-gl-js/dist/vietmap-gl.js", import.meta.url)) },
+        { find: "@", replacement: "/src" },
+      ],
     },
     server: {
       // Khi dev, request /api đi qua dev server tới OMTS.Api chạy local để không vướng CORS.
