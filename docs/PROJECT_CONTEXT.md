@@ -41,7 +41,9 @@ Its acceptance criteria must be re-mapped to Zalo Mini App equivalents before it
 
 ## Current code status
 
-- Device recovery (31/10/2026): the CLI's `mini.123c.vn` relay timed out on actual GETs despite a healthy local UI/backend. The current dev runtime serves Device bootstrap/assets and HMR through the working public API tunnel, with a new `TESTING_LOCAL` link. HTTPS UI rendering and WebSocket hot updates verified; phone confirmation requested. This is temporary local tooling, not a published Mini App release. See `docs/learning/08-device-white-screen.md`.
+- Folder restructuring (31/10/2026): mobile uses app / features / shared, centralized shared API/session foundations and feature-owned routes; backend groups controllers/repositories by feature and separates DTOs/models/interfaces. Source moves preserve UI routes, API payloads and DB schema. See `PROJECT_STRUCTURE.md` and `learning/09-folder-restructure.md`.
+
+- Device incident (31/10/2026): CLI relay GETs timed out while localhost/backend stayed healthy. A fallback HTTPS bootstrap/HMR worked in a desktop browser, but the user reported the generated link invalid in Zalo. Phone recovery is **not verified**; do not treat the fallback link as a working Zalo entry. The user requested folder restructuring first. See `docs/learning/08-device-white-screen.md`.
 
 - Cage purchase requests (31/10/2026, user correction overriding V8 kg for ordering): replaces the preview at `/account/purchases` with API-backed submission/list/detail/cancel, positive whole cages, actual products and pickup dates. Owner inbox/response at `/manage/purchase-requests`; Owner catalogue at `/manage/sales-products`. DB stores requests, idempotency key, status and row version; in-app notifications connect both actors. No cage-to-kg conversion and no payment/invoice/fulfilment/harvest/QR created by this step. See `docs/learning/07-cage-purchase-requests.md`.
 
@@ -54,7 +56,7 @@ Its acceptance criteria must be re-mapped to Zalo Mini App equivalents before it
 - Historical Trader purchase preview (30/10/2026) was superseded by cage purchase requests on 31/10. Sample-product/kg draft service removed. Trader home continues to exclude mock debt figures/tasks. Sales invoices (OMTS-224/SALE-10) remain unimplemented.
 
 - Zalo Mini App with React 18, TypeScript, Vite, ZaUI, ZMP SDK, Tailwind CSS and Jotai.
-- Launch splash, bottom navigation and a role-based dashboard for all seven SRS actors, using **mock data** only (`src/data/`).
+- Launch splash, bottom navigation and a role-based dashboard for all seven SRS actors, with legacy sample role data in `src/shared/navigation/roles.ts`; API-backed owner/trader behavior is described above.
 - Traceability lookup by lot code or QR scan, with a sample lot; Account page with cooperative info and privacy policy required by Zalo.
 - Account module (ACS-01…07, 28/10/2026): API client with token refresh, session in memory + `nativeStorage`, permission-based dashboard, `MSG07` offline banner, account linking by Zalo phone number (`/link`) as the only way in: no password form, password recovery or change, verification codes, post-login gates, contact changes or self-created trader accounts (passwords are Web-only; 28/10/2026 decision), personal profile with read-only contacts, notification preferences (push waits for the OMTS-215 channel decision), online/offline logout with a queued server revoke. The role switcher was removed.
 - The local backend source implements Zalo linking, silent re-entry, unlinking and trader approval requests. Deployment availability must be checked separately; the contract is in `docs/zalo-account-linking.md`.
@@ -77,8 +79,8 @@ Its acceptance criteria must be re-mapped to Zalo Mini App equivalents before it
 
 - QA API base URL and current OpenAPI/response contracts.
 - Confirm that the QA deployment includes the locally implemented Zalo endpoints and CORS for `https://h5.zdn.vn`.
-- Canonical Vietnamese/English message catalog: Mobile currently shows the SRS English texts verbatim (`src/services/acs/messages.ts`).
-- Push channel (Zalo OA/ZNS vs Mini App notifications): `PUSH_PROVIDER` in `src/config.ts`.
+- Canonical Vietnamese/English message catalog: Mobile currently shows the SRS English texts verbatim (`src/shared/lib/messages.ts`).
+- Push channel (Zalo OA/ZNS vs Mini App notifications): `PUSH_PROVIDER` in `src/shared/config/env.ts`.
 - Required offline behavior beyond showing `MSG07`; no mutation queue or conflict policy is assumed.
 - Which screens are Mobile-native versus Web-only when Jira has not assigned a channel.
 

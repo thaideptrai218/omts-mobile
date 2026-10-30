@@ -2,11 +2,11 @@
 
 Cập nhật 31/10/2026, đối chiếu với OMTS.Api đang phát triển (các controller có trong `src/OMTS.Api/Controllers`).
 
-Chủ HTX (`isCooperativeOwner`) thấy Tổng quan riêng (`src/components/owner-dashboard.tsx`): việc cần xử lý và số liệu
-lấy từ API thật (`src/services/owner-summary.ts`), chức năng chia nhóm (`ROLES.owner.actionGroups`). Nhóm cuối
-"Chưa có trên hệ thống" mở trang giải thích (`src/pages/feature.tsx`).
+Chủ HTX (`isCooperativeOwner`) thấy Tổng quan riêng (`src/features/dashboard/components/owner-dashboard.tsx`): việc cần xử lý và số liệu
+lấy từ API thật (`src/features/dashboard/api/owner-summary.ts`), chức năng chia nhóm (`ROLES.owner.actionGroups`). Nhóm cuối
+"Chưa có trên hệ thống" mở trang giải thích (`src/features/dashboard/pages/unavailable-page.tsx`).
 
-Mỗi màn quản lý là một file tải riêng khi mở (`lazyPage` trong `src/components/manage/lazy.tsx`), nên gói ban đầu
+Mỗi màn quản lý là một file tải riêng khi mở (`lazyPage` trong `src/shared/routing/lazy-page.tsx`), nên gói ban đầu
 không lớn thêm theo số màn. Bản build 28/10: cả app 1,2 MB, file lớn nhất 546 KB (thư viện ZaUI + React), mỗi màn 2–7 KB.
 
 ## 1. Đã có trên mobile (nối API thật)
@@ -39,7 +39,7 @@ không lớn thêm theo số màn. Bản build 28/10: cả app 1,2 MB, file lớ
 
 | Chức năng | Lý do |
 |---|---|
-| Đọc số đo nước từ ảnh máy đo (OCR: `…/water-measurements/recognize`, `…/with-photo`) | Cần gửi ảnh dạng multipart; `services/api/http.ts` chưa hỗ trợ. Nên làm tiếp trên mobile vì đo nước là việc ngoài hiện trường. |
+| Đọc số đo nước từ ảnh máy đo (OCR: `…/water-measurements/recognize`, `…/with-photo`) | Cần gửi ảnh dạng multipart; `shared/api/http.ts` chưa hỗ trợ. Nên làm tiếp trên mobile vì đo nước là việc ngoài hiện trường. |
 | Ảnh bè, ảnh hóa đơn phiếu nhập, chứng nhận nhà cung cấp, logo HTX, thêm/sửa/thay giấy tờ vùng | Cùng lý do tải tệp multipart. |
 | Biểu đồ và xuất Excel chỉ số nước, xuất Excel phiếu nhập | Biểu đồ cần thư viện vẽ; xuất Excel để backend sinh tệp, xem trên web. |
 | Đổi bố trí hàng của bè, sơ đồ bè, tình trạng từng hàng (`api/rafts/{id}/condition`) | Cần vẽ sơ đồ, màn nhỏ khó thao tác. |
@@ -64,7 +64,7 @@ Domain đã có bảng nhưng OMTS.Api chưa có controller, nên mobile chỉ h
 | Gửi thông báo cho nhân viên, thương lái (`broadcast`) | |
 
 Vì vậy Tổng quan của Chủ HTX chưa có sản lượng, doanh thu, công nợ thương lái; khi các API trên có, thêm vào
-`services/owner-summary.ts`.
+`features/dashboard/api/owner-summary.ts`.
 
 ## 4. Dữ liệu demo bổ sung (28/10/2026)
 

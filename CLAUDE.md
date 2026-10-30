@@ -11,21 +11,23 @@ nằm trong AGENTS.md, được nạp ở đây:
 
 @AGENTS.md
 
+Cấu trúc hiện hành: `docs/PROJECT_STRUCTURE.md` (app / features / shared, cập nhật 31/10/2026).
+
 ## 0. Kiến trúc mã nguồn
 
 - **Không có test runner.** Kiểm tra bằng `npm run lint` + `npm run typecheck` (CI chạy đúng hai lệnh này),
   rồi chạy thử bằng `npm start` hoặc trong Zalo. ESLint chỉ quét `src/**/*.{ts,tsx}`.
 - Vite chạy với `root: ./src`, alias `@` trỏ vào `src`; `npm run build` xuất ra `www/`.
   `src/app.ts` gán `app-config.json` vào `window.APP_CONFIG` rồi mount `Layout` vào `#app`.
-- `src/components/layout.tsx` khai báo mọi route (`ZMPRouter` + `AnimationRoutes`), `BottomNav` nằm ngoài
+- `src/app/layout.tsx` khai báo mọi route (`ZMPRouter` + `AnimationRoutes`), `BottomNav` nằm ngoài
   các route; `Splash` phủ lên trang chủ đã render sẵn rồi mờ dần.
-- **Phiên và tài khoản (ACS)**: `src/services/api/http.ts` gọi OMTS.Api (Bearer, tự làm mới access token
+- **Phiên và tài khoản (ACS)**: `src/shared/api/http.ts` gọi OMTS.Api (Bearer, tự làm mới access token
   15 phút, một lần làm mới dùng chung cho các request song song, 401 sau làm mới → phiên hết hạn MSG19);
-  `src/services/session/session.ts` giữ token trong atom + nativeStorage, hàng đợi thu hồi phiên khi đăng
-  xuất offline, cờ "đã đăng xuất" để không tự vào lại; `src/services/acs/*` là các lời gọi API theo use case
+  `src/shared/auth/session.ts` giữ token trong atom + nativeStorage, hàng đợi thu hồi phiên khi đăng
+  xuất offline, cờ "đã đăng xuất" để không tự vào lại; `src/features/*/api` là các lời gọi API theo use case
   (link, profile, notifications, permissions, push), `messages.ts` giữ nguyên
   văn thông báo SRS (MSGxx) và `types.ts` hợp đồng DTO. UI không gọi HTTP hay storage trực tiếp.
-  `src/components/session-guard.tsx` (nằm trong `ZMPRouter`) điều hướng theo phiên: thử vào lại im lặng bằng
+  `src/app/session-guard.tsx` (nằm trong `ZMPRouter`) điều hướng theo phiên: thử vào lại im lặng bằng
   token Zalo, màn bảo vệ `/account/*`, MSG19 khi hết hạn.
 - **Chỉ có "Liên kết tài khoản"** (`/link`): `getAccessToken` (vào lại nếu đã liên kết) rồi `getPhoneNumber`
   (số điện thoại Zalo), backend khớp số với hồ sơ HTX đã tạo. Bị từ chối quyền số điện thoại thì mở
@@ -35,23 +37,23 @@ nằm trong AGENTS.md, được nạp ở đây:
   Chủ HTX duyệt ở mục "Duyệt thương lái" (`/account/trader-requests`, web cũng có API này); Chủ HTX nhận thông
   báo in-app, thương lái nhận thông báo khi được duyệt. Mật khẩu chỉ dùng cho bản web. Hợp đồng API liên kết
   ở `docs/zalo-account-linking.md`. Khi dev ngoài Zalo đặt
-  `window.__OMTS_FAKE_ZALO__` (xem `src/services/zalo.ts`).
-- **Dashboard chạy theo quyền**: `GET api/me/permissions` → `permissionsAtom`; `src/data/feature-access.ts`
+  `window.__OMTS_FAKE_ZALO__` (xem `src/shared/platform/zalo.ts`).
+- **Dashboard chạy theo quyền**: `GET api/me/permissions` → `permissionsAtom`; `src/shared/navigation/feature-access.ts`
   quyết định `FeatureKey` nào hiện (mã chức năng của backend, chủ HTX, thương lái). `ROLES`
-  (`src/data/roles.ts`) chỉ còn cung cấp `stats`, `tasks`, `actions` mẫu theo vai trò gần nhất (`roleKeyFor`);
-  `tasks[].feature` và `actions` là `FeatureKey` lấy từ `FEATURES` (`src/data/features.ts`). `useOpenFeature`
-  mở `trace` ở tab `/trace`, còn lại mở `/feature/:key` (`src/pages/feature.tsx`, chỉ là khung "đang xây dựng").
+  (`src/shared/navigation/roles.ts`) chỉ còn cung cấp `stats`, `tasks`, `actions` mẫu theo vai trò gần nhất (`roleKeyFor`);
+  `tasks[].feature` và `actions` là `FeatureKey` lấy từ `FEATURES` (`src/shared/navigation/features.ts`). `useOpenFeature`
+  mở `trace` ở tab `/trace`, còn lại mở `/feature/:key` (`src/features/dashboard/pages/unavailable-page.tsx`, chỉ là khung "đang xây dựng").
   Thêm chức năng: thêm vào `FEATURES` và `FEATURE_ACCESS`, gắn vào role; khi có màn hình thật thì thêm route riêng
   trong `layout.tsx`. Chưa liên kết tài khoản thì trang chủ chỉ có ô tra cứu truy xuất.
 - **Chạy với backend local**: `npm start` proxy `/api` sang `API_PROXY_TARGET` (mặc định `http://localhost:5198`,
   xem `vite.config.mts`, `.env.example`); trong Zalo đặt `VITE_API_BASE_URL` (HTTPS) và backend phải trả CORS
   cho `https://h5.zdn.vn`. Mã SMS/email giả đọc ở `GET /api/dev/sms`, `GET /api/dev/email` của backend.
-- **Style**: token màu ở `:root` trong `src/css/app.scss`, bản tối ghi đè dưới `body[zaui-theme="dark"]`
+- **Style**: token màu ở `:root` trong `src/shared/styles/app.scss`, bản tối ghi đè dưới `body[zaui-theme="dark"]`
   (Tailwind cũng dùng selector này cho dark mode). Màu ZaUI đổi qua biến `--zaui-light-*`.
   `--capsule-space` chừa vùng menu Zalo, `--top-safe` chừa thanh trạng thái; header tự vẽ phải dùng hai biến này.
 - **Giao diện cho người lớn tuổi** (đã chốt): xanh Zalo `#006AF5`, chữ thân bài 16 đến 18px, chữ phụ `--ink-2`
   đạt tương phản 7:1, vùng chạm tối thiểu 48px, mức độ (gấp, cần chú ý, mới) luôn có nhãn chữ chứ không chỉ màu.
-  Cỡ chữ và line-height viết bằng **rem**, vì lựa chọn "Cỡ chữ" (`src/state/text-size.ts`) đổi `font-size` của
+  Cỡ chữ và line-height viết bằng **rem**, vì lựa chọn "Cỡ chữ" (`src/shared/preferences/text-size.ts`) đổi `font-size` của
   thẻ `<html>` qua `data-text-size`. Viết px thì chữ sẽ không phóng theo lựa chọn này.
   Mọi tab dùng `PageHeader` nền xanh, trang chi tiết tô `Header` của ZaUI cùng màu, nên `app-config.json` đặt
   `textColor: white`. Thêm màn hình có đầu trang nền sáng thì chữ trên thanh trạng thái sẽ không đọc được.
@@ -188,9 +190,9 @@ nằm trong AGENTS.md, được nạp ở đây:
 - **Menu của Zalo cố định ở góc trên bên phải** mọi màn hình. Không đặt nút hay thông tin dưới
   vùng đó; chọn màu sáng/tối cho menu sao cho đủ tương phản.
 - Giữ nút "trở lại" ở góc trên bên trái các trang phụ (Android); iOS vuốt từ mép trái.
-- Bottom navigation tối đa 4 tab. OMTS dùng (chốt 28/10/2026) `src/components/bottom-nav.tsx`: Tổng quan | nút quét
+- Bottom navigation tối đa 4 tab. OMTS dùng (chốt 28/10/2026) `src/app/components/bottom-nav.tsx`: Tổng quan | nút quét
   QR tròn nổi ở giữa | Tài khoản. Nút giữa là hành động, không phải tab: quét bằng `scanQr` rồi mở màn theo loại mã
-  (`src/services/scan-targets.ts`, hiện có mã truy xuất; điểm danh và loại khác thêm quy tắc ở đó). Thông báo mở từ
+  (`src/shared/platform/scan-targets.ts`, hiện có mã truy xuất; điểm danh và loại khác thêm quy tắc ở đó). Thông báo mở từ
   chuông góc trên bên trái của các trang chính (`PageHeader bell`), không phải tab. Truy xuất và Thông báo là trang chi
   tiết. Quét QR của Zalo cần quyền được Zalo duyệt (mục 5).
 - Luôn có trạng thái đang tải, lỗi, mất kết nối. Phản hồi kết quả bằng modal, popup hoặc trang kết quả;
@@ -293,26 +295,26 @@ nằm trong AGENTS.md, được nạp ở đây:
 - `POST api/auth/zalo/link`, `POST api/auth/zalo/login`, `DELETE api/me/zalo-link` và CORS cho `https://h5.zdn.vn`
   đã viết ở backend (28/10/2026) nhưng chưa vào `develop`: chờ mã Jira để mở PR. Development dùng `Zalo:Provider = Fake`
   (token `fake:<id>`, `fake:<số>`); thử với Zalo thật cần `Zalo:Provider = Graph` và secret key của Zalo App.
-- Kênh Push chưa chốt (OMTS-215): `PUSH_PROVIDER` trong `src/config.ts` đang là `"none"`, màn tùy chọn thông
+- Kênh Push chưa chốt (OMTS-215): `PUSH_PROVIDER` trong `src/shared/config/env.ts` đang là `"none"`, màn tùy chọn thông
   báo hiện Push là chưa khả dụng; đổi sang `"zalo"` thì luồng xin quyền + đăng ký thiết bị trong
-  `src/services/acs/push.ts` được bật.
+  `src/features/notifications/api/push.ts` được bật.
 - **Mọi chữ hiện cho người dùng bằng tiếng Việt** (chốt 28/10/2026), kể cả thông báo MSGxx: backend trả chữ tiếng
-  Anh trong `detail` nhưng app không hiện chữ đó, mà dịch theo `code` ở `errorText` (`src/services/acs/messages.ts`,
+  Anh trong `detail` nhưng app không hiện chữ đó, mà dịch theo `code` ở `errorText` (`src/shared/lib/messages.ts`,
   một chỗ duy nhất). Thêm mã lỗi mới ở backend thì thêm chữ tiếng Việt vào `SERVER_TEXT`; thêm loại thông báo
-  mới thì thêm vào `KINDS` của `src/pages/notifications.tsx`. Nghiệm thu so khớp MSGxx nguyên văn tiếng Anh
+  mới thì thêm vào `KINDS` của `src/features/notifications/pages/inbox-page.tsx`. Nghiệm thu so khớp MSGxx nguyên văn tiếng Anh
   cần thống nhất lại với SRS.
-- Số liệu và việc cần làm trên dashboard vẫn là dữ liệu mẫu trong `src/data`
+- Số liệu và việc cần làm trên dashboard vẫn là dữ liệu mẫu trong `src/shared/navigation` và feature sở hữu dữ liệu
   (`roles.ts`, `content.ts`) cho tới khi các module đó nối API; chức năng hiện ra đã lọc theo quyền thật.
 - `nativeStorage` của zmp-sdk không ghi gì khi chạy ngoài Zalo (`npm start`): phiên chỉ sống trong một lần
   mở trang, tải lại trang là mất; trong Zalo cần quyền native storage được duyệt.
-- Thông tin HTX trong `src/data/content.ts` (mã số, địa chỉ, điện thoại, kênh hỗ trợ) là dữ liệu mẫu,
+- Thông tin HTX trong `src/shared/config/cooperative.ts` (mã số, địa chỉ, điện thoại, kênh hỗ trợ) là dữ liệu mẫu,
   phải thay bằng thông tin thật trước khi gửi duyệt (xem mục 4).
 
-- Splash (`src/components/splash.tsx`) đã rút còn 0,6 giây giữ ảnh và 0,3 giây mờ dần. Vẫn nên bỏ qua splash
+- Splash (`src/app/components/splash.tsx`) đã rút còn 0,6 giây giữ ảnh và 0,3 giây mờ dần. Vẫn nên bỏ qua splash
   khi mở từ QR truy xuất, và cân nhắc `selfControlLoading` (xem mục 8).
 - "Cỡ chữ" lưu bằng `nativeStorage`, mà quyền này phải xin Zalo duyệt (mục 5). Chưa duyệt thì lựa chọn chỉ
   giữ trong lần mở app hiện tại.
-- Nội dung "Điều khoản sử dụng" trong `src/pages/account.tsx` là bản nháp, HTX cần duyệt trước khi gửi Zalo.
+- Nội dung "Điều khoản sử dụng" trong `src/features/account/pages/account-page.tsx` là bản nháp, HTX cần duyệt trước khi gửi Zalo.
 - "Xóa dữ liệu của tôi" mới mở chính sách bảo mật (hướng dẫn gọi HTX), chưa xóa được trong app như mục 6 yêu cầu.
 - Tên app "OTMS" trong `app-config.json` đang viết hoa toàn bộ (xem mục 3).
 - Tên viết tắt chưa thống nhất: repo, Jira, backend và README dùng "OMTS" (Oyster Management and Traceability

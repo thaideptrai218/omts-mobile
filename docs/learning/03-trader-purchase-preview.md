@@ -20,7 +20,7 @@ SRS đã thay đơn bán cũ bằng yêu cầu mua và hóa đơn. Yêu cầu kh
 Trang chủ trader → Mua hàng của tôi (`/account/purchases`) → Tạo yêu cầu mua thử → sản phẩm mẫu, số kg, ngày nhận, ghi chú → Xem trước → Sửa thông tin hoặc Về danh sách.
 
 - `services/trader/purchase-preview.ts`: kiểu xem thử, sản phẩm mẫu, kiểm tra giá trị và ngày lịch Việt Nam. Không gọi HTTP/storage.
-- `pages/trader/purchases.tsx`: màn được tải riêng; kiểm tra session, quyền Trader và accountId trước khi mount workspace. Workspace có key accountId để không giữ bản nháp của người trước.
+- `features/sales/pages/my-purchases.tsx`: màn được tải riêng; kiểm tra session, quyền Trader và accountId trước khi mount workspace. Workspace có key accountId để không giữ bản nháp của người trước.
 - Không thay đổi bootstrap/token/permission payload hoặc chính sách cache. Không tạo API mới.
 - Trang chủ trader bỏ các số công nợ và việc cần làm giả; các chức năng chưa có vẫn dùng trang giải thích hiện hữu.
 
@@ -33,7 +33,7 @@ Trang chủ trader → Mua hàng của tôi (`/account/purchases`) → Tạo yê
 
 ## Lỗi trong bộ kiểm tra và xử lý
 
-Script kiểm tra chạy từ thư mục tạm bằng `node`: import `/services/session/session.ts` lỗi fetch vì dev server đang phục vụ từ root repo; sửa thành `/src/services/session/session.ts`. Lần tiếp theo vẫn lỗi vì route Playwright `**/api/**` khớp nhầm file `/src/services/api/http.ts` và `errors.ts`; chỉ giả phản hồi khi pathname bắt đầu `/api/`, các module Vite được continue. Chạy lại toàn bộ luồng thành công. Đây là lỗi cấu hình bộ kiểm tra, không phải lỗi xác thực của app.
+Script kiểm tra chạy từ thư mục tạm bằng `node`: import `/services/session/session.ts` lỗi fetch vì dev server đang phục vụ từ root repo; sửa thành `/src/shared/auth/session.ts`. Lần tiếp theo vẫn lỗi vì route Playwright `**/api/**` khớp nhầm file `/src/shared/api/http.ts` và `errors.ts`; chỉ giả phản hồi khi pathname bắt đầu `/api/`, các module Vite được continue. Chạy lại toàn bộ luồng thành công. Đây là lỗi cấu hình bộ kiểm tra, không phải lỗi xác thực của app.
 
 ## Câu hỏi giải thích
 

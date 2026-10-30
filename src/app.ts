@@ -1,18 +1,18 @@
 // ZaUI stylesheet
 import "zmp-ui/zaui.css";
 // Tailwind stylesheet
-import "@/css/tailwind.scss";
+import "@/shared/styles/tailwind.scss";
 // Your stylesheet
-import "@/css/app.scss";
+import "@/shared/styles/app.scss";
 
 // React core
 import React from "react";
 import { createRoot } from "react-dom/client";
 
 // Mount the app
-import Layout from "@/components/layout";
-import { startConnectivityWatch } from "@/services/connectivity";
-import { restoreSession } from "@/services/session/session";
+import Layout from "@/app/layout";
+import { startConnectivityWatch } from "@/shared/platform/connectivity";
+import { restoreSession } from "@/shared/auth/session";
 
 // Expose app configuration
 import appConfig from "../app-config.json";

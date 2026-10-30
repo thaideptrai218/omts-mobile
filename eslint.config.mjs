@@ -17,4 +17,16 @@ export default tseslint.config(
       ...reactHooks.configs.recommended.rules,
     },
   },
+  {
+    files: ["src/shared/**/*.{ts,tsx}"],
+    rules: {
+      "no-restricted-imports": ["error", { patterns: [{ group: ["@/features/*", "@/app/*"], message: "shared chỉ dùng mã dùng chung; truyền dữ liệu/giao diện nghiệp vụ từ nơi gọi." }] }],
+    },
+  },
+  {
+    files: ["src/features/**/*.{ts,tsx}"],
+    rules: {
+      "no-restricted-imports": ["error", { patterns: [{ group: ["@/app/*"], message: "Nghiệp vụ không phụ thuộc app; app chịu trách nhiệm ghép các nghiệp vụ." }] }],
+    },
+  },
 );

@@ -21,10 +21,11 @@ Run lint and typecheck before declaring any task done. CI runs both on every PR.
 
 ## Structure
 
-- Entry: `src/app.ts` mounts `src/components/layout.tsx`, which declares routes with ZaUI `ZMPRouter` + `AnimationRoutes`.
-- Screens live in `src/pages/`; reusable UI in `src/components/`; mock data in `src/data/`; Jotai atoms in `src/state/`.
+- Entry: `src/app.ts` mounts `src/app/layout.tsx`, which declares routes with ZaUI `ZMPRouter` + `AnimationRoutes`.
+- Application composition is in `src/app/`; each business area owns its pages, API calls, components and state under `src/features/<area>/`. Shared foundations are under `src/shared/`. See `docs/PROJECT_STRUCTURE.md`.
+- Features do not import app code; shared does not import app or features. ESLint enforces these alias boundaries. Domain-specific state/mock data belongs to its feature; session and global preferences are shared foundations.
 - All images live in `src/static/images/` and must be imported, never referenced by a `/public` path.
-- Prefer ZaUI components and the design tokens in `src/css/app.scss`.
+- Prefer ZaUI components and the design tokens in `src/shared/styles/app.scss`.
 
 # OMTS Mobile working rules
 

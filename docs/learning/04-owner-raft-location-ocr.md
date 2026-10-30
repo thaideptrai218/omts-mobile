@@ -22,7 +22,7 @@ Trong form vùng hoặc bè:
 4. Hoặc mở **Chọn điểm trên bản đồ**, chạm điểm hoặc kéo ghim, rồi xác nhận. Tọa độ vùng chỉ căn giữa map cho bè mới; không tự gán thành vị trí bè.
 5. Bấm **Lưu** trên form mới gọi API tạo/sửa thật, theo quyền và rowVersion hiện hữu.
 
-`services/coordinates.ts` nhận dấu chấm hoặc phẩy thập phân, kiểm tra phạm vi ±90/±180, không loại dấu chấm như phân cách hàng nghìn. Giá trị `21.123` trước đây có thể bị đọc sai bởi `parseNumber` của tiền/số lượng; tọa độ giờ dùng parser riêng.
+`shared/lib/coordinates.ts` nhận dấu chấm hoặc phẩy thập phân, kiểm tra phạm vi ±90/±180, không loại dấu chấm như phân cách hàng nghìn. Giá trị `21.123` trước đây có thể bị đọc sai bởi `parseNumber` của tiền/số lượng; tọa độ giờ dùng parser riêng.
 
 ### OCR giấy/biểu mẫu
 
