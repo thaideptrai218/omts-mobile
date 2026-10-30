@@ -43,7 +43,9 @@ const KINDS: Record<string, Kind> = {
   EMPLOYEE_LEAVE_REQUESTED: { title: "Yêu cầu nghỉ phép", body: () => "Có nhân viên gửi yêu cầu nghỉ phép. Bấm để xem và phản hồi.", icon: "zi-calendar", tone: "warning", to: "/manage/leave-requests" },
   EMPLOYEE_LEAVE_REVIEWED: { title: "Phản hồi nghỉ phép", body: () => "Chủ HTX đã phản hồi yêu cầu nghỉ phép của bạn. Bấm để xem kết quả.", icon: "zi-user-check", tone: "neutral", to: "/account/work" },
   PAYROLL_SENT_BACK: { title: "Bảng lương bị trả lại", body: () => "Bảng lương được gửi lại để chỉnh sửa.", icon: "zi-note", tone: "warning" },
-  NEW_ORDER: { title: "Đơn hàng mới", body: () => "Có đơn hàng mới cần xử lý.", icon: "zi-poll", tone: "neutral" },
+  NEW_ORDER: { title: "Yêu cầu mua mới", body: n => `Có yêu cầu mua ${n.relatedRecordCode ?? ""} cần phản hồi. Bấm để xác nhận số lồng và ngày nhận.`, icon: "zi-poll", tone: "warning", to: "/manage/purchase-requests" },
+  PURCHASE_REQUEST_RESPONDED: { title: "HTX phản hồi yêu cầu mua", body: n => `HTX đã phản hồi ${n.relatedRecordCode ?? ""}. Bấm để xem số lồng và ngày nhận được xác nhận.`, icon: "zi-note", tone: "neutral", to: "/account/purchases" },
+  PURCHASE_REQUEST_CANCELLED: { title: "Thương lái hủy yêu cầu mua", body: n => `Thương lái đã hủy ${n.relatedRecordCode ?? ""}. Bấm để xem chi tiết.`, icon: "zi-recall", tone: "warning", to: "/manage/purchase-requests" },
   TRACE_QR_SENT: { title: "Đã gửi mã QR truy xuất", body: () => "Mã QR truy xuất nguồn gốc đã được gửi.", icon: "zi-qrline", tone: "success" },
 };
 

@@ -4,6 +4,7 @@ import { Button, Icon, Modal, Page, Sheet, useNavigate, useSnackbar } from "zmp-
 
 import PageHeader from "@/components/page-header";
 import TextSizeSheet from "@/components/text-size-sheet";
+import TestRoleSwitcher from "@/components/test-role-switcher";
 import { COOPERATIVE } from "@/data/content";
 import { describeGrants } from "@/data/feature-access";
 import type { IconName } from "@/data/features";
@@ -112,6 +113,8 @@ function AccountPage() {
             </Button>
           </div>
         )}
+
+        {session && import.meta.env.DEV && <TestRoleSwitcher key={session.accountId} />}
 
         <section className="block">
           <h2 className="block__title">Cài đặt</h2>

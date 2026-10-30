@@ -47,6 +47,15 @@ export const FIELD = {
 
 /** Tên trường backend gửi trong `field` của MSG01 (tiếng Anh) → tên hiện cho người dùng. */
 const SERVER_FIELD: Record<string, string> = {
+  "Requested cages": "Số lồng đặt mua",
+  "Accepted cages": "Số lồng chấp nhận",
+  "Pickup date": "Ngày nhận hàng",
+  "Product": "Sản phẩm",
+  "Product unavailable": "Sản phẩm đã ngừng bán hoặc ngoài thời gian bán",
+  "Customer profile": "Hồ sơ thương lái",
+  "Client operation": "Lần gửi yêu cầu",
+  "Purchase request status": "Trạng thái yêu cầu mua",
+  "Answered purchase request": "Yêu cầu đã được phản hồi hoặc đã hủy",
   "Work date": "Ngày làm việc",
   "Work assignment": "Phân công",
   "Job type": "Loại công việc",

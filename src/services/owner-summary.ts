@@ -4,6 +4,7 @@ import { api } from "@/services/api/http";
 import { listWater, listZones, USAGE } from "@/services/farm";
 import { num, shortMoney } from "@/services/format";
 import { violatedText } from "@/services/labels";
+import { listPurchaseRequests } from "@/services/sales";
 
 /**
  * Số liệu và việc cần làm trên Tổng quan của Chủ HTX, gom từ các API đã có (vùng nuôi, chỉ số nước, phiếu nhập,
@@ -28,15 +29,22 @@ function settle<T>(promise: Promise<T>): Promise<Settled<T>> {
 }
 
 export async function loadOwnerSummary(): Promise<OwnerSummary> {
-  const [zones, debts, drafts, requests] = await Promise.all([
+  const [zones, debts, drafts, requests, purchases] = await Promise.all([
     settle(listZones({ statusId: USAGE.inUse, pageSize: 100 })),
     settle(api<DebtRow[]>("/api/suppliers/debts")),
     settle(api<ReceiptSearch>(`/api/purchase-receipts?StatusId=${DRAFT_RECEIPT}&PageSize=1`)),
     settle(listTraderRequests()),
+    settle(listPurchaseRequests(false, "AWAITING_RESPONSE")),
   ]);
 
   const stats: Stat[] = [];
   const tasks: Task[] = [];
+
+  if (purchases.status === "fulfilled") {
+    const count = purchases.value.total;
+    stats.push({ label: "Yêu cầu mua chờ phản hồi", value: num(count), unit: "yêu cầu", tone: count > 0 ? "warning" : undefined });
+    if (count > 0) tasks.push({ id: "purchase-requests", title: `${count} yêu cầu mua chờ phản hồi`, detail: "Xác nhận số lồng và ngày nhận cho thương lái", tone: "warning", feature: "salesOrders" });
+  }
 
   if (requests.status === "fulfilled" && requests.value.length > 0) {
     const names = requests.value.slice(0, 2).map((r) => r.displayName).join(", ");

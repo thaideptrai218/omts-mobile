@@ -1,9 +1,9 @@
 # Chức năng của Chủ HTX trên Mini App
 
-Cập nhật 28/10/2026, đối chiếu với OMTS.Api nhánh develop (các controller có trong `src/OMTS.Api/Controllers`).
+Cập nhật 31/10/2026, đối chiếu với OMTS.Api đang phát triển (các controller có trong `src/OMTS.Api/Controllers`).
 
 Chủ HTX (`isCooperativeOwner`) thấy Tổng quan riêng (`src/components/owner-dashboard.tsx`): việc cần xử lý và số liệu
-lấy từ API thật (`src/services/owner-summary.ts`), chức năng chia bốn nhóm (`ROLES.owner.actionGroups`). Nhóm cuối
+lấy từ API thật (`src/services/owner-summary.ts`), chức năng chia nhóm (`ROLES.owner.actionGroups`). Nhóm cuối
 "Chưa có trên hệ thống" mở trang giải thích (`src/pages/feature.tsx`).
 
 Mỗi màn quản lý là một file tải riêng khi mở (`lazyPage` trong `src/components/manage/lazy.tsx`), nên gói ban đầu
@@ -13,6 +13,8 @@ không lớn thêm theo số màn. Bản build 28/10: cả app 1,2 MB, file lớ
 
 | Nhóm | Màn | Đường dẫn | API |
 |---|---|---|---|
+| Bán hàng | Yêu cầu mua: xem, chấp nhận số lồng và ngày nhận, hoặc từ chối có lý do | `/manage/purchase-requests` | `api/purchase-requests` |
+| | Sản phẩm bán: thêm, sửa, ngừng bán/dùng lại | `/manage/sales-products` | `api/sales-products` |
 | Vùng nuôi | Danh sách vùng (tìm, lọc trạng thái, tình trạng giấy tờ) | `/manage/zones` | `GET api/zones` |
 | | Chi tiết vùng: thông tin, giấy tờ, ngưỡng nước, bè; sửa; ngừng dùng/dùng lại | `/manage/zones/:id` | `GET/PUT api/zones/{id}`, `…/discontinue`, `…/reactivate`, `GET api/zones/{id}/licenses`, `GET/PUT api/zones/{id}/water-thresholds`, `GET api/zones/{id}/rafts` |
 | | Thêm/sửa vùng | `/manage/zones/new`, `/manage/zones/:id/edit` | `POST api/zones`, `PUT api/zones/{id}` |
@@ -54,9 +56,9 @@ Domain đã có bảng nhưng OMTS.Api chưa có controller, nên mobile chỉ h
 |---|---|
 | Chu kỳ nuôi, thả giống, nhật ký nuôi (`cycles`, `seeding`, `cultivationLog`) | Entity `CultivationCycle`, `SeedingEvent`, `CultivationLogEntry` |
 | Thu hoạch, lô truy xuất (`harvest`, tra cứu `trace` vẫn dùng dữ liệu mẫu) | `HarvestEvent`, `TracePublication` |
-| Đơn bán, cân tại cảng, công nợ thương lái, phiếu thu, đối soát, hoàn tiền (`salesOrders`, `portWeighing`, `receivables`, `receipts`, `reconcile`, `refunds`) | `SalesOrder`, `SaleAdjustment` |
+| Hóa đơn, cân tại cảng, công nợ thương lái, phiếu thu, đối soát, hoàn tiền (`portWeighing`, `receivables`, `receipts`, `reconcile`, `refunds`) | Yêu cầu mua theo lồng đã có; chưa nối sang `SalesOrder`, hóa đơn hay cân thực nhận |
 | Khiếu nại chất lượng, trả hàng của thương lái (`claims`) | `QualityClaim`, `PhysicalReturn` |
-| Phân công, chấm công, lịch làm việc, lương nhân công (`assignments`, `attendance`, `schedule`, `payroll`) | `PayRule`, `LaborSettlement` |
+| Lương nhân công (`payroll`) | Phân công, chấm công và nghỉ phép cơ bản đã có API; chưa có đủ luồng tính/chốt lương |
 | Báo cáo sản lượng, doanh thu (`reports`) | |
 | Nhật ký hệ thống (`auditLog`) | Backend ghi audit nhưng chưa có API đọc |
 | Gửi thông báo cho nhân viên, thương lái (`broadcast`) | |

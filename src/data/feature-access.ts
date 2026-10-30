@@ -15,6 +15,7 @@ import type { RoleKey } from "./roles";
 type Access = { functions?: string[]; owner?: boolean; trader?: boolean; employee?: boolean; everyone?: boolean };
 
 export const FEATURE_ACCESS: Record<FeatureKey, Access> = {
+  salesProducts: { owner: true },
   myWork: { employee: true },
   leaveRequests: { owner: true },
   attendanceSettings: { owner: true },
@@ -29,7 +30,7 @@ export const FEATURE_ACCESS: Record<FeatureKey, Access> = {
   attendance: { functions: ["ATTENDANCE"] },
   schedule: { functions: ["WORK_ASSIGNMENTS", "ATTENDANCE"] },
   portWeighing: { functions: ["SALES_INVOICES"] },
-  salesOrders: { functions: ["SALES_INVOICES", "PURCHASE_REQUESTS"] },
+  salesOrders: { functions: ["PURCHASE_REQUESTS"] },
   receivables: { functions: ["CUSTOMER_DEBTS"] },
   receipts: { functions: ["CUSTOMER_PAYMENTS"] },
   reconcile: { functions: ["CUSTOMER_PAYMENTS"] },

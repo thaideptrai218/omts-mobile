@@ -59,6 +59,8 @@ const Layout = () => {
             <Route path="/manage/leave-requests" element={lazyPage(() => import("@/pages/workforce/review"))}></Route>
             <Route path="/manage/attendance-settings" element={lazyPage(() => import("@/pages/workforce/settings"))}></Route>
             <Route path="/account/purchases" element={lazyPage(() => import("@/pages/trader/purchases"))}></Route>
+            <Route path="/manage/purchase-requests" element={lazyPage(() => import("@/pages/manage/sales/requests"))}></Route>
+            <Route path="/manage/sales-products" element={lazyPage(() => import("@/pages/manage/sales/products"))}></Route>
             <Route path="/account/notifications" element={<NotificationPreferencesPage />}></Route>
             <Route path="/account/trader-requests" element={<TraderRequestsPage />}></Route>
             {/* Quản lý của Chủ HTX: mỗi màn là một file tải riêng khi mở (lazyPage). */}

@@ -69,10 +69,11 @@ export const FEATURES = {
     description: "Ghi số cân khi giao hàu cho thương lái tại cảng.",
   },
   salesOrders: {
-    title: "Đơn bán",
+    title: "Yêu cầu mua",
     icon: "zi-note",
-    description: "Tạo và duyệt đơn bán hàu cho thương lái.",
+    description: "Nhận yêu cầu mua theo số lồng và phản hồi cho thương lái.",
   },
+  salesProducts: { title: "Sản phẩm bán", icon: "zi-list-2", description: "Danh mục sản phẩm để thương lái đặt mua theo số lồng." },
   receivables: {
     title: "Công nợ",
     icon: "zi-poll-solid",
@@ -116,7 +117,7 @@ export const FEATURES = {
   orders: {
     title: "Mua hàng của tôi",
     icon: "zi-note",
-    description: "Xem yêu cầu mua, phản hồi của HTX và hóa đơn của bạn.",
+    description: "Đặt mua theo số lồng, xem phản hồi của HTX và hủy yêu cầu.",
   },
   payment: {
     title: "Thanh toán",
@@ -215,6 +216,8 @@ export const FEATURE_ROUTES: Partial<Record<FeatureKey, string>> = {
   leaveRequests: "/manage/leave-requests",
   attendanceSettings: "/manage/attendance-settings",
   orders: "/account/purchases",
+  salesOrders: "/manage/purchase-requests",
+  salesProducts: "/manage/sales-products",
   zones: "/manage/zones",
   water: "/manage/water",
   raftMaterials: "/manage/raft-costs",

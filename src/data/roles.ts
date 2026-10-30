@@ -61,8 +61,9 @@ export const ROLES: Record<RoleKey, Role> = {
     actionGroups: [
       { title: "Vùng nuôi", actions: ["zones", "water", "raftMaterials", "trace"] },
       { title: "Mua hàng", actions: ["purchases", "suppliers", "supplierPayments", "inputItems"] },
+      { title: "Bán hàng", actions: ["salesOrders", "salesProducts"] },
       { title: "Tổ chức", actions: ["staff", "accounts", "permissions", "traderRequests", "cooperative", "assignments", "attendance", "leaveRequests", "attendanceSettings", "myWork"] },
-      { title: "Chưa có trên hệ thống", actions: ["cycles", "harvest", "salesOrders", "receivables", "payroll", "reports", "auditLog", "broadcast"] },
+      { title: "Chưa có trên hệ thống", actions: ["cycles", "harvest", "receivables", "payroll", "reports", "auditLog", "broadcast"] },
     ],
     tasksTitle: "Cần anh xử lý",
     tasks: [

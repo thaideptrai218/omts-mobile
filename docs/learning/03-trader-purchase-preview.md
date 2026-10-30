@@ -1,5 +1,7 @@
 # Xem thử yêu cầu mua của thương lái
 
+> Lịch sử: bản xem thử này đã được thay bằng yêu cầu mua theo số lồng, lưu qua API ngày 31/10/2026. Xem `07-cage-purchase-requests.md`.
+
 ## Phạm vi
 
 Yêu cầu người dùng: “làm thử 1 chút trader”. Làm trước màn mua hàng, form và xem lại bản nháp. Không triển khai API bán hàng, không báo đã gửi HTX, không tạo hóa đơn/công nợ giả. Sản phẩm ghi rõ là mẫu. Bản nháp chỉ tồn tại trong component, rời màn hoặc đổi tài khoản sẽ mất; đây không phải hàng đợi offline và không tự đồng bộ.

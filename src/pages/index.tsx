@@ -4,6 +4,7 @@ import { Button, Icon, Page, useNavigate } from "zmp-ui";
 import ActionGrid from "@/components/action-grid";
 import OwnerDashboard from "@/components/owner-dashboard";
 import PageHeader from "@/components/page-header";
+import TestRoleSwitcher from "@/components/test-role-switcher";
 import StatPanel from "@/components/stat-panel";
 import TaskList from "@/components/task-list";
 import TraceLookup from "@/components/trace-lookup";
@@ -106,7 +107,7 @@ function HomePage() {
           <>
             <div className="card form">
               <p className="block__title">Mua hàng cùng HTX</p>
-              <p className="form__hint">Bạn có thể xem thử cách tạo yêu cầu mua. Yêu cầu xem thử chưa gửi đến HTX.</p>
+              <p className="form__hint">Chọn sản phẩm, đặt số lồng và gửi yêu cầu đến Chủ HTX. Bạn có thể xem phản hồi trong Mua hàng của tôi.</p>
               <Button fullWidth size="large" onClick={() => navigate("/account/purchases")}>Mua hàng của tôi</Button>
             </div>
             <ActionGrid actions={actions} />
@@ -136,6 +137,7 @@ function HomePage() {
             {role.note && <p className="screen__note">{role.note}</p>}
           </>
         )}
+        {import.meta.env.DEV && <TestRoleSwitcher key={session.accountId} />}
       </div>
     </Page>
   );
