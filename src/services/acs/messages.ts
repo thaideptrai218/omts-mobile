@@ -47,6 +47,22 @@ export const FIELD = {
 
 /** Tên trường backend gửi trong `field` của MSG01 (tiếng Anh) → tên hiện cho người dùng. */
 const SERVER_FIELD: Record<string, string> = {
+  "Work date": "Ngày làm việc",
+  "Work assignment": "Phân công",
+  "Job type": "Loại công việc",
+  "Approved leave": "Nhân viên đã được duyệt nghỉ phép trong ngày này",
+  "Attendance already recorded": "Ngày này đã ghi nhận chấm công, không thể thay phân công",
+  "Attendance QR": "Mã QR chấm công (mã hết hạn hoặc không đúng nhân viên)",
+  "Check-in time": "Giờ vào ca",
+  "Check-out time": "Giờ ra ca",
+  "Job change time": "Thời điểm đổi việc",
+  "Crew not checked in": "Đội chưa có người vào ca",
+  "Leave request": "Ngày nghỉ và lý do",
+  "Response": "Phản hồi",
+  "Attendance settings": "Giờ nghỉ và đơn vị làm tròn",
+  "Locked payroll period": "Kỳ công đã gửi hoặc chốt lương, không đổi cài đặt được",
+  "Effective date already used": "Ngày áp dụng đã có cài đặt",
+  "Job type already exists": "Tên loại việc đã tồn tại",
   "Location token": "Vị trí Zalo",
   "Display name": FIELD.displayName,
   Reason: FIELD.reason,

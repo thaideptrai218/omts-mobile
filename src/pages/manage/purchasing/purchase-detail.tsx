@@ -4,6 +4,7 @@ import { Button, Input, Modal, Select, Sheet, Switch, useNavigate, useParams } f
 import FormError from "@/components/form-error";
 import { Actions, Badge, Facts, Loadable, ManagePage, NumberInput, ReasonSheet, Row, Rows, Section } from "@/components/manage/ui";
 import { useAction } from "@/hooks/use-action";
+import { useBusinessPermission } from "@/hooks/use-business-permission";
 import { useLoad } from "@/hooks/use-load";
 import { errorText, MESSAGES } from "@/services/acs/messages";
 import { date, dateTime, money, num, parseNumber, todayIso } from "@/services/format";
@@ -27,6 +28,7 @@ import DateField from "@/components/manage/date-field";
  * tất còn nợ thì ghi trả tiền; phiếu chưa hủy thì hủy kèm lý do. Trả hàng làm trên bản web.
  */
 function PurchaseDetailPage() {
+  const allowed = useBusinessPermission();
   const { id = "" } = useParams();
   const navigate = useNavigate();
   const { data, error, reload, setData } = useLoad(() => getReceipt(id), [id]);
@@ -60,8 +62,8 @@ function PurchaseDetailPage() {
         {(r) => {
           const st = statusLabel(r.status);
           const isDraft = r.statusId === RECEIPT_DRAFT;
-          const canPay = r.statusId === RECEIPT_COMPLETED && r.outstanding > 0;
-          const canCancel = r.statusId === RECEIPT_DRAFT || r.statusId === RECEIPT_COMPLETED;
+          const canPay = allowed("SUPPLIER_PAYMENTS", "Create") && r.statusId === RECEIPT_COMPLETED && r.outstanding > 0;
+          const canCancel = allowed("PURCHASE_RECEIPTS", "Delete", r.zone.id) && (r.statusId === RECEIPT_DRAFT || r.statusId === RECEIPT_COMPLETED);
           const hasPayments = r.payments.some((p) => p.status === "Recorded");
           return (
             <>

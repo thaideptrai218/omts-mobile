@@ -113,7 +113,12 @@ function HomePage() {
           </>
         ) : (
           <>
-            <TaskList title={role.tasksTitle} tasks={tasks} />
+            {role.key === "accountant" && <TaskList title={role.tasksTitle} tasks={tasks} />}
+            {role.key !== "accountant" && <div className="card form">
+              <p className="block__title">Công việc và giờ làm của bạn</p>
+              <p className="form__hint">Xem phân công, đưa mã chấm công cho Quản lý vùng và theo dõi giờ đã ghi nhận.</p>
+              <Button fullWidth size="large" onClick={() => navigate("/account/work")}>Mở công việc cá nhân</Button>
+            </div>}
             <ActionGrid actions={actions} />
             {actions.length === 0 && (
               <div className="empty">
@@ -127,7 +132,7 @@ function HomePage() {
                 </p>
               </div>
             )}
-            <StatPanel stats={role.stats} />
+            {role.key === "accountant" && <StatPanel stats={role.stats} />}
             {role.note && <p className="screen__note">{role.note}</p>}
           </>
         )}

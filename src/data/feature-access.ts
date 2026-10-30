@@ -12,9 +12,12 @@ import type { RoleKey } from "./roles";
  * - `everyone`: ai cũng thấy.
  * Đây chỉ là bộ lọc hiển thị; backend vẫn là nơi kiểm tra quyền cuối cùng (MSG02 khi bị từ chối).
  */
-type Access = { functions?: string[]; owner?: boolean; trader?: boolean; everyone?: boolean };
+type Access = { functions?: string[]; owner?: boolean; trader?: boolean; employee?: boolean; everyone?: boolean };
 
 export const FEATURE_ACCESS: Record<FeatureKey, Access> = {
+  myWork: { employee: true },
+  leaveRequests: { owner: true },
+  attendanceSettings: { owner: true },
   zones: { owner: true },
   cycles: { functions: ["CULTIVATION_CYCLES"] },
   seeding: { functions: ["CULTIVATION_CYCLES"] },
@@ -45,8 +48,8 @@ export const FEATURE_ACCESS: Record<FeatureKey, Access> = {
   auditLog: { owner: true },
   broadcast: { owner: true },
   settings: { owner: true },
-  suppliers: { owner: true },
-  purchases: { owner: true },
+  suppliers: { owner: true, functions: ["SUPPLIERS"] },
+  purchases: { owner: true, functions: ["PURCHASE_RECEIPTS"] },
   supplierPayments: { owner: true },
   inputItems: { owner: true },
   traderRequests: { owner: true },
@@ -57,6 +60,7 @@ export const FEATURE_ACCESS: Record<FeatureKey, Access> = {
 export function canUseFeature(permissions: MyPermissions, key: FeatureKey): boolean {
   const access = FEATURE_ACCESS[key];
   if (access.everyone) return true;
+  if (access.employee && (permissions.subjectType === "Staff" || permissions.isCooperativeOwner)) return true;
   if (access.owner && permissions.isCooperativeOwner) return true;
   if (access.trader && permissions.subjectType === "Trader") return true;
   return access.functions?.some((code) => hasFunction(permissions, code)) ?? false;
@@ -76,6 +80,6 @@ export function roleKeyFor(permissions: MyPermissions): RoleKey {
 export function describeGrants(permissions: MyPermissions): string {
   if (permissions.isCooperativeOwner) return "Chủ HTX, toàn HTX";
   if (permissions.subjectType === "Trader") return "Thương lái";
-  if (permissions.grants.length === 0) return "Nhân viên, chưa được cấp quyền";
+  if (permissions.grants.length === 0) return "Nhân viên, chưa có quyền quản lý vùng";
   return permissions.grants.map((g) => `${g.role}, ${g.allZones ? "toàn HTX" : (g.zoneName ?? g.zoneCode ?? "một vùng")}`).join("; ");
 }

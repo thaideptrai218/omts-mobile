@@ -61,7 +61,7 @@ export const ROLES: Record<RoleKey, Role> = {
     actionGroups: [
       { title: "Vùng nuôi", actions: ["zones", "water", "raftMaterials", "trace"] },
       { title: "Mua hàng", actions: ["purchases", "suppliers", "supplierPayments", "inputItems"] },
-      { title: "Tổ chức", actions: ["staff", "accounts", "permissions", "traderRequests", "cooperative"] },
+      { title: "Tổ chức", actions: ["staff", "accounts", "permissions", "traderRequests", "cooperative", "assignments", "attendance", "leaveRequests", "attendanceSettings", "myWork"] },
       { title: "Chưa có trên hệ thống", actions: ["cycles", "harvest", "salesOrders", "receivables", "payroll", "reports", "auditLog", "broadcast"] },
     ],
     tasksTitle: "Cần anh xử lý",
@@ -82,7 +82,7 @@ export const ROLES: Record<RoleKey, Role> = {
       { label: "Độ mặn sáng nay", value: "21", unit: "‰", note: "Thấp hơn ngưỡng 25‰", tone: "warning" },
       { label: "Có mặt hôm nay", value: "12/14", unit: "người", note: "2 người chưa chấm công" },
     ],
-    actions: ["cultivationLog", "water", "seeding", "harvest", "assignments", "attendance", "raftMaterials", "trace"],
+    actions: ["water", "purchases", "suppliers", "assignments", "attendance", "myWork", "cultivationLog", "seeding", "harvest", "trace"],
     tasksTitle: "Cần chị xử lý",
     tasks: [
       { id: "z1", title: "Độ mặn bè B-07 xuống 21‰", detail: "Đo lúc 06:30, nên đo lại trước 10:00", tone: "warning", feature: "water" },
@@ -101,7 +101,7 @@ export const ROLES: Record<RoleKey, Role> = {
       { label: "Giờ công tháng 10", value: "168", unit: "giờ" },
       { label: "Nhật ký đã ghi", value: "5", unit: "mục", note: "Trong tuần này" },
     ],
-    actions: ["attendance", "cultivationLog", "water", "portWeighing", "harvest", "schedule"],
+    actions: ["myWork", "schedule", "water", "purchases", "suppliers", "assignments", "attendance", "cultivationLog", "portWeighing", "harvest"],
     tasksTitle: "Việc của bạn hôm nay",
     tasks: [
       { id: "s1", title: "Vệ sinh lồng bè B-03 đến B-06", detail: "Vùng 1, xong trước 11:00", tone: "neutral", feature: "cultivationLog" },

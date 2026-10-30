@@ -10,6 +10,9 @@ export type Feature = {
 };
 
 export const FEATURES = {
+  myWork: { title: "Công việc của tôi", icon: "zi-calendar", description: "Phân công, QR chấm công, giờ làm và nghỉ phép cá nhân." },
+  leaveRequests: { title: "Duyệt nghỉ phép", icon: "zi-user-check", description: "Phản hồi yêu cầu nghỉ phép của nhân viên." },
+  attendanceSettings: { title: "Cài đặt chấm công", icon: "zi-clock-1", description: "Loại việc, giờ nghỉ và làm tròn giờ công." },
   zones: {
     title: "Vùng nuôi",
     icon: "zi-location",
@@ -205,6 +208,12 @@ export type FeatureKey = keyof typeof FEATURES;
  * (xem docs/owner-features.md).
  */
 export const FEATURE_ROUTES: Partial<Record<FeatureKey, string>> = {
+  myWork: "/account/work",
+  assignments: "/manage/workforce",
+  attendance: "/manage/workforce",
+  schedule: "/account/work",
+  leaveRequests: "/manage/leave-requests",
+  attendanceSettings: "/manage/attendance-settings",
   orders: "/account/purchases",
   zones: "/manage/zones",
   water: "/manage/water",

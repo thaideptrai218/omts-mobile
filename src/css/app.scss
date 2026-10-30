@@ -1626,3 +1626,18 @@ button.row:active {
 }
 // Giữ nhóm trường bè theo bố cục form, không thêm viền mặc định của fieldset.
 .raft-form-fields { border: 0; padding: 0; margin: 0; min-width: 0; display: flex; flex-direction: column; gap: 1rem; }
+/* Phân công và mã chấm công: vùng chạm lớn và QR có nền sáng cố định. */
+.crew-choice {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 3rem;
+  padding: 0.5rem 0;
+  font-size: 1rem;
+  input { width: 1.5rem; height: 1.5rem; flex-shrink: 0; }
+}
+.workforce-sheet { max-height: 75vh; overflow-y: auto; }
+.attendance-qr {
+  text-align: center;
+  img { display: block; width: min(100%, 20rem); height: auto; margin: 0 auto; background: white; }
+}

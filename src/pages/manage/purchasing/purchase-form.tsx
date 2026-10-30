@@ -4,6 +4,7 @@ import { Button, Icon, Input, Select, useNavigate, useParams } from "zmp-ui";
 import FormError from "@/components/form-error";
 import { Loadable, ManagePage, NumberInput, Section } from "@/components/manage/ui";
 import { useLoad } from "@/hooks/use-load";
+import { useBusinessPermission } from "@/hooks/use-business-permission";
 import { errorText, MESSAGES } from "@/services/acs/messages";
 import { money, parseNumber, todayIso } from "@/services/format";
 import { INPUT_GROUP, PAYMENT_METHOD } from "@/services/labels";
@@ -68,6 +69,8 @@ function PurchaseFormPage() {
 }
 
 function ReceiptForm({ choices }: { choices: Choices }) {
+  const allowed = useBusinessPermission();
+  const canPay = allowed("SUPPLIER_PAYMENTS", "Create");
   const navigate = useNavigate();
   const receipt = choices.receipt;
   const [supplierId, setSupplierId] = useState("");
@@ -225,8 +228,8 @@ function ReceiptForm({ choices }: { choices: Choices }) {
             Tiền hàng {money(subtotal)} · Phải trả {money(payable)}
           </p>
           <NumberInput label="Chiết khấu (đồng, không bắt buộc)" value={discount} onChange={setDiscount} disabled={busy} />
-          <NumberInput label="Trả ngay (đồng, không bắt buộc)" value={paidNow} onChange={setPaidNow} disabled={busy} helperText="Bội số của 1.000 đồng." />
-          {Boolean(parseNumber(paidNow)) && (
+          {canPay && <NumberInput label="Trả ngay (đồng, không bắt buộc)" value={paidNow} onChange={setPaidNow} disabled={busy} helperText="Bội số của 1.000 đồng." />}
+          {canPay && Boolean(parseNumber(paidNow)) && (
             <Select label="Hình thức trả" value={method} onChange={(v) => setMethod(v as PaymentMethod)} closeOnSelect disabled={busy}>
               {(Object.keys(PAYMENT_METHOD) as PaymentMethod[]).map((k) => (
                 <Select.Option key={k} value={k} title={PAYMENT_METHOD[k]} />

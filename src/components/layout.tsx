@@ -54,6 +54,10 @@ const Layout = () => {
             {/* Tài khoản: chỉ vào bằng liên kết tài khoản qua số điện thoại Zalo, không có mật khẩu hay mã xác minh. */}
             <Route path="/link" element={<LinkAccountPage />}></Route>
             <Route path="/account/profile" element={<ProfilePage />}></Route>
+            <Route path="/account/work" element={lazyPage(() => import("@/pages/workforce/mine"))}></Route>
+            <Route path="/manage/workforce" element={lazyPage(() => import("@/pages/workforce/crew"))}></Route>
+            <Route path="/manage/leave-requests" element={lazyPage(() => import("@/pages/workforce/review"))}></Route>
+            <Route path="/manage/attendance-settings" element={lazyPage(() => import("@/pages/workforce/settings"))}></Route>
             <Route path="/account/purchases" element={lazyPage(() => import("@/pages/trader/purchases"))}></Route>
             <Route path="/account/notifications" element={<NotificationPreferencesPage />}></Route>
             <Route path="/account/trader-requests" element={<TraderRequestsPage />}></Route>
