@@ -19,6 +19,7 @@
     "build": "vite build . --outDir www",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
+    "test:contracts": "node --test scripts/test-contract-compat.mjs",
     "login": "zmp login",
     "deploy": "zmp deploy"
   },

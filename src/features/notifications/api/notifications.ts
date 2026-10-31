@@ -7,7 +7,7 @@ export function getNotificationPreferences() {
   return api<CategoryPreferenceView[]>("/api/me/notification-preferences");
 }
 
-/** Lưu lựa chọn; `notice` là MSG22 khi bật Push mà máy chưa cho phép nhận thông báo. */
+/** Lưu lựa chọn; ưu tiên notice do API trả (noticeCode MSG-ACCOUNT-21, tương thích MSG22 cũ). */
 export function saveNotificationPreferences(items: NotificationPreferenceChange[]) {
   return api<NotificationPreferencesSaved>("/api/me/notification-preferences", { method: "PUT", body: { items } });
 }

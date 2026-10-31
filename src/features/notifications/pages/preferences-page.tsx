@@ -87,7 +87,7 @@ function NotificationPreferencesPage() {
       const saved = await saveNotificationPreferences(items);
       apply(saved.categories);
       openSnackbar({ text: MESSAGES.MSG10("tùy chọn thông báo"), type: "success", duration: 4000 });
-      if (saved.notice) setNotice(MESSAGES.MSG22);
+      setNotice(saved.notice ?? "");
     } catch (err) {
       setError(errorText(err));
     } finally {

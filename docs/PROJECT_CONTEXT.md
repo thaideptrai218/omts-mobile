@@ -2,6 +2,8 @@
 
 > Update this summary when Jira, the current SRS, or an approved team decision changes. Planned work is not evidence that a feature has already been implemented.
 
+31/10/2026 — contract integration: errors retain the canonical code and match/translate legacyCode during the transition; notification preferences display the API notice and clear a stale notice after a later save. DTOs accept messageCode/noticeCode. Five Node contract regressions, lint/typecheck/build pass locally; CI now includes contract checks and build. No Zalo device acceptance or deployment is claimed. The existing refresh/replay policy is unchanged. Work is isolated from the dirty Expo checkout; not merged into develop.
+
 ## Product and actor boundary
 
 OMTS supports Trung Nam Aquaculture Cooperative in managing farming zones, oyster cultivation, sales, traceability, employees, attendance, payroll, and related costs.

@@ -4,6 +4,8 @@ export type ProblemDetails = {
   title?: string;
   detail?: string;
   code?: string;
+  /** Mã cũ do backend giữ trong một đợt phát hành khi chuyển catalogue. */
+  legacyCode?: string;
   [extension: string]: unknown;
 };
 
@@ -32,7 +34,7 @@ export class NetworkError extends Error {
 }
 
 export function isApiError(error: unknown, code?: string): error is ApiError {
-  return error instanceof ApiError && (code === undefined || error.code === code);
+  return error instanceof ApiError && (code === undefined || error.code === code || error.details.legacyCode === code);
 }
 
 export function isNetworkError(error: unknown): error is NetworkError {

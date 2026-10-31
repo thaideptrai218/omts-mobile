@@ -17,7 +17,7 @@ npm run build      # production build into www/
 npm run deploy     # zmp deploy (Development / Testing)
 ```
 
-Run lint and typecheck before declaring any task done. CI runs both on every PR.
+Run lint, typecheck, test:contracts and build before declaring any task done. CI runs all four on every PR.
 
 ## Structure
 

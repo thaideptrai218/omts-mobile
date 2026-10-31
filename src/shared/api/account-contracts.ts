@@ -92,6 +92,7 @@ export type ProfileView = {
 export type ProfileSaved = {
   profile: ProfileView;
   message: string;
+  messageCode?: string;
 };
 
 export type ChannelPreferenceView = {
@@ -117,7 +118,9 @@ export type NotificationPreferenceChange = {
 export type NotificationPreferencesSaved = {
   categories: CategoryPreferenceView[];
   message: string;
+  messageCode?: string;
   notice: string | null;
+  noticeCode?: string | null;
 };
 
 export type RegisterPushDeviceRequest = {

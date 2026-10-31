@@ -15,8 +15,9 @@ Cấu trúc hiện hành: `docs/PROJECT_STRUCTURE.md` (app / features / shared, 
 
 ## 0. Kiến trúc mã nguồn
 
-- **Không có test runner.** Kiểm tra bằng `npm run lint` + `npm run typecheck` (CI chạy đúng hai lệnh này),
-  rồi chạy thử bằng `npm start` hoặc trong Zalo. ESLint chỉ quét `src/**/*.{ts,tsx}`.
+- Kiểm tra bằng `npm run lint`, `npm run typecheck`, `npm run test:contracts` và `npm run build`.
+  CI chạy cả bốn; contract tests dùng Node có sẵn, chưa có bộ UI/device tests. Sau đó chạy thử trong Zalo.
+  ESLint chỉ quét `src/**/*.{ts,tsx}`.
 - Vite chạy với `root: ./src`, alias `@` trỏ vào `src`; `npm run build` xuất ra `www/`.
   `src/app.ts` gán `app-config.json` vào `window.APP_CONFIG` rồi mount `Layout` vào `#app`.
 - `src/app/layout.tsx` khai báo mọi route (`ZMPRouter` + `AnimationRoutes`), `BottomNav` nằm ngoài

@@ -210,7 +210,9 @@ const SERVER_TEXT: Record<string, string | ((details: ProblemDetails) => string)
 /** Chữ hiện cho người dùng khi một lời gọi API thất bại: luôn tiếng Việt, theo mã lỗi server trả. */
 export function errorText(error: unknown): string {
   if (error instanceof ApiError) {
-    const text = SERVER_TEXT[error.code];
+    // Giữ code mới trên ApiError; catalogue tiếng Việt cũ dùng alias trong giai đoạn chuyển tiếp.
+    const legacy = typeof error.details.legacyCode === "string" ? error.details.legacyCode : undefined;
+    const text = SERVER_TEXT[error.code] ?? (legacy ? SERVER_TEXT[legacy] : undefined);
     if (typeof text === "function") return text({ ...error.details, detail: error.message });
     if (text) return text;
     return error.status === 401 ? MESSAGES.MSG19 : error.status === 403 ? MESSAGES.MSG02 : MESSAGES.UNEXPECTED;
