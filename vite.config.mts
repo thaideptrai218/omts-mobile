@@ -1,0 +1,36 @@
+import { fileURLToPath } from "node:url";
+import { defineConfig } from "vite";
+import zaloMiniApp from "zmp-vite-plugin";
+import react from "@vitejs/plugin-react";
+
+// https://vitejs.dev/config/
+export default () => {
+  return defineConfig({
+    root: "./src",
+    base: "",
+    // File .env nằm ở thư mục gốc dự án, cạnh file này. Không viết "..": `vite build .` và `zmp deploy` truyền
+    // root là "." nên ".." sẽ trỏ ra ngoài dự án và VITE_API_BASE_URL bị bỏ trống. Chỉ biến VITE_* vào bundle.
+    envDir: fileURLToPath(new URL(".", import.meta.url)),
+    plugins: [zaloMiniApp(), react()],
+    build: {
+      assetsInlineLimit: 0,
+    },
+    resolve: {
+      alias: [
+        // Gói VIETMAP không khai báo main/module; trỏ đúng bản phân phối cho Vite.
+        { find: /^@vietmap\/vietmap-gl-js$/, replacement: fileURLToPath(new URL("./node_modules/@vietmap/vietmap-gl-js/dist/vietmap-gl.js", import.meta.url)) },
+        { find: "@", replacement: "/src" },
+      ],
+    },
+    server: {
+      // Khi dev, request /api đi qua dev server tới OMTS.Api chạy local để không vướng CORS.
+      // Trong Zalo, app gọi thẳng VITE_API_BASE_URL (HTTPS, backend phải cho origin https://h5.zdn.vn).
+      proxy: {
+        "/api": {
+          target: process.env.API_PROXY_TARGET || "http://localhost:5198",
+          changeOrigin: true,
+        },
+      },
+    },
+  });
+};

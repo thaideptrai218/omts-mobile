@@ -1,0 +1,1643 @@
+/*
+ * Giao diện cho người lớn tuổi: màu xanh của Zalo (#006AF5, bảng màu ZaUI), chữ lớn, tương phản cao,
+ * vùng chạm rộng. Cỡ chữ và khoảng cách dòng tính bằng rem để đổi theo lựa chọn "Cỡ chữ"
+ * (thuộc tính data-text-size trên thẻ <html>, xem src/state/text-size.ts).
+ * Màu chữ phụ đậm hơn mặc định của ZaUI (#767A7F) để đạt tương phản 7:1 trên nền trắng.
+ */
+html {
+  font-size: 16px;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+html[data-text-size="xlarge"] {
+  font-size: 18px;
+}
+
+:root {
+  --brand: #006af5;
+  --brand-pressed: #0250b6;
+  --brand-soft: #e5f0ff;
+  /* Xanh đậm hơn một chút cho chữ trên nền trắng. */
+  --brand-text: #0052cc;
+  --header-bg: #006af5;
+  --page: #f2f4f7;
+  --surface: #ffffff;
+  --ink: #141415;
+  --ink-2: #44484d;
+  --line: #d6d9dc;
+  --ok: #157f3b;
+  --ok-soft: #e3f5e9;
+  --warn: #a65200;
+  --warn-soft: #fff1e0;
+  --danger: #c4170f;
+  --danger-soft: #ffe9e8;
+
+  /* Chừa chỗ cho nút menu cố định của Zalo ở góc trên bên phải. */
+  --capsule-space: 104px;
+  /* Thanh trạng thái trong suốt: lấy safe area, tối thiểu 28px cho máy Android không báo safe area. */
+  --top-safe: max(var(--zaui-safe-area-inset-top, 0px), 28px);
+  --bottom-safe: var(--zaui-safe-area-inset-bottom, 0px);
+  --nav-height: 64px;
+  --radius: 16px;
+
+  /* Màu ZaUI: giữ xanh mặc định, làm đậm chữ phụ, viền ô nhập và chữ tab chưa chọn. */
+  --zaui-light-input-border-color: #8f9499;
+  --zaui-light-input-placeholder-color: #767a7f;
+  --zaui-light-input-helper-text-color: var(--ink-2);
+}
+
+body[zaui-theme="dark"] {
+  --brand-soft: #0d2a52;
+  --brand-text: #8fc1ff;
+  /* Nền đầu trang tối hơn để đỡ chói khi dùng chế độ tối, chữ trắng vẫn rõ. */
+  --header-bg: #0a4fb3;
+  --page: #0e0f10;
+  --surface: #1d1e20;
+  --ink: #f4f5f6;
+  --ink-2: #c4c8cc;
+  --line: #36383a;
+  --ok: #5fd38a;
+  --ok-soft: #12321f;
+  --warn: #ffb560;
+  --warn-soft: #3a2608;
+  --danger: #ff8a84;
+  --danger-soft: #3d1210;
+
+  --zaui-dark-input-border-color: #8f9499;
+  --zaui-dark-input-placeholder-color: #8f9499;
+  --zaui-dark-input-helper-text-color: var(--ink-2);
+}
+
+body {
+  background: var(--page);
+}
+
+button:focus-visible {
+  outline: 3px solid var(--brand);
+  outline-offset: 2px;
+}
+
+/* ---------- Component ZaUI: phóng chữ và vùng chạm ---------- */
+
+.zaui-btn {
+  font-size: 1.125rem;
+  line-height: 1.5rem;
+  font-weight: 600;
+}
+
+.zaui-btn-large {
+  height: auto;
+  min-height: 56px;
+}
+
+.zaui-input-label {
+  font-size: 1rem;
+  line-height: 1.5rem;
+  font-weight: 600;
+}
+
+.zaui-input {
+  font-size: 1.125rem;
+  line-height: 1.5rem;
+}
+
+.zaui-input-large {
+  height: 56px;
+}
+
+.zaui-input-helper-text {
+  font-size: 0.9375rem;
+  line-height: 1.375rem;
+}
+
+.zaui-sheet-content,
+.zaui-modal-content {
+  font-size: 1rem;
+  line-height: 1.5rem;
+}
+
+.zaui-sheet-content .zaui-sheet-content-header .zaui-sheet-content-title,
+.zaui-modal-content .zaui-modal-content-title {
+  font-size: 1.25rem;
+  line-height: 1.75rem;
+  font-weight: 700;
+}
+
+.zaui-modal-content {
+  width: calc(100vw - 32px);
+}
+
+.zaui-modal-content-actions .zaui-modal-content-action {
+  min-height: 48px;
+  padding: 8px 16px;
+  font-size: 1.125rem;
+}
+
+.zaui-snackbar {
+  font-size: 1rem;
+  line-height: 1.5rem;
+}
+
+/*
+ * Thanh điều hướng dưới: Tổng quan | nút quét QR tròn nổi lên ở giữa | Tài khoản. Tab đang chọn có nền xanh nhạt
+ * sau icon; nút quét to, nổi trên thanh để người lớn tuổi dễ thấy và dễ bấm.
+ */
+.tabbar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 40;
+  display: grid;
+  grid-template-columns: 1fr 112px 1fr;
+  height: calc(var(--nav-height) + var(--bottom-safe));
+  padding-bottom: var(--bottom-safe);
+  background: var(--surface);
+  border-top: 1px solid var(--line);
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.06);
+}
+
+.tabbar__item,
+.tabbar__scan {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: var(--nav-height);
+  color: var(--ink-2);
+}
+
+.tabbar__item {
+  justify-content: center;
+  gap: 2px;
+}
+
+.tabbar__icon {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 32px;
+  border-radius: 16px;
+  font-size: 26px;
+}
+
+.tabbar__label {
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  font-weight: 500;
+}
+
+.tabbar__item.is-active {
+  color: var(--brand-text);
+}
+
+.tabbar__item.is-active .tabbar__icon {
+  background: var(--brand-soft);
+}
+
+.tabbar__item.is-active .tabbar__label,
+.tabbar__scan .tabbar__label {
+  font-weight: 700;
+}
+
+.tabbar__scan {
+  justify-content: flex-end;
+  padding-bottom: 6px;
+  color: var(--brand-text);
+}
+
+.tabbar__scan-circle {
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  margin-top: -30px;
+  margin-bottom: 2px;
+  border-radius: 50%;
+  border: 4px solid var(--surface);
+  background: var(--brand);
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(0, 106, 245, 0.35);
+  transition: transform 0.1s ease;
+}
+
+.tabbar__scan:active .tabbar__scan-circle {
+  transform: scale(0.95);
+}
+
+/* Snackbar không đè lên thanh dưới và nút quét (trình duyệt không hỗ trợ :has thì giữ vị trí mặc định). */
+body:has(.tabbar) .zaui-snackbar-bottom {
+  bottom: calc(var(--nav-height) + var(--bottom-safe) + 40px);
+}
+
+/* Chuông thông báo ở góc trên bên trái đầu trang (góc phải là menu cố định của Zalo). */
+.page-header > .bell:first-child {
+  padding-right: 0;
+}
+
+.bell {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  margin: -6px 0 6px -6px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.16);
+  color: #fff;
+}
+
+.bell__badge {
+  position: absolute;
+  top: 0;
+  right: -4px;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  border-radius: 11px;
+  border: 2px solid var(--header-bg);
+  background: var(--danger);
+  color: #fff;
+  font-size: 0.75rem;
+  line-height: 18px;
+  font-weight: 700;
+  text-align: center;
+}
+
+/* ---------- Khung màn hình ---------- */
+
+.screen {
+  background: var(--page);
+  color: var(--ink);
+  font-size: 1rem;
+  line-height: 1.5rem;
+}
+
+/* Chừa chỗ cho thanh dưới và phần nút quét nổi lên phía trên nó. */
+.screen--with-nav {
+  padding-bottom: calc(var(--nav-height) + var(--bottom-safe) + 40px);
+}
+
+.screen__body {
+  padding: 16px 16px 24px;
+}
+
+.screen__body > :first-child {
+  margin-top: 0;
+}
+
+.screen__note {
+  margin-top: 24px;
+  font-size: 0.9375rem;
+  line-height: 1.375rem;
+  color: var(--ink-2);
+  text-align: center;
+}
+
+.chevron {
+  flex: none;
+  color: var(--ink-2);
+}
+
+.tone-neutral {
+  color: var(--brand-text);
+}
+.tone-success {
+  color: var(--ok);
+}
+.tone-warning {
+  color: var(--warn);
+}
+.tone-danger {
+  color: var(--danger);
+}
+
+/* Nhãn chữ đi kèm màu, để không phải đoán mức độ chỉ bằng màu sắc. */
+.badge {
+  display: inline-block;
+  padding: 0 10px;
+  border-radius: 999px;
+  font-size: 0.9375rem;
+  line-height: 1.5rem;
+  font-weight: 700;
+}
+.badge--success {
+  background: var(--ok-soft);
+  color: var(--ok);
+}
+.badge--warning {
+  background: var(--warn-soft);
+  color: var(--warn);
+}
+.badge--danger {
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+.badge--new {
+  background: var(--brand);
+  color: #fff;
+}
+
+/* ---------- Đầu trang ---------- */
+
+.page-header {
+  background: var(--header-bg);
+  color: #fff;
+  padding: calc(var(--top-safe) + 12px) 16px 24px;
+  border-radius: 0 0 24px 24px;
+}
+
+/* Dòng đầu tiên nằm ngang hàng với menu Zalo nên phải chừa chỗ bên phải. */
+.page-header > :first-child {
+  padding-right: var(--capsule-space);
+}
+
+.page-header__kicker {
+  font-size: 1rem;
+  line-height: 1.5rem;
+  font-weight: 500;
+}
+
+.page-header__title {
+  margin-top: 4px;
+  font-size: 1.5rem;
+  line-height: 2rem;
+  font-weight: 700;
+}
+
+.page-header > .page-header__title:first-child {
+  margin-top: 0;
+}
+
+.page-header__sub {
+  margin-top: 8px;
+  font-size: 1rem;
+  line-height: 1.5rem;
+}
+
+.role-chip {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  margin-top: 16px;
+  min-height: 56px;
+  padding: 8px 16px;
+  border-radius: 14px;
+  border: 1.5px solid rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.16);
+  color: #fff;
+  text-align: left;
+}
+
+.role-chip:active {
+  background: rgba(255, 255, 255, 0.28);
+}
+
+.role-chip__text {
+  flex: 1;
+  min-width: 0;
+}
+
+.role-chip__label {
+  display: block;
+  font-size: 1.0625rem;
+  line-height: 1.5rem;
+  font-weight: 700;
+}
+
+.role-chip__scope {
+  display: block;
+  font-size: 0.9375rem;
+  line-height: 1.375rem;
+}
+
+/* Trang chi tiết dùng Header của ZaUI (cố định ở đỉnh), tô cùng màu với đầu trang các tab. */
+.screen--detail .detail-header.zaui-header {
+  height: calc(var(--top-safe) + 56px);
+  padding: var(--top-safe) var(--capsule-space) 0 4px;
+  background: var(--header-bg);
+  color: #fff;
+}
+
+.screen--detail .detail-header.zaui-header::after {
+  display: none;
+}
+
+/* Nút quay lại: vùng chạm 48px thay vì 24px. */
+.detail-header .zaui-header-back {
+  flex: none;
+  width: 48px;
+  height: 48px;
+}
+
+.detail-header .zaui-header-back-btn {
+  display: grid;
+  place-items: center;
+  color: #fff;
+}
+
+.detail-header .zaui-header-back-btn .zaui-icon {
+  width: 28px;
+  height: 28px;
+  font-size: 28px;
+}
+
+.detail-header .zaui-header-title {
+  font-size: 1.25rem;
+  line-height: 1.75rem;
+  font-weight: 700;
+}
+
+.screen--detail .screen__body {
+  padding-top: calc(var(--top-safe) + 56px + 16px);
+}
+
+/* ---------- Khối nội dung ---------- */
+
+.card {
+  padding: 16px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.block {
+  margin-top: 28px;
+}
+
+.block__title {
+  margin-bottom: 12px;
+  font-size: 1.25rem;
+  line-height: 1.75rem;
+  font-weight: 700;
+}
+
+.list {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.list > li + li {
+  border-top: 1px solid var(--line);
+}
+
+/* Việc cần làm */
+.task {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 80px;
+  padding: 16px 12px 16px 22px;
+  text-align: left;
+  color: var(--ink);
+}
+
+.task:active {
+  background: var(--brand-soft);
+}
+
+.task::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 14px;
+  bottom: 14px;
+  width: 6px;
+  border-radius: 0 6px 6px 0;
+  background: var(--brand);
+}
+
+.tone-bar-success::before {
+  background: var(--ok);
+}
+.tone-bar-warning::before {
+  background: var(--warn);
+}
+.tone-bar-danger::before {
+  background: var(--danger);
+}
+
+.task__text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.task__title {
+  font-size: 1.125rem;
+  line-height: 1.625rem;
+  font-weight: 600;
+}
+
+.task__detail {
+  font-size: 1rem;
+  line-height: 1.5rem;
+  color: var(--ink-2);
+}
+
+/* Lưới chức năng */
+.actions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  padding: 12px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.actions__item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  min-height: 112px;
+  padding: 12px 4px;
+  border-radius: 12px;
+  color: var(--ink);
+}
+
+.actions__item:active {
+  background: var(--brand-soft);
+}
+
+.actions__icon {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  background: var(--brand-soft);
+  color: var(--brand-text);
+}
+
+.actions__label {
+  font-size: 1rem;
+  line-height: 1.375rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+/* Bảng số liệu: một khối, chia ô bằng đường kẻ */
+.stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.stats__cell {
+  padding: 16px;
+}
+
+.stats__cell:nth-child(odd) {
+  border-right: 1px solid var(--line);
+}
+
+.stats__cell:nth-child(-n + 2) {
+  border-bottom: 1px solid var(--line);
+}
+
+.stats__label {
+  font-size: 1rem;
+  line-height: 1.375rem;
+  color: var(--ink-2);
+}
+
+.stats__value {
+  margin-top: 4px;
+  font-size: 1.75rem;
+  line-height: 2.25rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.stats__unit {
+  margin-left: 4px;
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--ink-2);
+}
+
+.stats__note {
+  margin-top: 4px;
+  font-size: 0.9375rem;
+  line-height: 1.375rem;
+  font-weight: 500;
+}
+
+.stats__note.tone-neutral {
+  color: var(--ink-2);
+}
+
+/* ---------- Truy xuất ---------- */
+
+.trace__or {
+  margin: 20px 0 8px;
+  font-size: 1rem;
+  line-height: 1.5rem;
+  color: var(--ink-2);
+  text-align: center;
+}
+
+.trace__submit {
+  margin-top: 12px;
+}
+
+.lot {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--line);
+}
+
+.lot__code {
+  font-size: 1rem;
+  line-height: 1.5rem;
+  color: var(--ink-2);
+}
+
+.lot__product {
+  margin-top: 2px;
+  font-size: 1.375rem;
+  line-height: 1.875rem;
+  font-weight: 700;
+}
+
+.lot__verified {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin-top: 8px;
+  font-size: 1rem;
+  line-height: 1.5rem;
+  font-weight: 600;
+  color: var(--ok);
+}
+
+/* Nhãn nằm trên giá trị để chữ lớn không bị ép vào cột hẹp. */
+.lot__facts {
+  display: grid;
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.lot__facts dt {
+  font-size: 1rem;
+  line-height: 1.375rem;
+  color: var(--ink-2);
+}
+
+.lot__facts dd {
+  margin-top: 2px;
+  font-size: 1.125rem;
+  line-height: 1.625rem;
+  font-weight: 500;
+}
+
+.lot__journey-title {
+  margin: 28px 0 16px;
+  font-size: 1.25rem;
+  line-height: 1.75rem;
+  font-weight: 700;
+}
+
+/* Hành trình là một chuỗi thời gian thật nên dùng dạng dòng thời gian */
+.journey__step {
+  position: relative;
+  padding: 0 0 20px 32px;
+}
+
+.journey__step::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 5px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 3px solid var(--brand);
+  background: var(--surface);
+  box-sizing: border-box;
+}
+
+.journey__step::after {
+  content: "";
+  position: absolute;
+  left: 7px;
+  top: 25px;
+  bottom: 0;
+  width: 2px;
+  background: var(--line);
+}
+
+.journey__step:last-child::after {
+  display: none;
+}
+
+.journey__title {
+  font-size: 1.125rem;
+  line-height: 1.625rem;
+  font-weight: 700;
+}
+
+.journey__date {
+  font-size: 0.9375rem;
+  line-height: 1.375rem;
+  font-weight: 500;
+  color: var(--brand-text);
+}
+
+.journey__detail {
+  margin-top: 4px;
+  font-size: 1rem;
+  line-height: 1.5rem;
+}
+
+/* ---------- Thông báo ---------- */
+
+.notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  width: 100%;
+  padding: 16px;
+  text-align: left;
+}
+
+/* Yêu cầu tài khoản thương lái (Chủ HTX duyệt) */
+.request-list {
+  display: grid;
+  gap: 12px;
+}
+
+.request {
+  display: grid;
+  gap: 6px;
+  padding: 16px;
+}
+
+.request__name {
+  font-size: 1.125rem;
+  line-height: 1.625rem;
+  font-weight: 600;
+}
+
+.request__meta {
+  font-size: 0.9375rem;
+  line-height: 1.375rem;
+  color: var(--ink-2);
+}
+
+.request__note {
+  font-size: 1rem;
+  line-height: 1.5rem;
+  overflow-wrap: anywhere;
+}
+
+.request__actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.notice.is-unread {
+  background: var(--brand-soft);
+}
+
+.notice__icon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--surface);
+  border: 1px solid var(--line);
+}
+
+.notice__text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.notice__title {
+  font-size: 1.125rem;
+  line-height: 1.625rem;
+  font-weight: 500;
+}
+
+.notice.is-unread .notice__title {
+  font-weight: 700;
+}
+
+.notice__body {
+  font-size: 1rem;
+  line-height: 1.5rem;
+  color: var(--ink-2);
+}
+
+.notice__time {
+  font-size: 0.9375rem;
+  line-height: 1.375rem;
+  color: var(--ink-2);
+}
+
+/* ---------- Trạng thái trống ---------- */
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 48px 16px;
+  text-align: center;
+  color: var(--ink-2);
+}
+
+.empty__badge {
+  display: grid;
+  place-items: center;
+  width: 72px;
+  height: 72px;
+  margin-bottom: 8px;
+  border-radius: 50%;
+  background: var(--brand-soft);
+  color: var(--brand-text);
+}
+
+.empty__title {
+  font-size: 1.25rem;
+  line-height: 1.75rem;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.empty__text {
+  max-width: 32ch;
+  font-size: 1rem;
+  line-height: 1.5rem;
+}
+
+.empty__hint {
+  margin-top: 8px;
+  font-size: 0.9375rem;
+  line-height: 1.375rem;
+}
+
+/* ---------- Tài khoản ---------- */
+
+.profile {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.profile__avatar {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--brand);
+  color: #fff;
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.profile__text {
+  min-width: 0;
+}
+
+.profile__name {
+  display: block;
+  font-size: 1.25rem;
+  line-height: 1.75rem;
+  font-weight: 700;
+}
+
+.profile__role {
+  display: block;
+  font-size: 1rem;
+  line-height: 1.5rem;
+  color: var(--ink-2);
+}
+
+.link-box {
+  margin-top: 12px;
+}
+
+.link-box__text {
+  margin-bottom: 16px;
+  font-size: 1rem;
+  line-height: 1.5rem;
+  color: var(--ink-2);
+}
+
+.linked {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 0 4px;
+  font-size: 1rem;
+  line-height: 1.5rem;
+  font-weight: 600;
+  color: var(--ok);
+}
+
+.menu-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 64px;
+  padding: 12px 16px;
+  font-size: 1.125rem;
+  line-height: 1.5rem;
+  color: var(--ink);
+  text-align: left;
+}
+
+.menu-row:active {
+  background: var(--brand-soft);
+}
+
+.menu-row__icon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: var(--brand-soft);
+  color: var(--brand-text);
+}
+
+.menu-row__label {
+  flex: 1;
+  min-width: 0;
+  font-weight: 500;
+}
+
+.menu-row__value {
+  flex: none;
+  font-size: 1rem;
+  color: var(--ink-2);
+}
+
+.info {
+  padding: 0 16px 24px;
+}
+
+.info div {
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.info div:last-child {
+  border-bottom: 0;
+}
+
+.info dt {
+  font-size: 0.9375rem;
+  line-height: 1.375rem;
+  color: var(--ink-2);
+}
+
+.info dd {
+  margin-top: 2px;
+  font-size: 1.125rem;
+  line-height: 1.625rem;
+  font-weight: 500;
+}
+
+.policy p {
+  font-size: 1rem;
+  line-height: 1.5rem;
+  text-align: left;
+}
+
+.policy p + p {
+  margin-top: 12px;
+}
+
+/* ---------- Danh sách lựa chọn trong sheet (vai trò, cỡ chữ) ---------- */
+
+.sheet-hint {
+  padding: 0 16px 8px;
+  font-size: 1rem;
+  line-height: 1.5rem;
+  color: var(--ink-2);
+}
+
+.choice-list {
+  padding: 0 16px 16px;
+}
+
+.choice {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  min-height: 72px;
+  padding: 12px 4px;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  color: var(--ink);
+}
+
+.choice-list li:last-child .choice {
+  border-bottom: 0;
+}
+
+.choice__text {
+  flex: 1;
+  min-width: 0;
+}
+
+.choice__name {
+  display: block;
+  font-size: 1.125rem;
+  line-height: 1.625rem;
+  font-weight: 600;
+}
+
+.choice.is-active .choice__name {
+  color: var(--brand-text);
+}
+
+.choice__hint {
+  display: block;
+  font-size: 0.9375rem;
+  line-height: 1.375rem;
+  color: var(--ink-2);
+}
+
+.choice__check {
+  flex: none;
+  color: var(--brand);
+}
+
+/* Mẫu chữ dùng px để luôn thấy đúng độ chênh giữa hai cỡ, bất kể cỡ đang chọn. */
+.choice__sample {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 12px;
+  background: var(--brand-soft);
+  color: var(--brand-text);
+  font-weight: 700;
+}
+
+.choice__sample--large {
+  font-size: 20px;
+}
+
+.choice__sample--xlarge {
+  font-size: 25px;
+}
+
+/* ---------- Màn hình mở đầu ---------- */
+
+.splash {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 9999;
+  background: #0b3d6b;
+  opacity: 1;
+  transform: scale(1);
+  transition-property: opacity, transform;
+  transition-timing-function: ease-out;
+}
+
+.splash--fade {
+  opacity: 0;
+  transform: scale(1.06);
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .splash--fade {
+    transform: none;
+  }
+}
+
+.splash__image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+}
+
+/* ---------- Tài khoản: form, xác minh, cổng chặn (ACS-01…07) ---------- */
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.form .zaui-input-wrapper,
+.form .zaui-btn {
+  margin: 0;
+}
+
+.form__intro {
+  font-size: 1rem;
+  line-height: 1.5rem;
+  color: var(--ink-2);
+}
+
+.form__hint {
+  font-size: 0.9375rem;
+  line-height: 1.375rem;
+  color: var(--ink-2);
+}
+
+.form__links {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.nowrap {
+  white-space: nowrap;
+}
+
+/* Nút dạng chữ: vùng chạm 48px nhưng không viền, dùng cho "Để sau", "Quay lại". */
+.link-button {
+  min-height: 48px;
+  padding: 8px 4px;
+  font-size: 1.0625rem;
+  line-height: 1.5rem;
+  font-weight: 600;
+  color: var(--brand-text);
+  text-align: center;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.link-button:disabled {
+  opacity: 0.6;
+}
+
+/* Dòng lỗi của form: icon đỏ kèm chữ, không chỉ dựa vào màu. */
+.form-error {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: var(--danger-soft);
+  color: var(--danger);
+  font-size: 1rem;
+  line-height: 1.5rem;
+  font-weight: 500;
+}
+
+.form-error .zaui-icon {
+  flex: none;
+  margin-top: 2px;
+}
+
+/* Băng mất mạng (MSG07): cố định ở đỉnh, chừa góc phải cho menu Zalo. */
+.offline-banner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  padding: calc(var(--top-safe) + 8px) var(--capsule-space) 10px 16px;
+  background: var(--warn);
+  color: #fff;
+  font-size: 0.9375rem;
+  line-height: 1.375rem;
+  font-weight: 500;
+}
+
+.offline-banner .zaui-icon {
+  flex: none;
+  margin-top: 2px;
+}
+
+/* Khung chờ tải (skeleton) */
+.skeleton {
+  border-radius: var(--radius);
+  background: linear-gradient(90deg, var(--line) 25%, var(--surface) 50%, var(--line) 75%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.4s infinite;
+}
+
+.skeleton--form {
+  height: 320px;
+}
+
+.skeleton--dashboard {
+  height: 420px;
+}
+
+@keyframes skeleton-shimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton {
+    animation: none;
+  }
+}
+
+/* Hồ sơ cá nhân */
+.info--flat {
+  padding: 0;
+}
+
+.readonly__value {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  color: var(--ink);
+  font-size: 1.125rem;
+  font-weight: 500;
+  text-align: left;
+}
+
+.readonly__value .zaui-icon {
+  color: var(--ink-2);
+}
+
+.plain-list {
+  display: grid;
+  gap: 4px;
+}
+
+.contact-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.contact-row__text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.contact-row__label {
+  font-size: 0.9375rem;
+  line-height: 1.375rem;
+  color: var(--ink-2);
+}
+
+.contact-row__value {
+  font-size: 1.125rem;
+  line-height: 1.625rem;
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+
+.sheet-form {
+  padding: 8px 16px 24px;
+}
+
+/* Tùy chọn thông báo */
+.pref__title {
+  font-size: 1.125rem;
+  line-height: 1.625rem;
+  font-weight: 700;
+}
+
+.pref__note {
+  margin-top: 4px;
+  font-size: 0.9375rem;
+  line-height: 1.375rem;
+  color: var(--ink-2);
+}
+
+.pref__rows {
+  margin-top: 8px;
+}
+
+.pref__row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 56px;
+  padding: 8px 0;
+  border-top: 1px solid var(--line);
+}
+
+.pref__text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.pref__label {
+  font-size: 1.0625rem;
+  line-height: 1.5rem;
+  font-weight: 500;
+}
+
+.pref__reason {
+  font-size: 0.9375rem;
+  line-height: 1.375rem;
+  color: var(--ink-2);
+}
+
+.menu-row--danger,
+.menu-row--danger .menu-row__icon {
+  color: var(--danger);
+}
+
+.menu-row--danger .menu-row__icon {
+  background: var(--danger-soft);
+}
+
+/* Màn quản lý của Chủ HTX (src/components/manage) */
+.info.card {
+  padding: 4px 16px;
+}
+
+.block__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.block__head .block__title {
+  margin-bottom: 0;
+}
+
+.rows {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.rows > li + li {
+  border-top: 1px solid var(--line);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 64px;
+  padding: 12px 16px;
+  text-align: left;
+  color: var(--ink);
+}
+
+button.row:active {
+  background: var(--brand-soft);
+}
+
+.row__text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.row__title {
+  font-size: 1.125rem;
+  line-height: 1.5rem;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.row__meta {
+  font-size: 0.9375rem;
+  line-height: 1.375rem;
+  color: var(--ink-2);
+  overflow-wrap: anywhere;
+}
+
+.row__badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.row__value {
+  flex: none;
+  max-width: 45%;
+  font-size: 1rem;
+  line-height: 1.5rem;
+  font-weight: 600;
+  text-align: right;
+}
+
+.chips {
+  display: flex;
+  gap: 8px;
+  margin: 0 -16px 16px;
+  padding: 0 16px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.chips::-webkit-scrollbar {
+  display: none;
+}
+
+.chip {
+  flex: none;
+  min-height: 40px;
+  padding: 0 16px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.chip.is-active {
+  border-color: var(--brand);
+  background: var(--brand);
+  color: #fff;
+}
+
+.search {
+  margin-bottom: 12px;
+}
+
+.action-row {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.action-row .zaui-btn {
+  margin: 0;
+}
+
+.screen--with-footer .screen__body {
+  padding-bottom: calc(96px + var(--bottom-safe));
+}
+
+.page-footer {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 10;
+  padding: 12px 16px calc(12px + var(--bottom-safe));
+  background: var(--surface);
+  border-top: 1px solid var(--line);
+}
+
+.page-footer .zaui-btn {
+  margin: 0;
+}
+
+.summary {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.summary__cell {
+  padding: 12px 14px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.summary__label {
+  display: block;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  color: var(--ink-2);
+}
+
+.summary__value {
+  display: block;
+  margin-top: 2px;
+  font-size: 1.25rem;
+  line-height: 1.75rem;
+  font-weight: 700;
+}
+
+.summary__cell.tone-danger .summary__value {
+  color: var(--danger);
+}
+
+.summary__cell.tone-warning .summary__value {
+  color: var(--warn);
+}
+
+.summary__cell.tone-success .summary__value {
+  color: var(--ok);
+}
+
+.text-danger {
+  color: var(--danger);
+}
+
+.text-muted {
+  color: var(--ink-2);
+}
+
+.more {
+  margin-top: 12px;
+}
+
+.line-item {
+  display: grid;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+
+.line-item__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-weight: 600;
+}
+
+.two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+/* Nút nhỏ ở đầu mục (Thêm bè, Cấp thêm…): chữ app to hơn mặc định của ZaUI nên để nút tự cao theo chữ. */
+.block__head .zaui-btn {
+  flex: none;
+  height: auto;
+  min-height: 40px;
+  margin: 0;
+  padding: 6px 14px;
+  line-height: 1.5rem;
+}
+// Giữ nhóm trường bè theo bố cục form, không thêm viền mặc định của fieldset.
+.raft-form-fields { border: 0; padding: 0; margin: 0; min-width: 0; display: flex; flex-direction: column; gap: 1rem; }
+/* Phân công và mã chấm công: vùng chạm lớn và QR có nền sáng cố định. */
+.crew-choice {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 3rem;
+  padding: 0.5rem 0;
+  font-size: 1rem;
+  input { width: 1.5rem; height: 1.5rem; flex-shrink: 0; }
+}
+.workforce-sheet { max-height: 75vh; overflow-y: auto; }
+.attendance-qr {
+  text-align: center;
+  img { display: block; width: min(100%, 20rem); height: auto; margin: 0 auto; background: white; }
+}
