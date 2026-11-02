@@ -153,8 +153,8 @@ function NotificationsPage() {
                       </span>
                       <span className="notice__text">
                         {!n.readAt && <span className="badge badge--new">Mới</span>}
-                        <span className="notice__title">{kind.title}</span>
-                        <span className="notice__body">{kind.body(n)}</span>
+                        <span className="notice__title">{n.localizedContent?.title ?? kind.title}</span>
+                        <span className="notice__body">{n.localizedContent?.body ?? kind.body(n)}</span>
                         <span className="notice__time">{timeOf(n.createdAt)}</span>
                       </span>
                     </button>

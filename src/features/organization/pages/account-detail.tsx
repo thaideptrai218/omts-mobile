@@ -6,7 +6,6 @@ import { Actions, Badge, Empty, Facts, Loadable, ManagePage, ReasonSheet, Row, R
 import { useAction } from "@/shared/hooks/use-action";
 import { useLoad } from "@/shared/hooks/use-load";
 import { MESSAGES } from "@/shared/lib/messages";
-import { date, todayIso } from "@/shared/lib/format";
 import { roleName, statusLabel } from "@/shared/lib/labels";
 import {
   addGrant,
@@ -23,12 +22,12 @@ import {
   unlockAccount,
 } from "@/features/organization/api/organization";
 
-import DateField from "@/shared/ui/date-field";
+
 
 const ALL_ZONES = "all";
 
 function grantPeriod(g: GrantRow) {
-  return g.effectiveTo ? `${date(g.effectiveFrom)} – ${date(g.effectiveTo)}` : `Từ ${date(g.effectiveFrom)}`;
+  return `Cấp lúc ${new Date(g.grantedAt).toLocaleString("vi-VN")}${g.grantedByName ? ` · ${g.grantedByName}` : ""}${g.revokedAt ? ` · Thu hồi ${new Date(g.revokedAt).toLocaleString("vi-VN")}` : ""}`;
 }
 
 /**
@@ -198,13 +197,11 @@ function GrantItem({ grant: g, onClick }: { grant: GrantRow; onClick?: () => voi
 function GrantSheet({ visible, accountId, onClose, onGranted }: { visible: boolean; accountId: string; onClose: () => void; onGranted: (g: GrantRow) => void }) {
   const options = useLoad(async () => {
     if (!visible) return null;
-    const [roles, zones] = await Promise.all([listRoles(STATUS_ID.inUse), lookupZones()]);
+    const [roles, zones] = await Promise.all([listRoles(), lookupZones()]);
     return { roles, zones: zones.filter((z) => z.statusId === STATUS_ID.inUse) };
   }, [visible]);
   const [roleId, setRoleId] = useState("");
   const [zoneId, setZoneId] = useState(ALL_ZONES);
-  const [from, setFrom] = useState(todayIso());
-  const [to, setTo] = useState<string | null>(null);
   const [error, setError] = useState("");
   const { busy, run } = useAction();
 
@@ -215,13 +212,12 @@ function GrantSheet({ visible, accountId, onClose, onGranted }: { visible: boole
     }
     setError("");
     const result = await run(
-      () => addGrant(accountId, { roleId, zoneId: zoneId === ALL_ZONES ? null : zoneId, effectiveFrom: from, effectiveTo: to }),
+      () => addGrant(accountId, { roleId, zoneId: zoneId === ALL_ZONES ? null : zoneId }),
       "Đã cấp vai trò.",
     );
     if (result) {
       setRoleId("");
       setZoneId(ALL_ZONES);
-      setTo(null);
       onGranted(result);
     }
   };
@@ -241,15 +237,6 @@ function GrantSheet({ visible, accountId, onClose, onGranted }: { visible: boole
             <Select.Option key={z.id} value={z.id} title={z.name ?? z.code ?? ""} />
           ))}
         </Select>
-        <div className="two-col">
-          <DateField label="Hiệu lực từ" value={from} onChange={setFrom} disabled={busy} />
-          <DateField label="Đến (không bắt buộc)" value={to} onChange={setTo} disabled={busy} />
-        </div>
-        {to && (
-          <button type="button" className="link-button" onClick={() => setTo(null)}>
-            Bỏ ngày kết thúc
-          </button>
-        )}
         <FormError text={error} />
         <Button fullWidth size="large" loading={busy} disabled={busy} onClick={() => void submit()}>
           Cấp vai trò

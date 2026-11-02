@@ -1,201 +1,46 @@
-import { useCallback, useEffect, useState } from "react";
-import { Button, Header, Modal, Page, Switch, useSnackbar } from "zmp-ui";
-
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Button, Header, Page, Switch } from "zmp-ui";
 import FormError from "@/shared/ui/form-error";
-import { errorText, MESSAGES } from "@/shared/lib/messages";
-import { getNotificationPreferences, saveNotificationPreferences } from "@/features/notifications/api/notifications";
-import { openPushSettings, pushAvailable, requestPushPermission } from "@/features/notifications/api/push";
-import type { CategoryPreferenceView, NotificationChannel, NotificationPreferenceChange } from "@/shared/api/account-contracts";
-
-const CATEGORY_LABEL: Record<string, string> = {
-  ORDERS: "Đơn hàng mới",
-  WORK: "Công việc được giao",
-  DEADLINE_REMINDERS: "Nhắc hạn",
-  WATER_ALERTS: "Cảnh báo chất lượng nước",
-  TRACEABILITY_QR_SENT: "Đã gửi QR truy xuất",
-  SALES_NOTICES: "Thông báo bán hàng",
-};
-
-const CHANNELS: { key: NotificationChannel; label: string; name: string }[] = [
-  { key: "InApp", label: "Trong app", name: "trong app" },
-  { key: "Push", label: "Push", name: "Push" },
-  { key: "Email", label: "Email", name: "Email" },
-  { key: "Zalo", label: "Zalo OA", name: "Zalo OA" },
-];
-
-const key = (category: string, channel: NotificationChannel) => `${category}:${channel}`;
-
-/**
- * ACS-07 tùy chọn thông báo: mỗi nhóm một thẻ với bốn kênh. Nhóm bắt buộc khóa In-app (MSG23); kênh
- * chưa đủ điều kiện bị vô hiệu kèm lý do (MSG21). Push theo quyết định ở OMTS-215: chưa chốt thì hiện
- * "chưa khả dụng"; khi chốt, bật Push lần đầu sẽ xin quyền và đăng ký thiết bị, bị từ chối thì MSG22.
- */
-function NotificationPreferencesPage() {
-  const { openSnackbar } = useSnackbar();
-  const [categories, setCategories] = useState<CategoryPreferenceView[] | null>(null);
-  const [loadError, setLoadError] = useState("");
-  const [values, setValues] = useState<Record<string, boolean>>({});
-  const [error, setError] = useState("");
-  const [saving, setSaving] = useState(false);
-  const [askPush, setAskPush] = useState(false);
-  const [pushDenied, setPushDenied] = useState(false);
-  const [notice, setNotice] = useState("");
-
-  const apply = useCallback((list: CategoryPreferenceView[]) => {
-    setCategories(list);
-    const next: Record<string, boolean> = {};
-    for (const c of list) for (const ch of c.channels) next[key(c.category, ch.channel)] = ch.enabled;
-    setValues(next);
-  }, []);
-
-  const load = useCallback(async () => {
-    setLoadError("");
-    try {
-      apply(await getNotificationPreferences());
-    } catch (err) {
-      setLoadError(errorText(err));
-    }
-  }, [apply]);
-
-  useEffect(() => {
-    void load();
-  }, [load]);
-
-  const pushEligible = categories?.some((c) => c.channels.some((ch) => ch.channel === "Push" && ch.eligible)) ?? false;
-
-  const toggle = (category: string, channel: NotificationChannel, enabled: boolean) => {
-    if (channel === "Push" && enabled && !pushEligible && pushAvailable()) {
-      setAskPush(true);
-      return;
-    }
-    setValues((v) => ({ ...v, [key(category, channel)]: enabled }));
-  };
-
+import { errorText } from "@/shared/lib/messages";
+import { getNotificationPreferences, saveNotificationPreferences } from "../api/notifications";
+import { openPushSettings, pushAvailable, requestPushPermission } from "../api/push";
+import { pushChanges, type PushCatalog } from "../model/push-contract";
+const labels: Record<string, string> = { WATER_ALERT: "Cảnh báo nước", WATER_ALERT_WITHDRAWN: "Thu hồi cảnh báo nước", WATER_MEASUREMENT_OVERDUE: "Nhắc đo nước", ZONE_LICENSE_EXPIRY: "Nhắc hạn giấy phép vùng", WORK_ASSIGNMENT: "Phân công công việc", NEW_ORDER: "Yêu cầu mua mới", TRADER_ACCESS_REQUESTED: "Yêu cầu tài khoản thương lái", TRADER_ACCESS_APPROVED: "Duyệt tài khoản thương lái", PURCHASE_REQUEST_RESPONDED: "Phản hồi yêu cầu mua", PURCHASE_REQUEST_CANCELLED: "Hủy yêu cầu mua", EMPLOYEE_LEAVE_REQUESTED: "Yêu cầu nghỉ phép", EMPLOYEE_LEAVE_REVIEWED: "Kết quả nghỉ phép" };
+export default function NotificationPreferencesPage() {
+  const [catalog, setCatalog] = useState<PushCatalog>(), [values, setValues] = useState<Record<string, boolean>>({});
+  const [error, setError] = useState(""), [notice, setNotice] = useState(""), [busy, setBusy] = useState(false), [blocked, setBlocked] = useState(false);
+  const saving = useRef(false);
+  const apply = useCallback((next: PushCatalog) => { setCatalog(next); setValues(Object.fromEntries(next.types.map((row) => [row.type, row.push]))); }, []);
+  const load = useCallback(async () => { setError(""); try { apply(await getNotificationPreferences()); } catch (err) { setError(errorText(err)); } }, [apply]);
+  useEffect(() => { void load(); }, [load]);
+  const changes = catalog ? pushChanges(catalog, values) : [];
   const save = async () => {
-    if (!categories) return;
-    const items: NotificationPreferenceChange[] = [];
-    for (const c of categories) {
-      for (const ch of c.channels) {
-        const locked = c.mandatory && (ch.channel === "InApp" || ch.channel === "Push");
-        if (locked || !ch.eligible) continue;
-        items.push({ category: c.category, channel: ch.channel, enabled: values[key(c.category, ch.channel)] ?? ch.enabled });
-      }
-    }
-    setSaving(true);
-    setError("");
-    try {
-      const saved = await saveNotificationPreferences(items);
-      apply(saved.categories);
-      openSnackbar({ text: MESSAGES.MSG10("tùy chọn thông báo"), type: "success", duration: 4000 });
-      setNotice(saved.notice ?? "");
-    } catch (err) {
-      setError(errorText(err));
-    } finally {
-      setSaving(false);
-    }
+    if (!changes.length || saving.current || blocked) return;
+    saving.current = true; setBusy(true); setError(""); setNotice("");
+    try { const saved = await saveNotificationPreferences(changes); apply(saved); setNotice(saved.notice ?? "Đã lưu tùy chọn thông báo."); }
+    catch (err) { setError(errorText(err)); setBlocked(true); }
+    finally { saving.current = false; setBusy(false); }
   };
-
-  const grantPush = async () => {
-    setAskPush(false);
-    try {
-      const result = await requestPushPermission();
-      if (result === "denied") setPushDenied(true);
-      await load();
-    } catch (err) {
-      setError(errorText(err));
-    }
-  };
-
-  return (
-    <Page className="screen screen--detail" hideScrollbar>
-      <Header title="Tùy chọn thông báo" className="detail-header" />
-      <div className="screen__body form">
-        {!categories && !loadError && <div className="skeleton skeleton--form" aria-busy />}
-        {loadError && (
-          <div className="empty">
-            <p className="empty__title">Không tải được tùy chọn</p>
-            <p className="empty__text">{loadError}</p>
-            <Button size="large" onClick={() => void load()}>
-              Thử lại
-            </Button>
-          </div>
-        )}
-
-        {categories?.map((c) => (
-          <section key={c.category} className="card pref">
-            <h2 className="pref__title">{CATEGORY_LABEL[c.category] ?? c.category}</h2>
-            {c.mandatory && <p className="pref__note">{MESSAGES.MSG23}</p>}
-            <ul className="pref__rows">
-              {CHANNELS.map((channel) => {
-                const view = c.channels.find((ch) => ch.channel === channel.key);
-                if (!view) return null;
-                const locked = c.mandatory && (channel.key === "InApp" || channel.key === "Push");
-                const pushUnavailable = channel.key === "Push" && !pushAvailable();
-                const disabled = locked || pushUnavailable || (!view.eligible && !(channel.key === "Push" && pushAvailable()));
-                const checked = locked ? true : (values[key(c.category, channel.key)] ?? view.enabled);
-                const reason = pushUnavailable
-                  ? "Push chưa khả dụng: kênh thông báo đang chờ chốt (OMTS-215)."
-                  : locked
-                    ? null
-                    : !view.eligible && channel.key !== "Push"
-                      ? MESSAGES.MSG21(channel.name)
-                      : null;
-                return (
-                  <li key={channel.key} className="pref__row">
-                    <div className="pref__text">
-                      <span className="pref__label">{channel.label}</span>
-                      {reason && <span className="pref__reason">{reason}</span>}
-                      {locked && <span className="pref__reason">Luôn bật</span>}
-                    </div>
-                    <Switch
-                      checked={checked}
-                      disabled={disabled}
-                      aria-label={`${CATEGORY_LABEL[c.category] ?? c.category}: ${channel.label}`}
-                      onChange={(e) => toggle(c.category, channel.key, e.target.checked)}
-                    />
-                  </li>
-                );
-              })}
-            </ul>
-          </section>
-        ))}
-
-        {categories && (
-          <>
-            <FormError text={error} />
-            <Button fullWidth size="large" loading={saving} disabled={saving} onClick={() => void save()}>
-              Lưu tùy chọn
-            </Button>
-          </>
-        )}
-      </div>
-
-      <Modal
-        visible={askPush}
-        title="Nhận thông báo đẩy"
-        description="OMTS sẽ gửi cảnh báo nước, đơn hàng mới và việc được giao tới Zalo của bạn ngay cả khi không mở app. Zalo sẽ hỏi bạn có cho phép không; bạn có thể từ chối và vẫn dùng các kênh khác."
-        onClose={() => setAskPush(false)}
-        actions={[
-          { text: "Để sau", close: true },
-          { text: "Cho phép", highLight: true, onClick: () => void grantPush() },
-        ]}
-      />
-      <Modal
-        visible={pushDenied || !!notice}
-        title="Thông báo đẩy chưa bật"
-        description={notice || MESSAGES.MSG22}
-        onClose={() => {
-          setPushDenied(false);
-          setNotice("");
-        }}
-        verticalActions
-        actions={[
-          ...(pushAvailable() ? [{ text: "Mở cài đặt thông báo", highLight: true, onClick: () => void openPushSettings() }] : []),
-          { text: "Đã hiểu", close: true },
-        ]}
-      />
-    </Page>
-  );
+  return <Page className="screen screen--detail" hideScrollbar><Header title="Tùy chọn thông báo" className="detail-header" /><div className="screen__body form">
+    {!catalog && !error && <div className="skeleton skeleton--form" aria-busy />}
+    <FormError text={error} />{notice && <p role="status">{notice}</p>}
+    {catalog && <><p>Mọi thông báo được lưu trong hộp thư. Chọn các loại bạn muốn nhận thêm qua Push.</p>
+      {!catalog.pushAllowedOnDevice && <p>Chưa có thiết bị cho phép nhận Push. Bạn vẫn có thể lưu lựa chọn.</p>}
+      {pushAvailable() && <Button variant="secondary" disabled={busy} onClick={async () => {
+        if (saving.current) return;
+        saving.current = true; setBusy(true);
+        try {
+          if (catalog.pushAllowedOnDevice) await openPushSettings();
+          else { const result = await requestPushPermission(); if (result === "denied") setNotice("Thiết bị chưa cho phép nhận thông báo Push."); }
+          const current = await getNotificationPreferences(); setCatalog((previous) => previous ? { ...previous, pushAllowedOnDevice: current.pushAllowedOnDevice } : current);
+        } catch (err) { setError(errorText(err)); }
+        finally { saving.current = false; setBusy(false); }
+      }}>{catalog.pushAllowedOnDevice ? "Cài đặt thông báo thiết bị" : "Cho phép thiết bị nhận Push"}</Button>}
+      {!catalog.types.length && <p>Chưa có tùy chọn dành cho tài khoản này.</p>}
+      {catalog.types.map((row) => <section className="card pref" key={row.type}><label className="pref__row"><span>{labels[row.type] ?? row.name}{row.mandatory && <small className="pref__reason">Bắt buộc nhận Push</small>}</span>
+        <Switch checked={values[row.type] ?? row.push} disabled={row.mandatory || busy || blocked} aria-label={labels[row.type] ?? row.name} onChange={(event) => { setValues({ ...values, [row.type]: event.target.checked }); setNotice(""); }} /></label></section>)}
+      <Button fullWidth size="large" loading={busy} disabled={busy || blocked || !changes.length} onClick={() => void save()}>Lưu tùy chọn</Button></>}
+    {blocked && <p>Chưa xác định được kết quả lưu. Đối chiếu thiết lập rồi mở lại màn hình trước khi thực hiện lượt mới.</p>}
+    {error && <Button disabled={busy} variant="secondary" onClick={() => void load()}>Tải lại thiết lập để đối chiếu</Button>}
+  </div></Page>;
 }
-
-export default NotificationPreferencesPage;

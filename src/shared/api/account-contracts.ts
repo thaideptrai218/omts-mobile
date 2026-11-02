@@ -60,6 +60,8 @@ export type NotificationView = {
   createdAt: string;
   readAt: string | null;
   isMandatory: boolean;
+  relatedRecordId?: string | null;
+  localizedContent?: { title: string; body: string };
 };
 
 /** `GET api/me/notifications`: mới nhất trước, kèm số chưa đọc cho huy hiệu. */

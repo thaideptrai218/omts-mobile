@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button, Input, Select, Sheet } from "zmp-ui";
 
 import FormError from "@/shared/ui/form-error";
@@ -8,6 +8,7 @@ import { errorText, MESSAGES } from "@/shared/lib/messages";
 import { INPUT_GROUP, statusLabel } from "@/shared/lib/labels";
 import {
   createInputItem,
+  getInputItemProposal,
   listInputItems,
   setInputItemInUse,
   STATUS_IN_USE,
@@ -18,10 +19,10 @@ import {
 
 /**
  * Danh mục vật tư dùng khi lập phiếu nhập: con giống, vật tư bè, khác. Thêm, sửa, ngừng dùng hoặc dùng lại trong
- * một sheet. Vật tư đã có phiếu nhập (`isUsed`) không đổi được mã, nhóm và đơn vị (backend kiểm tra).
+ * một sheet. Vật tư đã có phiếu nhập (`isUsed`) không đổi được nhóm và đơn vị (backend kiểm tra).
  */
 function InputItemsPage() {
-  const [group, setGroup] = useState<InputItemGroup>("RaftMaterial");
+  const [group, setGroup] = useState<InputItemGroup>("Material");
   const { data, error, reload, setData } = useLoad(() => listInputItems({ group }), [group]);
   const [editing, setEditing] = useState<InputItem | "new" | null>(null);
 
@@ -113,7 +114,19 @@ function ItemForm({
   const [description, setDescription] = useState(existing?.description ?? "");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
-  const locked = Boolean(existing?.isUsed);
+  const locked = Boolean(existing?.isUsed), discontinued = existing?.statusId === 102;
+  const [seedUnit, setSeedUnit] = useState<string | null>();
+  const [proposalError, setProposalError] = useState("");
+  const [proposalRefresh, setProposalRefresh] = useState(0);
+  useEffect(() => {
+    if (existing) return;
+    let live = true;
+    void getInputItemProposal().then((proposal) => {
+      if (!live) return; setSeedUnit(proposal.seedUnit); setCode((current) => current || proposal.code); setProposalError("");
+    }).catch((err) => { if (live) setProposalError(errorText(err)); });
+    return () => { live = false; };
+  }, [existing, proposalRefresh]);
+  useEffect(() => { if (group === "Seed" && seedUnit) setUnit(seedUnit); }, [group, seedUnit]);
 
   const submit = async (action: () => Promise<InputItem>) => {
     setError("");
@@ -129,6 +142,7 @@ function ItemForm({
   };
 
   const save = () => {
+    if (busy || discontinued) return;
     if (!code.trim()) return setError(MESSAGES.MSG01("Mã"));
     if (!name.trim()) return setError(MESSAGES.MSG01("Tên"));
     if (!unit.trim()) return setError(MESSAGES.MSG01("Đơn vị"));
@@ -140,18 +154,20 @@ function ItemForm({
 
   return (
     <div className="sheet-form form">
-      {locked && <p className="form__hint">Vật tư đã có trong phiếu nhập nên không đổi được mã, nhóm và đơn vị.</p>}
-      <Input label="Mã" value={code} onChange={(e) => setCode(e.target.value)} maxLength={50} disabled={busy || locked} />
-      <Input label="Tên" value={name} onChange={(e) => setName(e.target.value)} maxLength={200} disabled={busy} />
-      <Select label="Nhóm" value={group} onChange={(v) => setGroup(v as InputItemGroup)} closeOnSelect disabled={busy || locked}>
+      {discontinued && <p>Khôi phục sử dụng trước khi sửa vật tư.</p>}
+      {proposalError && <><FormError text={proposalError} /><Button onClick={() => setProposalRefresh((value) => value + 1)}>Tải lại mã và đơn vị giống</Button></>}
+      {locked && <p className="form__hint">Vật tư đã có trong phiếu nhập nên không đổi được nhóm và đơn vị.</p>}
+      <Input label="Mã" value={code} onChange={(e) => setCode(e.target.value)} maxLength={50} disabled={busy || discontinued} />
+      <Input label="Tên" value={name} onChange={(e) => setName(e.target.value)} maxLength={200} disabled={busy || discontinued} />
+      <Select label="Nhóm" value={group} onChange={(v) => setGroup(v as InputItemGroup)} closeOnSelect disabled={busy || discontinued || locked}>
         {(Object.keys(INPUT_GROUP) as InputItemGroup[]).map((k) => (
           <Select.Option key={k} value={k} title={INPUT_GROUP[k]} />
         ))}
       </Select>
-      <Input label="Đơn vị (cái, cuộn, kg…)" value={unit} onChange={(e) => setUnit(e.target.value)} maxLength={50} disabled={busy || locked} />
-      <Input.TextArea label="Mô tả" value={description} onChange={(e) => setDescription(e.target.value)} maxLength={500} showCount disabled={busy} />
+      <Input label="Đơn vị (cái, cuộn, kg…)" value={unit} onChange={(e) => setUnit(e.target.value)} maxLength={50} disabled={busy || discontinued || locked || group === "Seed" && !!seedUnit} />
+      <Input.TextArea label="Mô tả" value={description} onChange={(e) => setDescription(e.target.value)} maxLength={500} showCount disabled={busy || discontinued} />
       <FormError text={error} />
-      <Button fullWidth size="large" loading={busy} disabled={busy} onClick={save}>
+      <Button fullWidth size="large" loading={busy} disabled={busy || discontinued} onClick={save}>
         Lưu
       </Button>
       {existing && (

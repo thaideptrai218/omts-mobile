@@ -29,6 +29,7 @@ function SupplierForm({ supplier }: { supplier: SupplierView | null }) {
   const [name, setName] = useState("");
   const [type, setType] = useState<SupplierType>("Seed");
   const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
   const [contacts, setContacts] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -38,10 +39,13 @@ function SupplierForm({ supplier }: { supplier: SupplierView | null }) {
     setName(supplier.name ?? "");
     setType(supplier.supplierType);
     setPhone(supplier.phoneNumber ?? "");
-    setContacts(supplier.otherContacts ?? "");
+    setContacts(supplier.address ?? "");
+    setEmail(supplier.email ?? "");
   }, [supplier]);
 
+  const discontinued = supplier?.statusId === 102;
   const save = async () => {
+    if (discontinued || busy) return;
     if (!name.trim()) {
       setError(MESSAGES.MSG01("Tên nhà cung cấp"));
       return;
@@ -56,7 +60,8 @@ function SupplierForm({ supplier }: { supplier: SupplierView | null }) {
       name: name.trim(),
       supplierType: type,
       phoneNumber: phone.trim() || null,
-      otherContacts: contacts.trim() || null,
+      address: contacts.trim() || null,
+      email: email.trim() || null,
       rowVersion: supplier?.rowVersion,
     };
     try {
@@ -71,16 +76,18 @@ function SupplierForm({ supplier }: { supplier: SupplierView | null }) {
 
   return (
     <div className="form card">
-      <Input label="Tên nhà cung cấp" value={name} onChange={(e) => setName(e.target.value)} maxLength={200} disabled={busy} />
-      <Select label="Loại" value={type} onChange={(v) => setType(v as SupplierType)} closeOnSelect disabled={busy}>
+      <Input label="Tên nhà cung cấp" value={name} onChange={(e) => setName(e.target.value)} maxLength={200} disabled={busy || discontinued} />
+      <Select label="Loại" value={type} onChange={(v) => setType(v as SupplierType)} closeOnSelect disabled={busy || discontinued}>
         {(Object.keys(SUPPLIER_TYPE) as SupplierType[]).map((k) => (
           <Select.Option key={k} value={k} title={SUPPLIER_TYPE[k]} />
         ))}
       </Select>
-      <Input label="Số điện thoại" value={phone} inputMode="tel" onChange={(e) => setPhone(e.target.value)} maxLength={10} disabled={busy} />
-      <Input.TextArea label="Liên hệ khác (địa chỉ, người liên hệ…)" value={contacts} onChange={(e) => setContacts(e.target.value)} maxLength={500} showCount disabled={busy} />
+      <Input label="Số điện thoại" value={phone} inputMode="tel" onChange={(e) => setPhone(e.target.value)} maxLength={10} disabled={busy || discontinued} />
+      <Input.TextArea label="Địa chỉ" value={contacts} onChange={(e) => setContacts(e.target.value)} maxLength={500} showCount disabled={busy || discontinued} />
+      <Input label="Email" value={email} onChange={(e) => setEmail(e.target.value)} maxLength={256} disabled={busy || discontinued} />
+      {discontinued && <p>Khôi phục sử dụng trước khi sửa hồ sơ.</p>}
       <FormError text={error} />
-      <Button fullWidth size="large" loading={busy} disabled={busy} onClick={() => void save()}>
+      <Button fullWidth size="large" loading={busy} disabled={busy || discontinued} onClick={() => void save()}>
         Lưu
       </Button>
     </div>

@@ -72,7 +72,7 @@ export const SUPPLIER_TYPE: Record<string, string> = {
 
 export const INPUT_GROUP: Record<string, string> = {
   Seed: "Con giống",
-  RaftMaterial: "Vật tư bè",
+  Material: "Vật tư",
   Other: "Khác",
 };
 

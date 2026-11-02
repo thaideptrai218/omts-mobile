@@ -3,7 +3,7 @@ import { useNavigate } from "zmp-ui";
 import { Empty, Loadable, ManagePage, Row, Rows, Section } from "@/shared/ui/ui";
 import { useLoad } from "@/shared/hooks/use-load";
 import { date, money } from "@/shared/lib/format";
-import { listRaftMaterialCosts } from "@/features/purchasing/api/purchasing";
+import { listMaterialCosts } from "@/features/purchasing/api/purchasing";
 
 /**
  * Chi phí vật tư bè (phao, dây, lồng…) theo từng bè, tính từ các phiếu nhập đã hoàn tất trong năm nay có gắn bè,
@@ -11,7 +11,7 @@ import { listRaftMaterialCosts } from "@/features/purchasing/api/purchasing";
  */
 function RaftCostsPage() {
   const navigate = useNavigate();
-  const { data, error, reload } = useLoad(listRaftMaterialCosts, []);
+  const { data, error, reload } = useLoad(listMaterialCosts, []);
 
   return (
     <ManagePage title="Chi phí vật tư bè">

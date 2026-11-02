@@ -9,7 +9,7 @@ import { api } from "@/shared/api/http";
 
 
 export type SupplierType = "Seed" | "Material" | "Other";
-export type InputItemGroup = "Seed" | "RaftMaterial" | "Other";
+export type InputItemGroup = "Seed" | "Material" | "Other";
 export type PaymentMethod = "Cash" | "BankTransfer" | "Other";
 
 export const STATUS_IN_USE = 101;
@@ -34,9 +34,9 @@ export type SupplierListItem = {
 };
 
 export type SupplierView = SupplierListItem & {
-  otherContacts: string | null;
+  address: string | null;
+  email: string | null;
   certificates: { index: number; url: string | null }[];
-  debt: number;
   receipts: { id: string; code: string | null; receiptDate: string | null; zoneId: string; status: string | null; payable: number; outstanding: number }[];
   rowVersion: string | null;
 };
@@ -45,7 +45,8 @@ export type SaveSupplier = {
   name: string;
   supplierType: SupplierType;
   phoneNumber: string | null;
-  otherContacts: string | null;
+  address: string | null;
+  email: string | null;
   rowVersion?: string | null;
 };
 
@@ -87,7 +88,7 @@ export function updateSupplier(id: string, body: SaveSupplier) {
 }
 
 export function setSupplierInUse(id: string, inUse: boolean) {
-  return api<SupplierView>(`/api/suppliers/${id}/${inUse ? "reactivate" : "discontinue"}`, { method: "POST" });
+  return api<SupplierView>(`/api/suppliers/${id}/${inUse ? "resume" : "discontinue"}`, { method: "POST" });
 }
 
 export function listSupplierDebts() {
@@ -122,6 +123,10 @@ export function listInputItems(filter: { group?: InputItemGroup | null; statusId
   return api<InputItem[]>(`/api/farming-input-items${query({ group: filter.group, statusId: filter.statusId })}`);
 }
 
+export function getInputItemProposal() {
+  return api<{ code: string; seedUnit: string | null }>("/api/farming-input-items/next-code");
+}
+
 export function createInputItem(body: SaveInputItem) {
   return api<InputItem>("/api/farming-input-items", { method: "POST", body });
 }
@@ -131,7 +136,7 @@ export function updateInputItem(id: string, body: SaveInputItem) {
 }
 
 export function setInputItemInUse(id: string, inUse: boolean) {
-  return api<InputItem>(`/api/farming-input-items/${id}/${inUse ? "reactivate" : "discontinue"}`, { method: "POST" });
+  return api<InputItem>(`/api/farming-input-items/${id}/${inUse ? "resume" : "discontinue"}`, { method: "POST" });
 }
 
 /* Phiếu nhập */
@@ -272,15 +277,15 @@ export function cancelReceipt(id: string, body: { reason: string; cancelPayments
   return api<ReceiptView>(`/api/purchase-receipts/${id}/cancel`, { method: "POST", body });
 }
 
-export type RaftMaterialCost = {
+export type MaterialCost = {
   raft: RaftRef;
   zone: Ref;
   materialCost: number;
   receipts: { receiptId: string; code: string | null; receiptDate: string; materialCost: number }[];
 };
 
-export function listRaftMaterialCosts() {
-  return api<RaftMaterialCost[]>("/api/purchase-receipts/raft-material-costs");
+export function listMaterialCosts() {
+  return api<MaterialCost[]>("/api/purchase-receipts/raft-material-costs");
 }
 
 /* Trả tiền nhà cung cấp */

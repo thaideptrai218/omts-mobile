@@ -86,19 +86,22 @@ export type GrantRow = {
   allZones: boolean;
   roleId: string;
   roleName: string | null;
-  effectiveFrom: string;
-  effectiveTo: string | null;
+  role: string;
+  grantedAt: string;
+  grantedByName: string | null;
+  revokedByName: string | null;
   state: string | null;
   revokedAt: string | null;
   revokeReason: string | null;
 };
 
-export type GrantDraft = { zoneId: string | null; roleId: string; effectiveFrom: string | null; effectiveTo: string | null };
+export type GrantDraft = { zoneId: string | null; roleId: string };
 
-export type RolePermission = { functionCode: string | null; actions: string[]; dataScope: string };
+export type RolePermission = { functionCode: string | null; actions: string[]; dataScope?: string };
 
 export type RoleView = {
   id: string;
+  code: string;
   name: string | null;
   description: string | null;
   status: string | null;
@@ -202,24 +205,12 @@ export function revokeGrant(accountId: string, grantId: string, reason: string) 
 }
 
 // Vai trò
-export function listRoles(statusId?: number | null) {
-  return api<RoleView[]>(`/api/roles${query({ statusId })}`);
+export function listRoles() {
+  return api<RoleView[]>("/api/roles");
 }
 
 export function getRole(id: string) {
   return api<RoleView>(`/api/roles/${id}`);
-}
-
-export function getRoleImpact(id: string) {
-  return api<RoleImpact>(`/api/roles/${id}/impact`);
-}
-
-export function discontinueRole(id: string) {
-  return api<RoleView>(`/api/roles/${id}/discontinue`, { method: "POST" });
-}
-
-export function reactivateRole(id: string) {
-  return api<RoleView>(`/api/roles/${id}/reactivate`, { method: "POST" });
 }
 
 export function listPermissionFunctions() {

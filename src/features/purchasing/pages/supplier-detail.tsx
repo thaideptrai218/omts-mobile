@@ -37,14 +37,14 @@ function SupplierDetailPage() {
                   ["Tên", s.name],
                   ["Loại", SUPPLIER_TYPE[s.supplierType] ?? s.supplierType],
                   ["Số điện thoại", s.phoneNumber],
-                  ["Liên hệ khác", s.otherContacts],
+                  ["Địa chỉ", s.address],
+                  ["Email", s.email],
                   ["Trạng thái", <Badge key="st" text={st.text} tone={st.tone} />],
-                  ["Còn phải trả", <span key="debt" className={s.debt > 0 ? "text-danger" : undefined}>{money(s.debt)}</span>],
                   ["Chứng nhận", s.certificates.length > 0 ? `${s.certificates.length} tệp (xem trên bản web)` : null],
                 ]}
               />
               <Actions>
-                <Button variant="secondary" size="large" onClick={() => navigate(`/manage/suppliers/${id}/edit`)}>
+                <Button variant="secondary" size="large" disabled={!inUse} onClick={() => navigate(`/manage/suppliers/${id}/edit`)}>
                   Sửa
                 </Button>
                 <Button variant="secondary" size="large" type={inUse ? "danger" : "highlight"} onClick={() => setConfirming(true)}>

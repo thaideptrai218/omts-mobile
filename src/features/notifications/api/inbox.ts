@@ -1,10 +1,10 @@
 import { api } from "@/shared/api/http";
 
-import type { NotificationPage } from "@/shared/api/account-contracts";
+import { parseNotificationPage } from "@/features/notifications/model/inbox-contract";
 
 /** Thông báo in-app của người đang đăng nhập (`api/me/notifications`), mới nhất trước. */
 export function listNotifications(page = 1, pageSize = 50) {
-  return api<NotificationPage>(`/api/me/notifications?page=${page}&pageSize=${pageSize}`);
+  return api<unknown>(`/api/me/notifications?page=${page}&pageSize=${pageSize}`).then(parseNotificationPage);
 }
 
 export function markNotificationRead(id: string) {

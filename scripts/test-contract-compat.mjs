@@ -36,3 +36,31 @@ test("mã kỹ thuật Zalo giữ thông báo riêng", () => {
   const error = new errors.ApiError(403, "ZALO_APPROVAL_PENDING", "private diagnostic");
   assert.notEqual(messages.errorText(error), messages.MESSAGES.UNEXPECTED);
 });
+
+const inbox = await import(moduleUrl(await readFile(new URL("../src/features/notifications/model/inbox-contract.ts", import.meta.url), "utf8")));
+const oldNotification = { id: "122bb318-a72e-49aa-a8d7-a6169f889007", type: "WATER_MEASUREMENT_OVERDUE", title: "Title", body: "Old body",
+  relatedRecordType: "FarmingZone", relatedRecordCode: "DEMO-01", createdAt: "2026-10-30T00:00:00Z", readAt: null, isMandatory: false };
+test("inbox giữ schema cũ và bỏ trường người nhận ngoài hợp đồng", () => {
+  const result = inbox.parseNotificationPage({ items: [{ ...oldNotification, recipientAccountId: "private" }], total: 1, unreadCount: 1 });
+  assert.equal(result.items[0].isMandatory, false); assert.equal(JSON.stringify(result).includes("private"), false);
+});
+test("inbox v2 dịch tham số nguyên tử và giữ ID riêng với mã hiển thị", () => {
+  const result = inbox.parseNotificationPage({ items: [{ ...oldNotification, mandatory: true, relatedRecordId: oldNotification.id, messageCode: "MSG-WATER-06", messageParams: { zone_name: "A", last_date: "2026-10-01" } }], total: 1, unreadCount: 1 });
+  assert.equal(result.items[0].isMandatory, true); assert.equal(result.items[0].relatedRecordCode, "DEMO-01");
+  assert.equal(result.items[0].relatedRecordId, oldNotification.id); assert.ok(result.items[0].localizedContent.body.includes("01/10/2026"));
+});
+test("inbox không hạ v2 sai tham số về schema cũ", () => {
+  assert.throws(() => inbox.parseNotificationPage({ items: [{ ...oldNotification, mandatory: true, relatedRecordId: null, messageCode: "MSG-WATER-06", messageParams: { zone_name: [] } }], total: 1, unreadCount: 1 }));
+});
+
+const push = await import(moduleUrl(await readFile(new URL("../src/features/notifications/model/push-contract.ts", import.meta.url), "utf8")));
+test("catalog Push mới giữ tùy chọn khi chưa có thiết bị và khóa loại bắt buộc", () => {
+  const catalog = push.parsePushCatalog({ types: [{ type: "WATER_ALERT", name: "Water", mandatory: true, push: true }, { type: "WORK_ASSIGNMENT", name: "Work", mandatory: false, push: true }], pushAllowedOnDevice: false });
+  assert.deepEqual(push.pushChanges(catalog, { WATER_ALERT: false, WORK_ASSIGNMENT: false }), [{ type: "WORK_ASSIGNMENT", push: false }]);
+  assert.throws(() => push.parsePushCatalog({ ...catalog, types: [{ ...catalog.types[0], push: false }] }));
+  assert.throws(() => push.parsePushCatalog({ ...catalog, types: [catalog.types[0], catalog.types[0]] }));
+});
+test("notice của lần lưu Push phải có mã tương ứng", () => {
+  const saved = { types: [], pushAllowedOnDevice: false, message: "Saved", messageCode: "MSG-GEN-05", notice: "No device", noticeCode: "MSG-ACCOUNT-21" };
+  assert.equal(push.parsePushSaved(saved).notice, "No device"); assert.throws(() => push.parsePushSaved({ ...saved, noticeCode: null }));
+});
