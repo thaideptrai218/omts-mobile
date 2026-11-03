@@ -48,7 +48,7 @@ export async function rawRequest<T>(path: string, options: RequestOptions = {}):
     // gateway đứng trước (máy chủ không chạy, không với tới được): coi như mất kết nối tới server (MSG07).
     if (response.status >= 500 && !problem.code) throw new NetworkError();
     // Không có mã nghĩa là server không biết đường dẫn này (ví dụ endpoint chưa được triển khai): HTTP_404.
-    const code = problem.code ?? problem.title ?? `HTTP_${response.status}`;
+    const code = problem.legacyCode ?? problem.code ?? problem.title ?? `HTTP_${response.status}`;
     throw new ApiError(response.status, code, problem.detail ?? fallbackText(response.status), problem);
   }
   return data as T;

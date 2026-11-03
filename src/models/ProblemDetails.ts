@@ -4,5 +4,7 @@ export type ProblemDetails = {
   title?: string;
   detail?: string;
   code?: string;
+  /** Mã tương thích backend gửi khi chuyển sang danh mục SRS mới. */
+  legacyCode?: string;
   [extension: string]: unknown;
 };
