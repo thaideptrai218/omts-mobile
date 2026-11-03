@@ -41,10 +41,36 @@ Its acceptance criteria must be re-mapped to Zalo Mini App equivalents before it
 
 ## Current code status
 
+- Purchase staffing (31/10/2026, user-confirmed): Owner sends dated employee shift invitations before accepting a cage request. At the default 20 cages/person/day, 100 cages require five approvals; Owner makes the final decision. Added `AWAITING_STAFF`, personal approve/refuse with reason, capacity progress, replacement invitations, API guards, SQL protection against reserving one employee for two orders that day, and release on reject/cancel. FE/BE and SQL/browser checks pass; dev migration applied. Starting the replacement API was automatically rejected (`blocked by policy`), so the current Mini App backend/proxy has **not** been switched. See `learning/12-purchase-staffing.md`.
+
+- Model separation (31/10/2026, user request): business types, request/response DTOs and form data live in `features/<area>/models/`; shared types live in `src/models/`. Extracted 138 named declarations and 25 inline object types into 46 model files, consolidating one duplicate Tone declaration. Consumers import types directly from models; 25 services contain no model/interface/anonymous object type declarations. Notification atoms are in `state/`, sample trace data in `data/`. Runtime behavior and API data shapes are preserved. See `learning/11-model-separation.md`.
+
+- Folder structure (31/10/2026, user correction): mobile follows `assets`, `components`, `features`, `hooks`, `layouts`, `pages`, `routes`, `services`, `contexts`, `utils`, `constants`, with `App.tsx` and `main.tsx`. Feature API calls use `services/`; account linking/session code belongs to `features/auth/`; Zalo still enters through `app.ts`. This supersedes the earlier app/features/shared layout. Backend structure is unchanged. See `PROJECT_STRUCTURE.md` and `learning/10-requested-frontend-structure.md`.
+
+- Device incident (31/10/2026): CLI relay GETs timed out while localhost/backend stayed healthy. A fallback HTTPS bootstrap/HMR worked in a desktop browser, but the user reported the generated link invalid in Zalo. Phone recovery is **not verified**; do not treat the fallback link as a working Zalo entry. The user requested folder restructuring first. See `docs/learning/08-device-white-screen.md`.
+
+- Cage purchase requests (31/10/2026, user correction overriding V8 kg for ordering): replaces the preview at `/account/purchases` with API-backed submission/list/detail/cancel, positive whole cages, actual products and pickup dates. Owner inbox/response at `/manage/purchase-requests`; Owner catalogue at `/manage/sales-products`. DB stores requests, idempotency key, status and row version; in-app notifications connect both actors. No cage-to-kg conversion and no payment/invoice/fulfilment/harvest/QR created by this step. See `docs/learning/07-cage-purchase-requests.md`.
+
+- Development role testing (31/10/2026): opt-in server-authorized role switching for one configured linked Owner and its dedicated internal test personas. Owner's real identity/grants stay unchanged. Device mode can switch Owner/Zone Manager/Employee/Trader, with normal token issuance/refresh and old-session revocation. Production disables the tool and rejects persona tokens. Purchase requests now work in cages; harvest/weighing/provenance remain incomplete. See `docs/learning/06-dev-role-switch.md`.
+
+- Workforce basic role support (30/10/2026, DOCX V8): API-backed personal work/attendance/QR/leave at `/account/work`, manager crew assignments/manual-or-QR attendance/job changes at `/manage/workforce`, Owner leave review and dated attendance settings. Employed linked Staff may enter the personal area without management grants; management APIs still enforce zone permissions. No new Accountant feature. This does not complete every V8 use case: missed-time requests/correction, staff-specific attendance variants, cycles/harvest/sales/real public provenance and payslips remain outstanding. See `docs/learning/05-mobile-workforce-roles.md`. SQL migrations applied on dev; code has not been deployed to Zalo or used to replace the pre-existing API process.
+
+- Owner location/form input (30/10/2026): zone/raft create/edit already call real APIs. Added one-shot Zalo location lookup via authenticated Owner-only `POST /api/me/zalo-location`, confirmed map picking, and device-side Vietnamese OCR for labeled raft forms. OCR suggestions are reviewed before applying, never auto-saved. Zone coordinates center the new-raft map without silently becoming the raft position. Coordinates use a decimal-specific parser, independent of money/thousands parsing. Needs validation of Zalo location/camera permission and WebAssembly/worker behavior on real phones; basemap availability still depends on VIETMAP key/quota.
+
+- Historical Trader purchase preview (30/10/2026) was superseded by cage purchase requests on 31/10. Sample-product/kg draft service removed. Trader home continues to exclude mock debt figures/tasks. Sales invoices (OMTS-224/SALE-10) remain unimplemented.
+
 - Zalo Mini App with React 18, TypeScript, Vite, ZaUI, ZMP SDK, Tailwind CSS and Jotai.
-- Launch splash, bottom navigation and a role-based dashboard for all seven SRS actors, using **mock data** only (`src/data/`).
+- Launch splash, bottom navigation and a role-based dashboard for all seven SRS actors, with legacy sample role data in `src/constants/roles.ts`; API-backed owner/trader behavior is described above.
 - Traceability lookup by lot code or QR scan, with a sample lot; Account page with cooperative info and privacy policy required by Zalo.
-- A role switcher exists for UI preview only. Zalo login/account linking, API client, permission payloads, message catalog and offline banner are not implemented yet.
+- Account module (ACS-01…07, 28/10/2026): API client with token refresh, session in memory + `nativeStorage`, permission-based dashboard, `MSG07` offline banner, account linking by Zalo phone number (`/link`) as the only way in: no password form, password recovery or change, verification codes, post-login gates, contact changes or self-created trader accounts (passwords are Web-only; 28/10/2026 decision), personal profile with read-only contacts, notification preferences (push waits for the OMTS-215 channel decision), online/offline logout with a queued server revoke. The role switcher was removed.
+- The local backend source implements Zalo linking, silent re-entry, unlinking and trader approval requests. Deployment availability must be checked separately; the contract is in `docs/zalo-account-linking.md`.
+
+### Account linking and API authentication
+
+- Mobile identifies the user through Zalo, with no username/password form or OTP flow. The backend resolves the phone number using Zalo tokens, matches it to an OMTS account and stores the Zalo user ID on that account.
+- Linking returns OMTS access/refresh tokens. These tokens are still required for protected API calls and zone permissions; removing password entry does not remove API authentication.
+- Subsequent app openings restore the OMTS session or obtain one using the linked Zalo identity (`api/auth/zalo/login`), without requesting the phone number again.
+- Keep session refresh, protected-route checks, logout/revocation and unlinking. They support the linked account and are not password-login leftovers.
 
 ## Current Mobile critical path
 
@@ -56,9 +82,9 @@ Its acceptance criteria must be re-mapped to Zalo Mini App equivalents before it
 ## Decisions still requiring confirmation
 
 - QA API base URL and current OpenAPI/response contracts.
-- Access/refresh token response shape, lifetime, and refresh endpoint behavior.
-- `/me/permissions` payload, especially zone scope and all-zone access.
-- Canonical Vietnamese/English message catalog.
+- Confirm that the QA deployment includes the locally implemented Zalo endpoints and CORS for `https://h5.zdn.vn`.
+- Canonical Vietnamese/English message catalog: Mobile currently displays Vietnamese messages from `src/constants/messages.ts`, with backend error translation in `src/utils/errorText.ts`.
+- Push channel (Zalo OA/ZNS vs Mini App notifications): `PUSH_PROVIDER` in `src/constants/env.ts`.
 - Required offline behavior beyond showing `MSG07`; no mutation queue or conflict policy is assumed.
 - Which screens are Mobile-native versus Web-only when Jira has not assigned a channel.
 

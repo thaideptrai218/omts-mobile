@@ -23,14 +23,18 @@
     "deploy": "zmp deploy"
   },
   "dependencies": {
+    "@vietmap/vietmap-gl-js": "6.0.1",
     "jotai": "^2.12.1",
+    "qrcode": "^1.5.4",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "tesseract.js": "^7.0.0",
     "zmp-sdk": "^2.53.3",
     "zmp-ui": "^1.11.15-2"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.5",
+    "@types/qrcode": "^1.5.6",
     "@types/react": "^18.3.1",
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^4.3.1",
