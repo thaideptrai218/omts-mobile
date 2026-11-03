@@ -1,5 +1,7 @@
 # Yêu cầu mua theo lồng — 31/10/2026
 
+> Bước nhận đơn trực tiếp trong ghi chép này đã được thay bằng [xác nhận nhân lực trước khi nhận đơn](12-purchase-staffing.md). Phải đủ nhân viên đồng ý ca, sau đó Owner quyết định; thiếu nhân lực có thể từ chối kèm lý do.
+
 Theo yêu cầu trực tiếp của chủ dự án, thay bản xem thử bằng yêu cầu mua được lưu trên backend; số lượng đặt mua là **số lồng nguyên**, không phải kg. Quyết định này thay trường số kg của SALE-01/03 trong DOCX V8 cho bước đặt mua.
 
 Thương lái mở Mua hàng của tôi, chọn sản phẩm thật trong danh mục của HTX, nhập số lồng và ngày nhận, kiểm tra rồi bấm Gửi yêu cầu mua. Backend tự lấy hồ sơ khách hàng từ tài khoản đang gọi, không nhận customerId từ ứng dụng. Yêu cầu chuyển sang chờ phản hồi; Chủ HTX nhận thông báo trong ứng dụng.

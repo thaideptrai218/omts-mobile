@@ -35,13 +35,23 @@ APIs such as `getAccessToken`, `getPhoneNumber` and Checkout SDK only work insid
 
 ```text
 src/
-  app.ts             Zalo entry point; restore session, start connectivity, mount React
-  app/               application layout, session guard, navigation shell
-  features/          account, dashboard, farming, organization, purchasing, sales,
-                     workforce, notifications, traceability, development
-  shared/            api, auth, config, hooks, lib, navigation, platform, preferences,
-                     routing, styles, ui
-  static/images/     imported images
+  app.ts             Zalo CLI entry; imports main.tsx
+  main.tsx           restore session, start connectivity, mount React
+  App.tsx            compose providers, layout and routes
+  assets/            imported images and global styles
+  components/        reusable components, one folder per component
+  features/          auth, account, dashboard, farming, organization, purchasing,
+                     sales, workforce, notifications, traceability, development
+                     each feature owns models/, services/, pages/, components/ as needed
+  models/            shared HTTP, pagination, coordinates, navigation and UI types
+  hooks/             shared React hooks
+  layouts/           application shell
+  pages/             general pages: HomePage, FeaturePage
+  routes/            AppRoutes, route groups and lazy loading
+  services/          HTTP client, Zalo SDK, storage and connectivity
+  contexts/          existing application providers
+  utils/             formatting, coordinates, error translation and permission helpers
+  constants/         environment config, cooperative info, messages and feature catalogue
 scripts/testing/     manual browser test scenarios
 docs/                context, structure, contracts, learning notes
 app-config.json      Zalo window configuration

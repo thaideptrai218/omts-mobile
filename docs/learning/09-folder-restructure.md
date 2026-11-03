@@ -1,5 +1,7 @@
 # Sắp xếp folder — 31/10/2026
 
+> Ghi chép lần sắp xếp trước. Phần cấu trúc mobile dưới đây đã được thay theo cây thư mục người dùng yêu cầu; xem [cấu trúc hiện hành](../PROJECT_STRUCTURE.md) và [lần sửa tiếp theo](10-requested-frontend-structure.md). Phần backend giữ nguyên.
+
 Người dùng yêu cầu dọn cấu trúc trước khi tiếp tục xử lý việc mở Mini App. Trước đó một chức năng mobile nằm rải ở pages, services, state và components; backend có các file chứa nhiều DTO/interface/record và controller đặt chung một thư mục.
 
 ## Cách chia

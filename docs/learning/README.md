@@ -19,3 +19,6 @@ Do not record a Jira item as complete until its done criteria and quality checks
 | Lesson | Topic | Status |
 | --- | --- | --- |
 | [01](01-official-mobile-foundation.md) | Official repository, Expo foundation, routing, environment, and current gaps | In progress |
+| [10](10-requested-frontend-structure.md) | Frontend structure requested by the user, Zalo entry, import updates and verification | Verified locally |
+| [11](11-model-separation.md) | Feature models, shared types, API DTO separation and runtime comparison | Verified locally |
+| [12](12-purchase-staffing.md) | Employee shift approval and capacity before Owner accepts cage orders | Tested; dev API process update blocked |

@@ -51,7 +51,7 @@ async function prepareTrader(phone, password) {
 
 const browser = await chromium.launch({ executablePath: process.env.CHROME_PATH || "C:/Program Files/Google/Chrome/Application/chrome.exe", headless: true });
 const context = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true, locale: "vi-VN" });
-// Bản giả của zmp-sdk khi dev (src/shared/platform/zalo.ts): access token và token số điện thoại.
+// Bản giả của zmp-sdk khi dev (src/services/zaloService.ts): access token và token số điện thoại.
 const zalo = { accessToken: "fake:zalo-e2e", phoneToken: "fake:phone", declinePhone: false };
 await context.addInitScript((z) => { window.__OMTS_FAKE_ZALO__ = z; }, zalo);
 const page = await context.newPage();

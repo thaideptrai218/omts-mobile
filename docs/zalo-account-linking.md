@@ -5,7 +5,7 @@ Tài liệu bàn giao cho người làm `omts-backend`. Cập nhật 28/10/2026.
 Mobile (Zalo Mini App) **không có form tên đăng nhập + mật khẩu**: Zalo ẩn khỏi tìm kiếm và Mini App Store những
 app có form đó (`CLAUDE.md` mục 5). Nhân viên và thương lái vào app bằng **Liên kết tài khoản**: liên kết tài khoản
 Zalo **một lần** với hồ sơ OMTS qua **số điện thoại Zalo**, sau đó mở app là vào thẳng. Phía mobile đã viết xong
-và gọi đúng các endpoint dưới đây (`src/features/account/api/link.ts`, `src/shared/platform/zalo.ts`, `src/features/account/pages/link-page.tsx`).
+và gọi đúng các endpoint dưới đây (`src/features/auth/services/linkService.ts`, `src/services/zaloService.ts`, `src/features/auth/pages/LinkAccountPage.tsx`).
 Backend đã làm các endpoint này (28/10/2026, `ZaloLinkService` trong `OMTS.Application/Features/Auth`, adapter
 `OMTS.Infrastructure/Zalo`), chờ mã Jira để mở PR vào `develop`. Backend chưa có chúng thì bấm "Liên kết bằng số điện
 thoại Zalo" sẽ báo "Máy chủ OMTS chưa hỗ trợ liên kết tài khoản Zalo".

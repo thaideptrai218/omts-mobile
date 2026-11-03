@@ -21,11 +21,16 @@ Run lint and typecheck before declaring any task done. CI runs both on every PR.
 
 ## Structure
 
-- Entry: `src/app.ts` mounts `src/app/layout.tsx`, which declares routes with ZaUI `ZMPRouter` + `AnimationRoutes`.
-- Application composition is in `src/app/`; each business area owns its pages, API calls, components and state under `src/features/<area>/`. Shared foundations are under `src/shared/`. See `docs/PROJECT_STRUCTURE.md`.
-- Features do not import app code; shared does not import app or features. ESLint enforces these alias boundaries. Domain-specific state/mock data belongs to its feature; session and global preferences are shared foundations.
-- All images live in `src/static/images/` and must be imported, never referenced by a `/public` path.
-- Prefer ZaUI components and the design tokens in `src/shared/styles/app.scss`.
+- Zalo entry: `src/app.ts` imports `src/main.tsx`, which restores the session, starts connectivity and mounts `src/App.tsx`.
+- Follow the user's structure: `assets`, `components`, `features`, `hooks`, `layouts`, `pages`, `routes`, `services`, `contexts`, `utils`, `constants`. See `docs/PROJECT_STRUCTURE.md`. Do not introduce an `app/` or `shared/` hierarchy.
+- Business pages, services, hooks and components belong to `src/features/<area>/`. Use `services/` for API calls inside a feature. Shared components use `components/ComponentName/ComponentName.tsx`; global pages belong to `pages/`, and routing belongs to `routes/`.
+- All business models, API request/response DTOs and form data belong to `features/<area>/models/`, grouped by entity. Shared data types belong to `src/models/`. Import them directly with `import type`; do not define or re-export models from services, or put anonymous request/response object types in service signatures. ESLint enforces this separation.
+- Models contain type declarations and type-only imports. Services keep runtime API/SDK logic; atoms belong to `state/`, sample data to `data/`. Local component props and animation phases may stay beside their component.
+- `App.tsx` composes providers, `layouts/MainLayout.tsx` and `routes/AppRoutes.tsx`. Reusable components receive business UI through props; features do not import application layouts/pages/routes/providers. ESLint enforces these alias boundaries.
+- Keep Jotai atoms and the existing default store. `contexts/AppProviders.tsx` composes the existing ZaUI/snackbar providers; do not add a duplicate authentication context or password forms for the folder template.
+- Import `@/App.tsx` explicitly from `main.tsx`: extensionless `@/App` resolves to Zalo's `app.ts` on Windows. `allowImportingTsExtensions` is enabled with `noEmit` for this purpose.
+- All images live in `src/assets/images/` and must be imported, never referenced by a `/public` path.
+- Prefer ZaUI components and the design tokens in `src/assets/styles/app.scss`.
 
 # OMTS Mobile working rules
 
