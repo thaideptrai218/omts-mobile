@@ -15,7 +15,7 @@ Prerequisites: Node.js (version in `.nvmrc`), npm, Zalo Mini App CLI, and the Za
 ```bash
 npm install -g zmp-cli
 npm ci
-cp .env.example .env     # fill APP_ID; ZMP_TOKEN is written by `npm run login`
+cp .env.example .env     # fill APP_ID; ZMP_TOKEN is written by `npm run login`; empty VITE_API_BASE_URL = proxy to the local backend
 npm run login
 npm start                # zmp start --no-frame, then open the printed localhost URL
 ```
@@ -33,16 +33,32 @@ APIs such as `getAccessToken`, `getPhoneNumber` and Checkout SDK only work insid
 
 ## Project layout
 
-```
+```text
 src/
-  app.ts            entry point, mounts the app into #app
-  components/       layout, splash, dashboard pieces, bottom navigation
-  pages/            Overview, Traceability, Notifications, Account, feature detail
-  data/             mock data for roles, features, notices and a sample traceability lot
-  state/            Jotai atoms
-  static/images/    all images, imported so Vite bundles them
-app-config.json     Zalo Mini App window config
+  app.ts             Zalo CLI entry; imports main.tsx
+  main.tsx           restore session, start connectivity, mount React
+  App.tsx            compose providers, layout and routes
+  assets/            imported images and global styles
+  components/        reusable components, one folder per component
+  features/          auth, account, dashboard, farming, organization, purchasing,
+                     sales, workforce, notifications, traceability, development
+                     each feature owns models/, services/, pages/, components/ as needed
+  models/            shared HTTP, pagination, coordinates, navigation and UI types
+  hooks/             shared React hooks
+  layouts/           application shell
+  pages/             general pages: HomePage, FeaturePage
+  routes/            AppRoutes, route groups and lazy loading
+  services/          HTTP client, Zalo SDK, storage and connectivity
+  contexts/          existing application providers
+  utils/             formatting, coordinates, error translation and permission helpers
+  constants/         environment config, cooperative info, messages and feature catalogue
+scripts/testing/     manual browser test scenarios
+docs/                context, structure, contracts, learning notes
+app-config.json      Zalo window configuration
+www/                 generated build output (git-ignored)
 ```
+
+Detailed responsibilities and import boundaries: [docs/PROJECT_STRUCTURE.md](docs/PROJECT_STRUCTURE.md).
 
 ## Rules
 

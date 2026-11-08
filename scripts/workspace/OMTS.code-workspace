@@ -1,0 +1,10 @@
+{
+  "folders": [
+    { "name": "Backend", "path": "../../../../back-end/omts-backend" },
+    { "name": "Mobile · Zalo Mini App", "path": "../.." }
+  ],
+  "settings": {
+    "files.exclude": { "**/bin": true, "**/obj": true, "**/www": true },
+    "search.exclude": { "**/node_modules": true, "**/bin": true, "**/obj": true, "**/www": true }
+  }
+}

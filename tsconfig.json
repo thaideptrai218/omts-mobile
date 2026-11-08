@@ -1,6 +1,7 @@
 {
   "compilerOptions": {
     "noEmit": true,
+    "allowImportingTsExtensions": true,
     "target": "es6",
     "module": "esnext",
     "noImplicitAny": false,
