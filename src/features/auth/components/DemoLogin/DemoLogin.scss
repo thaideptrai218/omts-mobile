@@ -1,0 +1,12 @@
+/* Mô tả việc của từng tài khoản demo, dưới các nút chọn. */
+.demo-login__hints {
+  margin: 16px 0 12px;
+  padding-left: 20px;
+  font-size: 1rem;
+  line-height: 1.5rem;
+  color: var(--ink-2);
+}
+
+.demo-login__hints li + li {
+  margin-top: 8px;
+}

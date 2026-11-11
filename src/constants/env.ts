@@ -10,6 +10,9 @@
  */
 export const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL ?? "").replace(/\/+$/, "");
 
+/** Gốc URL của server thử thanh toán, chỉ màn thử ở bản dev dùng. */
+export const PAYMENT_SANDBOX_URL = (import.meta.env.VITE_PAYMENT_SANDBOX_URL ?? "").replace(/\/+$/, "");
+
 /**
  * Kênh push chưa được chốt ở OMTS-215 (Zalo OA/ZNS hay thông báo Mini App). Khi còn "none", màn
  * tùy chọn thông báo hiện Push là chưa khả dụng. Đổi sang "zalo" khi PM chốt: app sẽ xin quyền

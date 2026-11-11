@@ -5,6 +5,7 @@ import { Button } from "zmp-ui";
 import vietmapgl from "@vietmap/vietmap-gl-js";
 import "@vietmap/vietmap-gl-js/dist/vietmap-gl.css";
 
+import { Empty } from "@/components/Empty/Empty";
 import { VIETMAP_API_KEY } from "@/constants/env";
 import { USAGE } from "@/features/farming/services/farmService";
 import { statusLabel } from "@/utils/labels";
@@ -23,10 +24,10 @@ function mapErrorText(cause: unknown): string {
   const event = cause as { error?: { status?: number }; status?: number } | undefined;
   const status = event?.error?.status ?? event?.status;
   if (status === 423 || status === 429) {
-    return "Dịch vụ VIETMAP đang giới hạn tải bản đồ. Vui lòng liên hệ người quản trị kiểm tra quyền sử dụng và hạn mức dịch vụ.";
+    return "Bản đồ đang bị giới hạn lượt tải. Vui lòng liên hệ người quản trị kiểm tra quyền sử dụng và hạn mức dịch vụ.";
   }
   if (status === 401 || status === 403) {
-    return "Dịch vụ VIETMAP từ chối truy cập bản đồ. Vui lòng liên hệ người quản trị kiểm tra cấu hình dịch vụ.";
+    return "Dịch vụ bản đồ từ chối truy cập. Vui lòng liên hệ người quản trị kiểm tra cấu hình dịch vụ.";
   }
   return "Không tải được bản đồ. Vui lòng kiểm tra kết nối hoặc cấu hình dịch vụ bản đồ rồi thử lại.";
 }
@@ -81,7 +82,7 @@ export default function RaftMap({ zone, rafts, onOpenRaft }: {
         if (!resourceFailed) setError("");
         const bounds = new vietmapgl.LngLatBounds();
         if (zonePosition) {
-          new vietmapgl.Marker({ color: "#006AF5" }).setLngLat(zonePosition)
+          new vietmapgl.Marker({ color: "#0050C8" }).setLngLat(zonePosition)
             .setPopup(new vietmapgl.Popup().setText(`Vùng ${zone.name ?? zone.code ?? "nuôi"}`)).addTo(map);
           bounds.extend(zonePosition);
         }
@@ -114,12 +115,12 @@ export default function RaftMap({ zone, rafts, onOpenRaft }: {
     };
   }, [attempt, hasPosition, onOpenRaft, points, zone, zonePosition]);
 
-  if (!VIETMAP_API_KEY) return <div className="empty"><p className="empty__title">Bản đồ chưa được cấu hình</p><p className="empty__text">Vui lòng liên hệ người quản trị để bật dịch vụ bản đồ.</p></div>;
-  if (!hasPosition) return <div className="empty"><p className="empty__title">Chưa có tọa độ để hiển thị</p><p className="empty__text">Cập nhật tọa độ vùng nuôi hoặc bè rồi mở lại bản đồ.</p></div>;
+  if (!VIETMAP_API_KEY) return <Empty icon="zi-location" title="Bản đồ chưa được cấu hình" text="Vui lòng liên hệ người quản trị để bật dịch vụ bản đồ." />;
+  if (!hasPosition) return <Empty icon="zi-location" title="Chưa có tọa độ để hiển thị" text="Cập nhật tọa độ vùng nuôi hoặc bè rồi mở lại bản đồ." />;
 
   return (
     <div className="raft-map">
-      <p className="form__hint">Ghim xanh là vùng nuôi. Chạm nhãn bè để mở chi tiết; bè ngừng dùng có nhãn “Ngừng dùng” trong danh sách bên dưới.</p>
+      <p className="form__hint">Ghim xanh dương là vùng nuôi. Chạm nhãn bè để mở chi tiết; bè ngừng dùng có nhãn “Ngừng dùng” trong danh sách bên dưới.</p>
       <div className="raft-map__frame">
         <div className="raft-map__canvas" ref={container} role="region" aria-label="Bản đồ vị trí vùng nuôi và bè" />
         {!ready && !error && <div className="raft-map__loading skeleton" role="status">Đang tải bản đồ…</div>}

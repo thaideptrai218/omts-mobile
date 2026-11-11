@@ -1,0 +1,85 @@
+.water-chart {
+  margin-bottom: 12px;
+}
+
+// Ô chọn khoảng thời gian và dòng hướng dẫn phía trên biểu đồ.
+.water-chart__spaced {
+  margin-bottom: 16px;
+}
+
+.water-chart__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 12px;
+}
+
+.water-chart__title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.water-chart__limit {
+  font-size: 0.9375rem;
+  color: var(--ink-2);
+}
+
+.water-chart__readout {
+  min-height: 3rem;
+  margin: 4px 0 8px;
+  font-size: 1rem;
+  line-height: 1.5rem;
+  color: var(--ink-2);
+}
+
+.water-chart__plot {
+  display: block;
+  width: 100%;
+  height: auto;
+  // Vuốt dọc vẫn cuộn trang, vuốt ngang để dò từng kỳ.
+  touch-action: pan-y;
+}
+
+.water-chart__band {
+  fill: var(--brand-soft);
+}
+
+.water-chart__grid {
+  stroke: var(--line);
+  stroke-width: 1;
+}
+
+.water-chart__cross {
+  stroke: var(--ink-2);
+  stroke-width: 1;
+}
+
+.water-chart__tick {
+  font-size: 0.9375rem;
+  fill: var(--ink-2);
+}
+
+.water-chart__line {
+  fill: none;
+  stroke: var(--brand);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.water-chart__dot {
+  fill: var(--brand);
+  stroke: var(--surface);
+  stroke-width: 2;
+}
+
+.water-chart__dot--alert {
+  fill: var(--danger);
+}
+
+// Mỗi chỉ số một dòng trong danh sách số dưới biểu đồ.
+.water-chart__stat {
+  display: block;
+}

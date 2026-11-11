@@ -2,8 +2,10 @@ import type { MyPermissions } from "@/features/auth/models/Permissions";
 import type { RoleKey } from "@/features/dashboard/models/Dashboard";
 import type { Access, FeatureKey } from "@/models/Navigation";
 import { hasFunction } from "@/features/auth/services/permissionsService";
+import { roleName } from "@/utils/labels";
 
 export const FEATURE_ACCESS: Record<FeatureKey, Access> = {
+  workPlans: { functions: ["WORK_ASSIGNMENTS"] },
   salesProducts: { owner: true },
   myWork: { employee: true },
   leaveRequests: { owner: true },
@@ -31,8 +33,9 @@ export const FEATURE_ACCESS: Record<FeatureKey, Access> = {
   orders: { trader: true },
   payment: { trader: true },
   weighSlips: { trader: true },
+  myInvoices: { trader: true },
   pickup: { trader: true },
-  claims: { trader: true },
+  claims: { trader: true, owner: true, functions: ["QUALITY_CLAIMS"] },
   accounts: { owner: true },
   permissions: { owner: true },
   auditLog: { owner: true },
@@ -40,10 +43,17 @@ export const FEATURE_ACCESS: Record<FeatureKey, Access> = {
   settings: { owner: true },
   suppliers: { owner: true, functions: ["SUPPLIERS"] },
   purchases: { owner: true, functions: ["PURCHASE_RECEIPTS"] },
-  supplierPayments: { owner: true },
+  supplierPayments: { owner: true, functions: ["SUPPLIER_PAYMENTS"] },
   inputItems: { owner: true },
   traderRequests: { owner: true },
   cooperative: { owner: true },
+  customers: { functions: ["CUSTOMERS"] },
+  materialUsage: { functions: ["CULTIVATION_CYCLES"] },
+  harvestSettings: { owner: true },
+  payRates: { functions: ["PAY_RULES"] },
+  payslips: { employee: true },
+  payrollSettings: { owner: true },
+  bankAccount: { owner: true },
   trace: { everyone: true },
 };
 
@@ -56,7 +66,7 @@ export function canUseFeature(permissions: MyPermissions, key: FeatureKey): bool
   return access.functions?.some((code) => hasFunction(permissions, code)) ?? false;
 }
 
-/** Vai trò gần nhất để chọn bộ số liệu và việc cần làm mẫu của dashboard (dữ liệu mẫu, chưa nối API). */
+/** Vai trò gần nhất để chọn bộ chức năng hiện trên trang chủ. */
 export function roleKeyFor(permissions: MyPermissions): RoleKey {
   if (permissions.isCooperativeOwner) return "owner";
   if (permissions.subjectType === "Trader") return "trader";
@@ -71,5 +81,5 @@ export function describeGrants(permissions: MyPermissions): string {
   if (permissions.isCooperativeOwner) return "Chủ HTX, toàn HTX";
   if (permissions.subjectType === "Trader") return "Thương lái";
   if (permissions.grants.length === 0) return "Nhân viên, chưa có quyền quản lý vùng";
-  return permissions.grants.map((g) => `${g.role}, ${g.allZones ? "toàn HTX" : (g.zoneName ?? g.zoneCode ?? "một vùng")}`).join("; ");
+  return permissions.grants.map((g) => `${roleName(g.role)}, ${g.allZones ? "toàn HTX" : (g.zoneName ?? g.zoneCode ?? "một vùng")}`).join("; ");
 }

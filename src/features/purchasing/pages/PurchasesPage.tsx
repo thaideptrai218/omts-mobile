@@ -13,6 +13,7 @@ import { useAction } from "@/hooks/useAction";
 import { useLoad } from "@/hooks/useLoad";
 import { date, money } from "@/utils/format";
 import { statusLabel } from "@/utils/labels";
+import { MetaLines } from "@/features/purchasing/components/MetaLines/MetaLines";
 import { RECEIPT_CANCELLED, RECEIPT_COMPLETED, RECEIPT_DRAFT, searchReceipts } from "@/features/purchasing/services/purchasingService";
 
 const STATUS_OF: Record<Filter, number | null> = {
@@ -100,14 +101,23 @@ function PurchasesPage() {
                       <Row
                         key={r.id}
                         title={r.code}
-                        meta={`${date(r.receiptDate)} · ${r.supplier.name ?? ""} · ${r.zone.code ?? r.zone.name ?? ""}${r.raft ? ` / ${r.raft.code}` : ""}`}
+                        meta={
+                          <MetaLines
+                            items={[
+                              ["Ngày nhập", date(r.receiptDate)],
+                              ["Nhà cung cấp", r.supplier.name],
+                              ["Vùng nuôi", r.zone.code ?? r.zone.name],
+                              ["Bè", r.raft?.code],
+                              ["Phải trả", money(r.payable)],
+                            ]}
+                          />
+                        }
                         badge={
                           <>
                             <Badge text={st.text} tone={st.tone} />
                             {r.outstanding > 0 && r.statusId === RECEIPT_COMPLETED && <Badge text={`Còn nợ ${money(r.outstanding)}`} tone="danger" />}
                           </>
                         }
-                        value={money(r.payable)}
                         onClick={() => navigate(`/manage/purchases/${r.id}`)}
                       />
                     );

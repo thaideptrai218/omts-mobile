@@ -1,6 +1,6 @@
 import type { SupplierStatusFilter as StatusFilter, SupplierTypeFilter as TypeFilter } from "@/features/purchasing/models/Supplier";
 import { useState } from "react";
-import { Button, useNavigate } from "zmp-ui";
+import { Button, Select, useNavigate } from "zmp-ui";
 
 import { Badge } from "@/components/Badge/Badge";
 import { Chips } from "@/components/Chips/Chips";
@@ -43,7 +43,7 @@ function SuppliersPage() {
         Xem công nợ nhà cung cấp
       </Button>
       <div className="block">
-        <SearchBox placeholder="Tìm tên hoặc số điện thoại" onSearch={setSearch} />
+        <SearchBox label="Tìm nhà cung cấp" placeholder="Tên hoặc số điện thoại" onSearch={setSearch} />
         <Chips
           options={[
             ["all", "Tất cả"],
@@ -54,14 +54,12 @@ function SuppliersPage() {
           value={type}
           onChange={setType}
         />
-        <Chips
-          options={[
-            ["inUse", "Đang dùng"],
-            ["discontinued", "Ngừng dùng"],
-          ]}
-          value={status}
-          onChange={setStatus}
-        />
+        <div className="form">
+          <Select label="Trạng thái" value={status} onChange={(v) => setStatus(v as StatusFilter)} closeOnSelect>
+            <Select.Option value="inUse" title="Đang dùng" />
+            <Select.Option value="discontinued" title="Ngừng dùng" />
+          </Select>
+        </div>
         <Loadable data={data} error={error} reload={() => void reload()}>
           {(page) =>
             page.items.length === 0 ? (

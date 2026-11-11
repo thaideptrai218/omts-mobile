@@ -46,7 +46,7 @@ export async function recognizeRaftForm(image: File | string, signal: AbortSigna
   const workerError = new Promise<never>((_, reject) => { rejectWorker = reject; });
   const stop = () => { rejectAbort(new DOMException("Đã hủy", "AbortError")); void worker?.terminate(); };
   signal.addEventListener("abort", stop, { once: true });
-  const timeout = window.setTimeout(() => rejectWorker(new Error("OCR tải quá lâu. Vui lòng thử ảnh rõ hơn hoặc nhập thông tin bằng tay.")), 60000);
+  const timeout = window.setTimeout(() => rejectWorker(new Error("Đọc ảnh mất quá lâu. Vui lòng thử ảnh rõ hơn hoặc nhập thông tin bằng tay.")), 60000);
   const work = async () => {
     worker = await createWorker("vie", 1, {
       workerPath: new URL(workerUrl, window.location.href).href,

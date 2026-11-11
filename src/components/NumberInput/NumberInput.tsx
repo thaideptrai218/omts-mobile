@@ -18,6 +18,7 @@ export function NumberInput({
   return (
     <Input
       label={label}
+      size="large"
       value={value}
       inputMode={decimal ? "decimal" : "numeric"}
       onChange={(e) => onChange(e.target.value)}

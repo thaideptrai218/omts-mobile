@@ -9,9 +9,9 @@ const TABS: { key: string; label: string; icon: IconName }[] = [
 ];
 
 /**
- * Thanh điều hướng dưới: Tổng quan | nút quét QR tròn ở giữa | Tài khoản (2 tab, trong giới hạn 4 tab của Zalo).
- * Nút giữa là hành động, không phải tab: quét xong mở màn theo loại mã (`useScan`). Thông báo nằm ở chuông góc
- * trên bên trái. Ẩn ở trang chi tiết.
+ * Thanh điều hướng dưới: Tổng quan | Quét mã | Tài khoản (2 tab, trong giới hạn 4 tab của Zalo). Nút giữa là khối
+ * phẳng nằm trong thanh, là hành động chứ không phải tab: quét xong mở màn theo loại mã (`useScan`). Thông báo nằm
+ * ở chuông góc trên bên trái. Ẩn ở trang chi tiết.
  */
 function BottomNav() {
   const location = useLocation();
@@ -41,10 +41,10 @@ function BottomNav() {
     <nav className="tabbar" aria-label="Điều hướng chính">
       {tab(TABS[0])}
       <button type="button" className="tabbar__scan" onClick={() => void scan()}>
-        <span className="tabbar__scan-circle">
-          <Icon icon="zi-qrline" size={32} />
+        <span className="tabbar__icon">
+          <Icon icon="zi-qrline" />
         </span>
-        <span className="tabbar__label">Quét QR</span>
+        <span className="tabbar__label">Quét mã</span>
       </button>
       {tab(TABS[1])}
     </nav>

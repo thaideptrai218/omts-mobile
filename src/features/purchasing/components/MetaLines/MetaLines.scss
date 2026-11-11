@@ -1,0 +1,13 @@
+/* Mỗi thông tin một dòng trong hàng danh sách; cỡ chữ và màu nhãn lấy từ .row__meta. */
+.meta-lines {
+  display: block;
+}
+
+.meta-lines__item {
+  display: block;
+}
+
+.meta-lines__value {
+  font-weight: 700;
+  color: var(--ink);
+}

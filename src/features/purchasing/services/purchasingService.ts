@@ -1,12 +1,13 @@
 import type { InputItem, InputItemSearchParams, SaveInputItem } from "@/features/purchasing/models/InputItem";
-import type { CancelReceiptRequest, PurchaseReceiptSearchParams, ReceiptSearch, ReceiptView, SaveReceipt } from "@/features/purchasing/models/PurchaseReceipt";
+import type { CancelReceiptRequest, PurchaseReceiptSearchParams, ReceiptSearch, ReceiptView, SavePurchaseReturn, SaveReceipt } from "@/features/purchasing/models/PurchaseReceipt";
 import type { RaftMaterialCost } from "@/features/purchasing/models/RaftMaterialCost";
 import type { RaftLookup, ZoneLookup } from "@/features/purchasing/models/Reference";
-import type { SaveSupplier, SupplierDebtRow, SupplierListItem, SupplierSearchParams, SupplierView } from "@/features/purchasing/models/Supplier";
+import type { SaveSupplier, SupplierDebtDetail, SupplierDebtRow, SupplierListItem, SupplierSearchParams, SupplierView } from "@/features/purchasing/models/Supplier";
 import type { SaveSupplierPayment, SupplierPayment, SupplierPaymentSearch, SupplierPaymentSearchParams } from "@/features/purchasing/models/SupplierPayment";
 import type { Paged } from "@/models/Pagination";
 
 import { api } from "@/services/httpClient";
+import { appendPhoto } from "@/utils/imageFile";
 
 export const STATUS_IN_USE = 101;
 export const STATUS_DISCONTINUED = 102;
@@ -46,6 +47,20 @@ export function setSupplierInUse(id: string, inUse: boolean) {
 
 export function listSupplierDebts() {
   return api<SupplierDebtRow[]>("/api/suppliers/debts");
+}
+
+export function getSupplierDebt(id: string) {
+  return api<SupplierDebtDetail>(`/api/suppliers/${id}/debt`);
+}
+
+export function addSupplierCertificate(id: string, photo: Blob) {
+  const form = new FormData();
+  appendPhoto(form, "files", photo);
+  return api<SupplierView>(`/api/suppliers/${id}/certificates`, { method: "POST", form });
+}
+
+export function removeSupplierCertificate(id: string, index: number) {
+  return api<SupplierView>(`/api/suppliers/${id}/certificates/${index}`, { method: "DELETE" });
 }
 
 export function listInputItems(filter: InputItemSearchParams = {}) {
@@ -88,6 +103,10 @@ export function completeReceipt(id: string, rowVersion: string | null) {
 
 export function cancelReceipt(id: string, body: CancelReceiptRequest) {
   return api<ReceiptView>(`/api/purchase-receipts/${id}/cancel`, { method: "POST", body });
+}
+
+export function createPurchaseReturn(id: string, body: SavePurchaseReturn) {
+  return api<ReceiptView>(`/api/purchase-receipts/${id}/returns`, { method: "POST", body });
 }
 
 export function listRaftMaterialCosts() {

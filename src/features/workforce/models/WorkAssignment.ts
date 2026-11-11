@@ -5,6 +5,8 @@ export type EmployeeOption = {
 };
 
 export type WorkRow = {
+  workDayPlanId?: string | null;
+  responsibleAccountId?: string | null;
   id: string;
   employeeId: string;
   employeeName: string;
@@ -19,6 +21,7 @@ export type WorkRow = {
 };
 
 export type AssignWorkRequest = {
+  workDayPlanId?: string;
   date: string;
   raftId: string;
   jobTypeId: string;

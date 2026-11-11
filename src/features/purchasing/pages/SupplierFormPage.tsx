@@ -18,16 +18,21 @@ function SupplierFormPage() {
   const { id } = useParams();
   const { data, error, reload } = useLoad<SupplierView | "new">(() => (id ? getSupplier(id) : Promise.resolve("new")), [id]);
 
+  const title = id ? "Sửa nhà cung cấp" : "Thêm nhà cung cấp";
+
+  // Form đặt nút chính ở chân trang nên tự dựng ManagePage; khung dưới chỉ dùng khi đang tải hoặc lỗi.
+  if (data !== null) return <SupplierForm title={title} supplier={data === "new" ? null : data} />;
+
   return (
-    <ManagePage title={id ? "Sửa nhà cung cấp" : "Thêm nhà cung cấp"}>
+    <ManagePage title={title}>
       <Loadable data={data} error={error} reload={() => void reload()}>
-        {(s) => <SupplierForm supplier={s === "new" ? null : s} />}
+        {() => null}
       </Loadable>
     </ManagePage>
   );
 }
 
-function SupplierForm({ supplier }: { supplier: SupplierView | null }) {
+function SupplierForm({ title, supplier }: { title: string; supplier: SupplierView | null }) {
   const navigate = useNavigate();
   const [name, setName] = useState("");
   const [type, setType] = useState<SupplierType>("Seed");
@@ -73,20 +78,26 @@ function SupplierForm({ supplier }: { supplier: SupplierView | null }) {
   };
 
   return (
-    <div className="form card">
-      <Input label="Tên nhà cung cấp" value={name} onChange={(e) => setName(e.target.value)} maxLength={200} disabled={busy} />
-      <Select label="Loại" value={type} onChange={(v) => setType(v as SupplierType)} closeOnSelect disabled={busy}>
-        {(Object.keys(SUPPLIER_TYPE) as SupplierType[]).map((k) => (
-          <Select.Option key={k} value={k} title={SUPPLIER_TYPE[k]} />
-        ))}
-      </Select>
-      <Input label="Số điện thoại" value={phone} inputMode="tel" onChange={(e) => setPhone(e.target.value)} maxLength={10} disabled={busy} />
-      <Input.TextArea label="Liên hệ khác (địa chỉ, người liên hệ…)" value={contacts} onChange={(e) => setContacts(e.target.value)} maxLength={500} showCount disabled={busy} />
-      <FormError text={error} />
-      <Button fullWidth size="large" loading={busy} disabled={busy} onClick={() => void save()}>
-        Lưu
-      </Button>
-    </div>
+    <ManagePage
+      title={title}
+      footer={
+        <Button fullWidth size="large" loading={busy} disabled={busy} onClick={() => void save()}>
+          Lưu
+        </Button>
+      }
+    >
+      <div className="form card">
+        <Input label="Tên nhà cung cấp (bắt buộc)" value={name} onChange={(e) => setName(e.target.value)} maxLength={200} disabled={busy} />
+        <Select label="Loại" value={type} onChange={(v) => setType(v as SupplierType)} closeOnSelect disabled={busy}>
+          {(Object.keys(SUPPLIER_TYPE) as SupplierType[]).map((k) => (
+            <Select.Option key={k} value={k} title={SUPPLIER_TYPE[k]} />
+          ))}
+        </Select>
+        <Input label="Số điện thoại" value={phone} inputMode="tel" onChange={(e) => setPhone(e.target.value)} maxLength={10} disabled={busy} />
+        <Input.TextArea label="Liên hệ khác (địa chỉ, người liên hệ…)" value={contacts} onChange={(e) => setContacts(e.target.value)} maxLength={500} showCount disabled={busy} />
+        <FormError text={error} />
+      </div>
+    </ManagePage>
   );
 }
 

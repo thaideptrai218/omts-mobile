@@ -46,16 +46,16 @@ export default function RaftFormImport({ editing, disabled, onApply, onBusyChang
   };
   const edit = (field: keyof RaftFormSuggestion, value: string) => { setError(""); setResult((current) => current && ({ ...current, fields: { ...current.fields, [field]: value } })); };
   return <>
-    <p className="form__hint">Chọn ảnh giấy/biểu mẫu có thông tin bè. OCR phù hợp chữ in rõ; chữ viết tay có thể đọc sai. Ảnh được xử lý trên thiết bị, bạn kiểm tra trước khi áp dụng.</p>
+    <p className="form__hint">Chọn ảnh giấy tờ có thông tin bè, app sẽ đọc và điền giúp. Chữ in rõ đọc tốt hơn chữ viết tay. Ảnh được xử lý ngay trên điện thoại này, và bạn kiểm tra lại trước khi dùng.</p>
     <input ref={input} type="file" accept="image/*" hidden onChange={(event) => { const file = event.target.files?.[0]; event.target.value = ""; if (file) void read(file); }} />
-    <Button fullWidth size="large" variant="secondary" disabled={disabled || busy} onClick={() => void choose()}>Đọc biểu mẫu bằng OCR</Button>
+    <Button fullWidth size="large" variant="secondary" disabled={disabled || busy} onClick={() => void choose()}>Đọc từ ảnh giấy tờ</Button>
     {busy && <><p role="status" aria-live="polite">Đang chuẩn bị hoặc đọc ảnh… {progress}%</p><Button fullWidth variant="secondary" onClick={() => controller.current?.abort()}>Hủy đọc ảnh</Button></>}
     {!result && <FormError text={error} />}
     <Sheet visible={!!result} onClose={() => { setResult(null); setError(""); }} height="85vh" mask title="Kiểm tra thông tin từ ảnh">
       {result && <div className="sheet-form form">
-        <p className="form__intro">Thông tin chỉ được điền vào form, chưa lưu bè. Chỉ các ô có giá trị mới thay thế thông tin bạn đã nhập.</p>
+        <p className="form__intro">Thông tin chỉ được điền vào các ô nhập, chưa lưu bè. Chỉ những ô có chữ mới thay thế thông tin bạn đã nhập.</p>
         {result.confidence < 70 && <p role="alert">Ảnh khó đọc. Vui lòng đối chiếu từng ô với giấy gốc.</p>}
-        {!Object.values(result.fields).some(Boolean) && <p>Chưa nhận ra nhãn trường. Bạn có thể nhập lại từ phần chữ đọc được bên dưới.</p>}
+        {!Object.values(result.fields).some(Boolean) && <p>Chưa nhận ra thông tin nào trong ảnh. Bạn có thể nhập lại từ phần chữ đọc được bên dưới.</p>}
         <Input label="Mã bè" value={result.fields.code} onChange={(e) => edit("code", e.target.value)} maxLength={50} />
         <Input label="Kích thước" value={result.fields.size} onChange={(e) => edit("size", e.target.value)} maxLength={100} />
         {!editing && <><NumberInput label="Số hàng" value={result.fields.laneCount} onChange={(value) => edit("laneCount", value)} /><NumberInput decimal label="Dài mỗi hàng (m)" value={result.fields.laneLength} onChange={(value) => edit("laneLength", value)} /></>}
@@ -66,7 +66,7 @@ export default function RaftFormImport({ editing, disabled, onApply, onBusyChang
         <Input label="Kinh độ (nếu giấy có ghi)" value={result.fields.longitude} onChange={(e) => edit("longitude", e.target.value)} inputMode="decimal" />
         <details><summary>Chữ đọc được từ ảnh</summary><pre style={{ whiteSpace: "pre-wrap", fontSize: "1rem" }}>{result.text || "Không đọc được chữ."}</pre></details>
         <FormError text={error} />
-        <Button fullWidth size="large" disabled={!Object.values(result.fields).some((value) => value.trim())} onClick={apply}>Áp dụng vào form</Button>
+        <Button fullWidth size="large" disabled={!Object.values(result.fields).some((value) => value.trim())} onClick={apply}>Dùng các thông tin này</Button>
       </div>}
     </Sheet>
   </>;

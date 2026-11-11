@@ -11,8 +11,31 @@ export type FakeZalo = {
   scan?: string;
   locationToken?: string;
   image?: string;
+  /** Giả CheckoutSDK.createOrder: trả mã đơn này rồi phát sự kiện chọn phương thức riêng. */
+  checkoutOrderId?: string;
+};
+
+/** Tham số của CheckoutSDK.createOrder; server tạo và ký, app truyền nguyên vẹn. */
+export type CheckoutOrderParams = {
+  amount: number;
+  desc: string;
+  item: Record<string, unknown>[];
+  extradata: string;
+  method: string;
+  mac: string;
+};
+
+/** Dữ liệu sự kiện PAY_BY_CUSTOM_METHOD khi người dùng chọn phương thức riêng. */
+export type CustomPaymentSelection = {
+  method: string;
+  orderId: string;
 };
 
 export type FakeZaloWindow = {
   __OMTS_FAKE_ZALO__?: FakeZalo;
+};
+
+export type CustomPaymentEvent = {
+  eventType?: string;
+  data?: CustomPaymentSelection;
 };

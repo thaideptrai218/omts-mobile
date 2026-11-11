@@ -1,7 +1,8 @@
 import type { Feature, FeatureKey } from "@/models/Navigation";
 
 export const FEATURES = {
-  myWork: { title: "Công việc của tôi", icon: "zi-calendar", description: "Phân công, QR chấm công, giờ làm và nghỉ phép cá nhân." },
+  workPlans: { title: "Kế hoạch ngày làm", icon: "zi-calendar", description: "Lập kế hoạch, nhận hoặc từ chối và phân công nhân viên." },
+  myWork: { title: "Công việc của tôi", icon: "zi-calendar", description: "Lịch làm việc, phân công, mã chấm công, giờ làm và nghỉ phép cá nhân." },
   leaveRequests: { title: "Duyệt nghỉ phép", icon: "zi-user-check", description: "Phản hồi yêu cầu nghỉ phép của nhân viên." },
   attendanceSettings: { title: "Cài đặt chấm công", icon: "zi-clock-1", description: "Loại việc, giờ nghỉ và làm tròn giờ công." },
   zones: {
@@ -40,9 +41,9 @@ export const FEATURES = {
     description: "Chi phí phao, dây, lồng và vật tư khác đã nhập cho từng bè.",
   },
   assignments: {
-    title: "Phân công",
+    title: "Phân công và chấm công",
     icon: "zi-members",
-    description: "Giao việc cho nhân công theo vùng, bè và ca làm.",
+    description: "Giao việc cho nhân công theo vùng, bè và ca làm, ghi giờ vào và ra ca.",
   },
   attendance: {
     title: "Chấm công",
@@ -76,7 +77,7 @@ export const FEATURES = {
     description: "Lập phiếu thu và phân bổ tiền thu vào các đơn bán.",
   },
   reconcile: {
-    title: "Đối soát chuyển khoản",
+    title: "Khớp tiền chuyển khoản",
     icon: "zi-retry",
     description: "Khớp các khoản chuyển khoản ngân hàng với đơn và công nợ.",
   },
@@ -113,13 +114,17 @@ export const FEATURES = {
   payment: {
     title: "Thanh toán",
     icon: "zi-check-circle-solid",
-    description:
-      "Thanh toán công nợ bằng chuyển khoản. Khi làm thật, bước này phải đi qua Checkout SDK của Zalo.",
+    description: "Thanh toán công nợ bằng chuyển khoản ngay trong ứng dụng.",
   },
   weighSlips: {
     title: "Phiếu cân",
     icon: "zi-file",
-    description: "Xem lại phiếu cân của từng lần nhận hàng tại cảng.",
+    description: "Xem kg từng lồng HTX đã cân ở cảng và đồng ý số cân để HTX lập hóa đơn.",
+  },
+  myInvoices: {
+    title: "Hóa đơn của tôi",
+    icon: "zi-note",
+    description: "Xem hóa đơn mua hàu, kg từng lồng, số tiền còn nợ và nguồn gốc hàng đã mua.",
   },
   pickup: {
     title: "Lịch nhận hàng",
@@ -142,7 +147,7 @@ export const FEATURES = {
     description: "Các vai trò và quyền trên từng chức năng; gán vai trò theo vùng ở màn Tài khoản.",
   },
   auditLog: {
-    title: "Nhật ký hệ thống",
+    title: "Lịch sử thao tác",
     icon: "zi-list-1",
     description: "Xem lịch sử thao tác quan trọng trong hệ thống.",
   },
@@ -164,10 +169,10 @@ export const FEATURES = {
   purchases: {
     title: "Phiếu nhập",
     icon: "zi-file",
-    description: "Phiếu nhập giống, vật tư: hoàn tất, hủy, ghi thanh toán cho nhà cung cấp.",
+    description: "Phiếu nhập giống, vật tư và chi phí nhập hàng: hoàn tất, hủy, ghi thanh toán cho nhà cung cấp.",
   },
   supplierPayments: {
-    title: "Trả tiền NCC",
+    title: "Trả tiền nhà cung cấp",
     icon: "zi-check-circle-solid",
     description: "Các lần trả tiền cho nhà cung cấp.",
   },
@@ -186,6 +191,13 @@ export const FEATURES = {
     icon: "zi-home",
     description: "Tên, mã số thuế, địa chỉ, người đại diện và ngành nghề của HTX.",
   },
+  customers: { title: "Khách hàng", icon: "zi-group", description: "Hồ sơ khách hàng và thương lái, gộp hồ sơ trùng." },
+  materialUsage: { title: "Vật tư sử dụng", icon: "zi-list-2", description: "Phao, dây và vật tư đã dùng để sửa bè." },
+  harvestSettings: { title: "Cài đặt lô hàu", icon: "zi-setting", description: "Số kg trung bình mỗi lồng và số ngày tự đóng lô." },
+  payRates: { title: "Bảng giá công", icon: "zi-list-1", description: "Giá mỗi giờ theo loại việc." },
+  payslips: { title: "Phiếu lương", icon: "zi-file", description: "Phiếu lương hằng tháng của bạn." },
+  payrollSettings: { title: "Cài đặt lương", icon: "zi-setting", description: "Ngày bắt đầu kỳ lương và tự tạo bảng lương." },
+  bankAccount: { title: "Tài khoản nhận tiền", icon: "zi-check-circle", description: "Tài khoản ngân hàng nhận tiền chuyển khoản của hóa đơn." },
   trace: {
     title: "Truy xuất",
     icon: "zi-qrline",
@@ -193,11 +205,73 @@ export const FEATURES = {
   },
 } satisfies Record<string, Feature>;
 
+/** Một dòng ngắn dưới tên chức năng trong danh sách. Câu giải thích đầy đủ là `description`, hiện ở trang của chức năng. */
+export const FEATURE_HINTS: Record<keyof typeof FEATURES, string> = {
+  workPlans: "Ngày nào làm việc gì",
+  myWork: "Lịch làm, mã chấm công",
+  leaveRequests: "Ai xin nghỉ ngày nào",
+  attendanceSettings: "Giờ nghỉ, làm tròn giờ",
+  zones: "Bè, hàng bè, giấy tờ",
+  cycles: "Từ thả giống đến thu hoạch",
+  seeding: "Lô giống, lần thả",
+  cultivationLog: "Việc hằng ngày trên bè",
+  water: "Độ pH, độ mặn",
+  harvest: "Các đợt thu hoạch",
+  raftMaterials: "Tiền phao, dây, lồng",
+  assignments: "Giao việc, ghi giờ làm",
+  attendance: "Vào ca, ra ca",
+  schedule: "Việc trong ngày, trong tuần",
+  portWeighing: "Số cân khi giao hàu",
+  salesOrders: "Thương lái đặt lồng",
+  salesProducts: "Hàng đang bán",
+  receivables: "Thương lái còn nợ",
+  receipts: "Tiền đã thu",
+  reconcile: "Đối chiếu tiền chuyển khoản",
+  refunds: "Trả lại tiền cho thương lái",
+  payroll: "Tính lương theo giờ công",
+  costs: "Giống, vật tư, nhân công",
+  staff: "Nhân viên, thời vụ",
+  reports: "Sản lượng, doanh thu, chi phí",
+  orders: "Đặt số lồng, xem phản hồi",
+  payment: "Trả công nợ",
+  weighSlips: "Đồng ý số cân ở cảng",
+  myInvoices: "Hóa đơn và số còn nợ",
+  pickup: "Giờ và nơi nhận hàng",
+  claims: "Gửi và theo dõi khiếu nại",
+  accounts: "Tạo, khóa tài khoản",
+  permissions: "Ai được làm việc gì",
+  auditLog: "Ai đã làm gì, khi nào",
+  broadcast: "Báo cho nhân viên, thương lái",
+  settings: "Cấu hình chung",
+  suppliers: "Danh sách và công nợ",
+  purchases: "Giống, vật tư đã nhập",
+  supplierPayments: "Các lần đã trả tiền",
+  inputItems: "Con giống, phao, dây",
+  traderRequests: "Yêu cầu tài khoản mới",
+  cooperative: "Tên, địa chỉ, mã số",
+  customers: "Hồ sơ khách hàng",
+  materialUsage: "Vật tư đã dùng sửa bè",
+  harvestSettings: "Kg mỗi lồng, ngày đóng lô",
+  payRates: "Giá mỗi giờ công",
+  payslips: "Lương hằng tháng",
+  payrollSettings: "Kỳ lương",
+  bankAccount: "Tài khoản ngân hàng của HTX",
+  trace: "Xem nguồn gốc lô hàu",
+};
+
+/** Chức năng backend chưa có API: bản dev mở màn dữ liệu mẫu `/mock/<key>`, bản production mở trang "chưa có". */
+export const MOCK_FEATURES: FeatureKey[] = [
+  "cycles", "seeding", "cultivationLog", "materialUsage", "harvestSettings", "customers", "claims",
+  "receivables", "receipts", "reconcile", "refunds", "bankAccount", "payroll", "payRates", "payslips", "payrollSettings",
+  "reports", "auditLog", "broadcast", "payment", "pickup",
+];
+
 /**
  * Chức năng đã có màn thật (nối API). Chức năng không có ở đây mở trang "chưa có" giải thích lý do
  * (xem docs/owner-features.md).
  */
 export const FEATURE_ROUTES: Partial<Record<FeatureKey, string>> = {
+  workPlans: "/manage/work-plans",
   myWork: "/account/work",
   assignments: "/manage/workforce",
   attendance: "/manage/workforce",
@@ -205,6 +279,10 @@ export const FEATURE_ROUTES: Partial<Record<FeatureKey, string>> = {
   leaveRequests: "/manage/leave-requests",
   attendanceSettings: "/manage/attendance-settings",
   orders: "/account/purchases",
+  weighSlips: "/account/weighings",
+  myInvoices: "/account/invoices",
+  harvest: "/manage/harvest",
+  portWeighing: "/manage/weighings",
   salesOrders: "/manage/purchase-requests",
   salesProducts: "/manage/sales-products",
   zones: "/manage/zones",

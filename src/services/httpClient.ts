@@ -15,6 +15,12 @@ function fallbackText(status: number) {
   return status === 401 ? MESSAGES.MSG19 : status === 403 ? MESSAGES.MSG02 : MESSAGES.UNEXPECTED;
 }
 
+/** Tệp server trả đường dẫn tương đối (`/api/public/...`, `/api/files/...`): ghép gốc API để ảnh tải được trong Zalo. */
+export function absoluteUrl(path: string | null) {
+  if (!path) return null;
+  return /^https?:\/\//.test(path) ? path : API_BASE_URL + path;
+}
+
 /** Gọi API không qua lớp phiên đăng nhập. Lỗi HTTP thành `ApiError`, lỗi mạng thành `NetworkError`. */
 export async function rawRequest<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const headers: Record<string, string> = { Accept: "application/json" };
@@ -26,7 +32,7 @@ export async function rawRequest<T>(path: string, options: RequestOptions = {}):
     response = await fetch(API_BASE_URL + path, {
       method: options.method ?? "GET",
       headers,
-      body: options.body === undefined ? undefined : JSON.stringify(options.body),
+      body: options.form ?? (options.body === undefined ? undefined : JSON.stringify(options.body)),
     });
   } catch {
     throw new NetworkError();

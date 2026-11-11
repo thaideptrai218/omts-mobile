@@ -1,0 +1,67 @@
+/* Nhãn phía trên hàng chip lọc: nói rõ các chip dùng để làm gì. */
+.sales-filter-label {
+  margin-top: 12px;
+  margin-bottom: 8px;
+  font-size: 1rem;
+  line-height: 1.5rem;
+  font-weight: 700;
+}
+
+/* Thông báo kết quả ở đầu trang: tách khỏi nội dung bên dưới. */
+.sales-notice {
+  margin-bottom: 12px;
+}
+
+/* Ô đánh dấu dạng khung lớn: bấm vào chữ hay bất kỳ chỗ nào trong khung đều được. */
+.sales-option.zaui-checkbox-wrapper {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 3.5rem;
+  padding: 12px;
+  border: 2px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  box-sizing: border-box;
+}
+
+/* Một lô trong lần cân: tên lô và tổng, rồi kg của từng lồng xuống dòng thoải mái. */
+.weighing-lot {
+  margin-bottom: 12px;
+}
+
+.weighing-lot__title {
+  font-size: 1.0625rem;
+  line-height: 1.5rem;
+  font-weight: 700;
+}
+
+.weighing-lot__cages {
+  margin-top: 4px;
+  font-size: 1rem;
+  line-height: 1.5rem;
+  color: var(--ink-2);
+  overflow-wrap: anywhere;
+}
+
+/* Mã QR của hóa đơn: ảnh vuông ở giữa, nền trắng để máy quét đọc được cả ở chế độ tối. */
+.invoice-qr {
+  margin-bottom: 12px;
+  text-align: center;
+}
+
+.invoice-qr__image {
+  display: block;
+  width: min(80%, 320px);
+  height: auto;
+  margin: 12px auto;
+  background: #fff;
+  border-radius: var(--radius-sm);
+}
+
+.invoice-qr__link {
+  font-size: 1rem;
+  line-height: 1.5rem;
+  color: var(--ink-2);
+  overflow-wrap: anywhere;
+}

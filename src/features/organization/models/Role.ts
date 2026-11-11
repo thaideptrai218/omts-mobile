@@ -13,21 +13,12 @@ export type RoleView = {
   rowVersion: string | null;
 };
 
-export type RoleImpact = {
-  accountCount: number;
-  zoneCount: number;
-  allZonesGranted: boolean;
-  accounts: string[];
-};
-
 export type FunctionCatalogItem = {
   code: string | null;
   name: string | null;
   cooperativeWide: boolean;
   supportedActions: string[];
 };
-
-export type RoleStatusFilter = "inUse" | "discontinued";
 
 export type RoleStatusLabel = {
   text: string;

@@ -9,6 +9,7 @@ import { Empty } from "@/components/Empty/Empty";
 import { Facts } from "@/components/Facts/Facts";
 import { Loadable } from "@/components/Loadable/Loadable";
 import { ManagePage } from "@/components/ManagePage/ManagePage";
+import { MenuRows } from "@/components/MenuRows/MenuRows";
 import { NumberInput } from "@/components/NumberInput/NumberInput";
 import { ReasonSheet } from "@/components/ReasonSheet/ReasonSheet";
 import { Row } from "@/components/Row/Row";
@@ -35,39 +36,56 @@ function ZoneDetailPage() {
 
   const inUse = zone.data?.statusId === USAGE.inUse;
 
+  // Bản đồ và sửa chỉ có khi đã tải được vùng; thêm giấy tờ, thêm bè chỉ cần mã vùng trên đường dẫn.
+  const actions = [
+    ...(zone.data
+      ? [
+          { key: "map", title: "Bản đồ bè", hint: "Xem vị trí các bè trên bản đồ", icon: "zi-location" as const, onClick: () => navigate(`/manage/zones/${id}/map`) },
+          { key: "edit", title: "Sửa thông tin vùng", hint: "Đổi tên, vị trí, diện tích", icon: "zi-edit" as const, onClick: () => navigate(`/manage/zones/${id}/edit`) },
+        ]
+      : []),
+    { key: "license", title: "Thêm giấy tờ", hint: "Thêm giấy tờ pháp lý cho vùng này", icon: "zi-file" as const, onClick: () => navigate(`/manage/licenses/new?zone=${id}`) },
+    { key: "raft", title: "Thêm bè", hint: "Thêm một bè mới vào vùng này", icon: "zi-more-grid" as const, onClick: () => navigate(`/manage/zones/${id}/rafts/new`) },
+  ];
+
   return (
-    <ManagePage title={zone.data?.name ?? "Vùng nuôi"}>
+    <ManagePage
+      title={zone.data?.name ?? "Vùng nuôi"}
+      footer={
+        <Button fullWidth size="large" onClick={() => navigate(`/manage/water?zone=${id}`)}>
+          Xem số đo nước
+        </Button>
+      }
+    >
       <Loadable data={zone.data} error={zone.error} reload={() => void zone.reload()}>
         {(z) => {
           const status = statusLabel(z.status);
           return (
-            <>
-              <Facts
-                items={[
-                  ["Mã vùng", z.code],
-                  ["Trạng thái", <Badge key="s" text={status.text} tone={status.tone} />],
-                  ["Vị trí", z.location],
-                  ["Diện tích", z.area !== null ? num(z.area, "ha") : null],
-                  ["Tọa độ", z.latitude !== null && z.longitude !== null ? `${z.latitude}, ${z.longitude}` : null],
-                  ["Điểm đo nước", z.waterMeasurementPoint],
-                  ["Bè đang dùng", `${num(z.inUseRaftCount)} bè`],
-                ]}
-              />
-              <Actions>
-                <Button variant="secondary" size="large" onClick={() => navigate(`/manage/zones/${z.id}/map`)}>
-                  Bản đồ bè
-                </Button>
-                <Button variant="secondary" size="large" onClick={() => navigate(`/manage/zones/${z.id}/edit`)}>
-                  Sửa
-                </Button>
-                <Button variant="secondary" size="large" type={inUse ? "danger" : "highlight"} onClick={() => setStatusOpen(true)}>
-                  {inUse ? "Ngừng dùng" : "Dùng lại"}
-                </Button>
-              </Actions>
-            </>
+            <Facts
+              items={[
+                ["Mã vùng", z.code],
+                ["Trạng thái", <Badge key="s" text={status.text} tone={status.tone} />],
+                ["Vị trí", z.location],
+                ["Diện tích", z.area !== null ? num(z.area, "ha") : null],
+                ["Tọa độ", z.latitude !== null && z.longitude !== null ? `${z.latitude}, ${z.longitude}` : null],
+                ["Điểm đo nước", z.waterMeasurementPoint],
+                ["Bè đang dùng", `${num(z.inUseRaftCount)} bè`],
+              ]}
+            />
           );
         }}
       </Loadable>
+
+      <Section title="Thao tác">
+        <MenuRows items={actions} />
+        {zone.data && (
+          <Actions>
+            <Button variant="secondary" size="large" type={inUse ? "danger" : "highlight"} onClick={() => setStatusOpen(true)}>
+              {inUse ? "Ngừng dùng vùng nuôi" : "Dùng lại vùng nuôi"}
+            </Button>
+          </Actions>
+        )}
+      </Section>
 
       <Section title="Giấy tờ pháp lý">
         <Loadable data={licenses.data} error={licenses.error} reload={() => void licenses.reload()}>
@@ -84,7 +102,7 @@ function ZoneDetailPage() {
                       title={DOCUMENT_TYPE[l.documentType ?? ""] ?? l.documentTypeName}
                       meta={l.documentNumber ? `Số ${l.documentNumber}${l.expiryDate ? ` · hết hạn ${date(l.expiryDate)}` : ""}` : "Chưa có giấy tờ này"}
                       badge={<Badge text={state.text} tone={state.tone} />}
-                      onClick={l.documentId ? () => navigate(`/manage/licenses/${l.documentId}`) : undefined}
+                      onClick={() => navigate(l.documentId ? `/manage/licenses/${l.documentId}` : `/manage/licenses/new?zone=${id}&type=${l.documentType ?? ""}`)}
                     />
                   );
                 })}
@@ -94,14 +112,7 @@ function ZoneDetailPage() {
         </Loadable>
       </Section>
 
-      <Section
-        title="Chỉ số nước"
-        action={
-          <Button size="small" variant="tertiary" onClick={() => navigate(`/manage/water?zone=${id}`)}>
-            Xem số đo
-          </Button>
-        }
-      >
+      <Section title="Chỉ số nước">
         <Loadable data={thresholds.data} error={thresholds.error} reload={() => void thresholds.reload()}>
           {(t) => (
             <>
@@ -121,14 +132,7 @@ function ZoneDetailPage() {
         </Loadable>
       </Section>
 
-      <Section
-        title="Bè"
-        action={
-          <Button size="small" variant="tertiary" onClick={() => navigate(`/manage/zones/${id}/rafts/new`)}>
-            Thêm bè
-          </Button>
-        }
-      >
+      <Section title="Bè">
         <Loadable data={rafts.data} error={rafts.error} reload={() => void rafts.reload()}>
           {(list) =>
             list.length === 0 ? (
@@ -159,6 +163,7 @@ function ZoneDetailPage() {
         intro={inUse ? "Vùng ngừng dùng không nhận bè, chu kỳ nuôi hay số đo mới. Dữ liệu cũ vẫn giữ nguyên." : "Vùng sẽ dùng lại được cho bè và số đo mới."}
         confirmText={inUse ? "Ngừng dùng" : "Dùng lại"}
         busy={busy}
+        danger={inUse}
         onClose={() => setStatusOpen(false)}
         onConfirm={async (reason) => {
           if (!zone.data) return false;
@@ -225,14 +230,10 @@ function ThresholdSheet({
     <Sheet visible={visible} onClose={onClose} autoHeight mask handler swipeToClose title="Ngưỡng chỉ số nước">
       <div className="sheet-form form">
         <p className="form__intro">Số đo nằm ngoài khoảng này sẽ được đánh dấu vượt ngưỡng và gửi cảnh báo.</p>
-        <div className="two-col">
-          <NumberInput decimal label="pH thấp nhất" value={phMin} onChange={setPhMin} disabled={busy} />
-          <NumberInput decimal label="pH cao nhất" value={phMax} onChange={setPhMax} disabled={busy} />
-        </div>
-        <div className="two-col">
-          <NumberInput decimal label="Độ mặn thấp nhất (‰)" value={salMin} onChange={setSalMin} disabled={busy} />
-          <NumberInput decimal label="Độ mặn cao nhất (‰)" value={salMax} onChange={setSalMax} disabled={busy} />
-        </div>
+        <NumberInput decimal label="pH thấp nhất" value={phMin} onChange={setPhMin} disabled={busy} />
+        <NumberInput decimal label="pH cao nhất" value={phMax} onChange={setPhMax} disabled={busy} />
+        <NumberInput decimal label="Độ mặn thấp nhất (‰)" value={salMin} onChange={setSalMin} disabled={busy} />
+        <NumberInput decimal label="Độ mặn cao nhất (‰)" value={salMax} onChange={setSalMax} disabled={busy} />
         <FormError text={error} />
         <Button fullWidth size="large" loading={busy} disabled={busy} onClick={() => void save()}>
           Lưu ngưỡng

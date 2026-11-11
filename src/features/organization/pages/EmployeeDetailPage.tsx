@@ -1,9 +1,10 @@
 import type { EmploymentChanged } from "@/features/organization/models/Employee";
 import { useState } from "react";
-import { Button, Modal, Sheet, useNavigate, useParams } from "zmp-ui";
+import { Button, Sheet, useNavigate, useParams } from "zmp-ui";
 
 import { Actions } from "@/components/Actions/Actions";
 import { Badge } from "@/components/Badge/Badge";
+import { ConfirmSheet } from "@/components/ConfirmSheet/ConfirmSheet";
 import { Facts } from "@/components/Facts/Facts";
 import { Loadable } from "@/components/Loadable/Loadable";
 import { ManagePage } from "@/components/ManagePage/ManagePage";
@@ -49,12 +50,27 @@ function EmployeeDetailPage() {
     if (applyChange(await run(() => reinstateEmployee(id, data.rowVersion), `Đã nhận lại ${data.fullName}.`))) setReinstating(false);
   };
 
+  const left = data?.status === "Left";
+
   return (
-    <ManagePage title="Nhân viên">
+    <ManagePage
+      title="Nhân viên"
+      footer={
+        data &&
+        (left ? (
+          <Button fullWidth size="large" onClick={() => setReinstating(true)}>
+            Nhận lại
+          </Button>
+        ) : (
+          <Button fullWidth size="large" onClick={() => navigate(`/manage/employees/${id}/edit`)}>
+            Sửa hồ sơ
+          </Button>
+        ))
+      }
+    >
       <Loadable data={data} error={error} reload={() => void reload()}>
         {(e) => {
           const status = statusLabel(e.status);
-          const left = e.status === "Left";
           const bank = e.bankAccount;
           return (
             <>
@@ -111,12 +127,9 @@ function EmployeeDetailPage() {
                 )}
               </Section>
               <Actions>
-                <Button size="large" variant="secondary" onClick={() => navigate(`/manage/employees/${id}/edit`)}>
-                  Sửa
-                </Button>
                 {left ? (
-                  <Button size="large" onClick={() => setReinstating(true)}>
-                    Nhận lại
+                  <Button size="large" variant="secondary" onClick={() => navigate(`/manage/employees/${id}/edit`)}>
+                    Sửa hồ sơ
                   </Button>
                 ) : (
                   <Button size="large" variant="secondary" type="danger" onClick={() => setEnding(true)}>
@@ -133,21 +146,25 @@ function EmployeeDetailPage() {
         <div className="sheet-form form">
           <p className="form__intro">Nhân viên sẽ chuyển sang “Đã nghỉ”. Tài khoản OMTS (nếu có) không tự khóa; app sẽ nhắc bạn xem lại.</p>
           <DateField label="Ngày nghỉ việc" value={endDate} onChange={setEndDate} disabled={busy} />
-          <Button fullWidth size="large" loading={busy} disabled={busy} onClick={() => void end()}>
-            Xác nhận nghỉ việc
-          </Button>
+          <div className="sheet-actions">
+            <Button fullWidth size="large" type="danger" loading={busy} disabled={busy} onClick={() => void end()}>
+              Xác nhận nghỉ việc
+            </Button>
+            <Button fullWidth size="large" variant="secondary" disabled={busy} onClick={() => setEnding(false)}>
+              Không, quay lại
+            </Button>
+          </div>
         </div>
       </Sheet>
 
-      <Modal
+      <ConfirmSheet
         visible={reinstating}
         title="Nhận lại nhân viên"
-        description={data ? `${data.fullName} sẽ chuyển lại sang “Đang làm”.` : ""}
+        message={data ? `${data.fullName} sẽ chuyển lại sang “Đang làm”.` : ""}
+        confirmText="Nhận lại"
+        busy={busy}
         onClose={() => setReinstating(false)}
-        actions={[
-          { text: "Để sau", close: true },
-          { text: "Nhận lại", highLight: true, disabled: busy, onClick: () => void reinstate() },
-        ]}
+        onConfirm={() => void reinstate()}
       />
     </ManagePage>
   );

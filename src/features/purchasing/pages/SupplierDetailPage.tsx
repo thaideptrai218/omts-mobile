@@ -1,8 +1,10 @@
+import { useAtomValue } from "jotai";
 import { useState } from "react";
-import { Button, Modal, useNavigate, useParams } from "zmp-ui";
+import { Button, useNavigate, useParams } from "zmp-ui";
 
 import { Actions } from "@/components/Actions/Actions";
 import { Badge } from "@/components/Badge/Badge";
+import { ConfirmSheet } from "@/components/ConfirmSheet/ConfirmSheet";
 import { Empty } from "@/components/Empty/Empty";
 import { Facts } from "@/components/Facts/Facts";
 import { Loadable } from "@/components/Loadable/Loadable";
@@ -13,13 +15,18 @@ import { Section } from "@/components/Section/Section";
 import { useAction } from "@/hooks/useAction";
 import { useLoad } from "@/hooks/useLoad";
 import { date, money } from "@/utils/format";
+import { canUseFeature } from "@/utils/featureAccess";
 import { statusLabel, SUPPLIER_TYPE } from "@/utils/labels";
+import { permissionsAtom } from "@/features/auth/state/authAtoms";
+import { MetaLines } from "@/features/purchasing/components/MetaLines/MetaLines";
+import { SupplierCertificates } from "@/features/purchasing/components/SupplierCertificates/SupplierCertificates";
 import { getSupplier, setSupplierInUse, STATUS_IN_USE } from "@/features/purchasing/services/purchasingService";
 
-/** Chi tiết nhà cung cấp: liên hệ, công nợ còn phải trả, các phiếu nhập. Sửa, ngừng dùng hoặc dùng lại. */
+/** Chi tiết nhà cung cấp: liên hệ, công nợ còn phải trả, chứng nhận, các phiếu nhập. Sửa, ngừng dùng hoặc dùng lại. */
 function SupplierDetailPage() {
   const { id = "" } = useParams();
   const navigate = useNavigate();
+  const permissions = useAtomValue(permissionsAtom);
   const { data, error, reload, setData } = useLoad(() => getSupplier(id), [id]);
   const { busy, run } = useAction();
   const [confirming, setConfirming] = useState(false);
@@ -33,7 +40,16 @@ function SupplierDetailPage() {
   };
 
   return (
-    <ManagePage title="Nhà cung cấp">
+    <ManagePage
+      title="Nhà cung cấp"
+      footer={
+        data ? (
+          <Button fullWidth size="large" onClick={() => navigate(`/manage/suppliers/${id}/edit`)}>
+            Sửa
+          </Button>
+        ) : undefined
+      }
+    >
       <Loadable data={data} error={error} reload={() => void reload()}>
         {(s) => {
           const st = statusLabel(s.status);
@@ -43,22 +59,25 @@ function SupplierDetailPage() {
               <Facts
                 items={[
                   ["Tên", s.name],
+                  ["Trạng thái", <Badge key="st" text={st.text} tone={st.tone} />],
+                  ["Còn phải trả", <span key="debt" className={s.debt > 0 ? "text-danger" : undefined}>{money(s.debt)}</span>],
                   ["Loại", SUPPLIER_TYPE[s.supplierType] ?? s.supplierType],
                   ["Số điện thoại", s.phoneNumber],
                   ["Liên hệ khác", s.otherContacts],
-                  ["Trạng thái", <Badge key="st" text={st.text} tone={st.tone} />],
-                  ["Còn phải trả", <span key="debt" className={s.debt > 0 ? "text-danger" : undefined}>{money(s.debt)}</span>],
-                  ["Chứng nhận", s.certificates.length > 0 ? `${s.certificates.length} tệp (xem trên bản web)` : null],
                 ]}
               />
               <Actions>
-                <Button variant="secondary" size="large" onClick={() => navigate(`/manage/suppliers/${id}/edit`)}>
-                  Sửa
-                </Button>
+                {permissions && canUseFeature(permissions, "supplierPayments") && (
+                  <Button variant="secondary" size="large" onClick={() => navigate(`/manage/supplier-debts/${id}`)}>
+                    Xem công nợ
+                  </Button>
+                )}
                 <Button variant="secondary" size="large" type={inUse ? "danger" : "highlight"} onClick={() => setConfirming(true)}>
-                  {inUse ? "Ngừng dùng" : "Dùng lại"}
+                  {inUse ? "Ngừng dùng nhà cung cấp" : "Dùng lại nhà cung cấp"}
                 </Button>
               </Actions>
+
+              <SupplierCertificates supplier={s} onChange={setData} />
 
               <Section title="Phiếu nhập">
                 {s.receipts.length === 0 ? (
@@ -71,14 +90,20 @@ function SupplierDetailPage() {
                         <Row
                           key={r.id}
                           title={r.code}
-                          meta={date(r.receiptDate)}
+                          meta={
+                            <MetaLines
+                              items={[
+                                ["Ngày nhập", date(r.receiptDate)],
+                                ["Phải trả", money(r.payable)],
+                              ]}
+                            />
+                          }
                           badge={
                             <>
                               <Badge text={rs.text} tone={rs.tone} />
                               {r.outstanding > 0 && <Badge text={`Còn nợ ${money(r.outstanding)}`} tone="danger" />}
                             </>
                           }
-                          value={money(r.payable)}
                           onClick={() => navigate(`/manage/purchases/${r.id}`)}
                         />
                       );
@@ -87,19 +112,19 @@ function SupplierDetailPage() {
                 )}
               </Section>
 
-              <Modal
+              <ConfirmSheet
                 visible={confirming}
                 title={inUse ? "Ngừng dùng nhà cung cấp?" : "Dùng lại nhà cung cấp?"}
-                description={
+                message={
                   inUse
                     ? `${s.name} sẽ không chọn được khi lập phiếu nhập mới. Phiếu và công nợ cũ giữ nguyên.`
                     : `${s.name} sẽ chọn được lại khi lập phiếu nhập.`
                 }
+                confirmText={inUse ? "Ngừng dùng nhà cung cấp" : "Dùng lại nhà cung cấp"}
+                danger={inUse}
+                busy={busy}
                 onClose={() => setConfirming(false)}
-                actions={[
-                  { text: "Để sau", close: true },
-                  { text: inUse ? "Ngừng dùng" : "Dùng lại", highLight: true, disabled: busy, onClick: () => void toggle() },
-                ]}
+                onConfirm={() => void toggle()}
               />
             </>
           );

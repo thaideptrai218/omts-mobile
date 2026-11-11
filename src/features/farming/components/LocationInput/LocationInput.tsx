@@ -11,9 +11,10 @@ import { currentRaftPosition } from "@/features/farming/services/raftLocationSer
 const LocationMap = lazy(() => import("@/features/farming/components/LocationMap/LocationMap"));
 
 /** Các cách nhập chỉ đề xuất giá trị vào form, không tự lưu vùng/bè. */
-export default function LocationInput({ latitude, longitude, onChange, disabled, mapCenter }: {
-  latitude: string; longitude: string; onChange: (latitude: string, longitude: string) => void; disabled?: boolean; mapCenter?: Coordinates | null;
+export default function LocationInput({ latitude, longitude, onChange, disabled, mapCenter, required = false }: {
+  latitude: string; longitude: string; onChange: (latitude: string, longitude: string) => void; disabled?: boolean; mapCenter?: Coordinates | null; required?: boolean;
 }) {
+  const mark = required ? " (bắt buộc)" : "";
   const [mapOpen, setMapOpen] = useState(false);
   const [locating, setLocating] = useState(false);
   const [proposal, setProposal] = useState<Coordinates | null>(null);
@@ -26,14 +27,13 @@ export default function LocationInput({ latitude, longitude, onChange, disabled,
     finally { setLocating(false); }
   };
   return <>
-    <div className="two-col">
-      <Input label="Vĩ độ" value={latitude} inputMode="decimal" onChange={(e) => onChange(e.target.value, longitude)} disabled={disabled || locating} />
-      <Input label="Kinh độ" value={longitude} inputMode="decimal" onChange={(e) => onChange(latitude, e.target.value)} disabled={disabled || locating} />
-    </div>
-    <p className="form__hint">Nếu đang ở trên bè, bạn có thể dùng vị trí điện thoại. Zalo sẽ xin quyền chia sẻ vị trí khi bạn bấm nút; vị trí chưa được lưu cho đến khi bấm Lưu.</p>
-    <Button fullWidth size="large" variant="secondary" loading={locating} disabled={disabled || locating} onClick={() => void locate()}>Lấy vị trí qua Zalo</Button>
+    <p className="form__hint">Tọa độ là hai con số (vĩ độ và kinh độ) chỉ đúng một điểm trên bản đồ. Bạn không cần tự gõ: bấm một trong hai nút dưới đây, app sẽ điền giúp.</p>
+    <p className="form__hint">Nếu đang đứng đúng chỗ cần đánh dấu, bạn có thể dùng vị trí điện thoại. Zalo sẽ xin quyền chia sẻ vị trí khi bạn bấm nút; vị trí chưa được lưu cho đến khi bấm Lưu.</p>
+    <Button fullWidth size="large" variant="secondary" loading={locating} disabled={disabled || locating} onClick={() => void locate()}>Lấy vị trí điện thoại</Button>
     <Button fullWidth size="large" variant="secondary" disabled={disabled || locating} onClick={() => { setError(""); setMapOpen(true); }}>Chọn điểm trên bản đồ</Button>
     <FormError text={error} />
+    <Input label={`Vĩ độ${mark}`} value={latitude} inputMode="decimal" onChange={(e) => onChange(e.target.value, longitude)} disabled={disabled || locating} />
+    <Input label={`Kinh độ${mark}`} value={longitude} inputMode="decimal" onChange={(e) => onChange(latitude, e.target.value)} disabled={disabled || locating} />
     <Sheet visible={proposal !== null} onClose={() => setProposal(null)} autoHeight mask title="Kiểm tra vị trí điện thoại">
       <div className="sheet-form form">
         <p className="form__intro">Chỉ dùng vị trí này nếu điện thoại đang ở đúng vị trí bạn muốn đánh dấu. Sai số phụ thuộc thiết bị.</p>

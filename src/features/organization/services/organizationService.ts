@@ -2,11 +2,11 @@ import type { AccountSearchParams, GrantDraft, GrantRow, StaffAccount } from "@/
 import type { CooperativeProfile, CooperativeProfileSaved, SaveCooperativeProfile } from "@/features/organization/models/Cooperative";
 import type { EmployeeListItem, EmployeeSaved, EmployeeSearchParams, EmployeeView, EmploymentChanged, SaveEmployee } from "@/features/organization/models/Employee";
 import type { ZoneLookupItem } from "@/features/organization/models/OrganizationZone";
-import type { FunctionCatalogItem, RoleImpact, RoleStatusLabel, RoleView } from "@/features/organization/models/Role";
+import type { FunctionCatalogItem, RoleStatusLabel, RoleView } from "@/features/organization/models/Role";
 import type { Paged } from "@/models/Pagination";
 
-import { API_BASE_URL } from "@/constants/env";
 import { api } from "@/services/httpClient";
+import { appendPhoto, shrinkImage } from "@/utils/imageFile";
 
 export const STATUS_ID = {
   employeeWorking: 401,
@@ -91,18 +91,6 @@ export function getRole(id: string) {
   return api<RoleView>(`/api/roles/${id}`);
 }
 
-export function getRoleImpact(id: string) {
-  return api<RoleImpact>(`/api/roles/${id}/impact`);
-}
-
-export function discontinueRole(id: string) {
-  return api<RoleView>(`/api/roles/${id}/discontinue`, { method: "POST" });
-}
-
-export function reactivateRole(id: string) {
-  return api<RoleView>(`/api/roles/${id}/reactivate`, { method: "POST" });
-}
-
 export function listPermissionFunctions() {
   return api<FunctionCatalogItem[]>("/api/permission-functions");
 }
@@ -112,14 +100,21 @@ export function getCooperativeProfile() {
   return api<CooperativeProfile>("/api/cooperative/profile");
 }
 
-export function updateCooperativeProfile(body: SaveCooperativeProfile) {
-  return api<CooperativeProfileSaved>("/api/cooperative/profile", { method: "PUT", body });
+const LOGO_MAX_BYTES = 2 * 1024 * 1024;
+
+/** Thay logo ngay khi tải lên. Backend nhận tối đa 2 MB nên ảnh chụp lớn được thu nhỏ trước. */
+export async function uploadCooperativeLogo(photo: Blob) {
+  const form = new FormData();
+  appendPhoto(form, "file", await shrinkImage(photo, LOGO_MAX_BYTES));
+  return api<CooperativeProfile>("/api/cooperative/profile/logo", { method: "POST", form });
 }
 
-/** Logo server trả đường dẫn tương đối (`/api/public/...`): ghép gốc API để ảnh tải được trong Zalo. */
-export function absoluteUrl(path: string | null) {
-  if (!path) return null;
-  return /^https?:\/\//.test(path) ? path : API_BASE_URL + path;
+export function removeCooperativeLogo() {
+  return api<CooperativeProfile>("/api/cooperative/profile/logo", { method: "DELETE" });
+}
+
+export function updateCooperativeProfile(body: SaveCooperativeProfile) {
+  return api<CooperativeProfileSaved>("/api/cooperative/profile", { method: "PUT", body });
 }
 
 /** Tên chức năng trong danh mục quyền (backend trả tiếng Anh kèm mã use case) → tiếng Việt. */

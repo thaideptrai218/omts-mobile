@@ -1,9 +1,11 @@
+import type { AreaKey } from "@/models/Navigation";
 import type { IconName } from "@/models/UI";
 import NotificationBell from "@/features/notifications/components/NotificationBell/NotificationBell";
 import { useAtomValue } from "jotai";
 import { useState } from "react";
 import { Button, Icon, Modal, Page, Sheet, useNavigate, useSnackbar } from "zmp-ui";
 
+import { Actions } from "@/components/Actions/Actions";
 import PageHeader from "@/components/PageHeader/PageHeader";
 import TextSizeSheet from "@/components/TextSizeSheet/TextSizeSheet";
 import TestRoleSwitcher from "@/features/development/components/TestRoleSwitcher/TestRoleSwitcher";
@@ -21,10 +23,10 @@ function initials(name: string) {
   return parts.slice(-2).map((p) => p[0]).join("").toUpperCase();
 }
 
-function MenuRow({ icon, label, value, danger, onClick }: { icon: IconName; label: string; value?: string; danger?: boolean; onClick: () => void }) {
+function MenuRow({ icon, label, value, area, onClick }: { icon: IconName; label: string; value?: string; area: AreaKey; onClick: () => void }) {
   return (
-    <li>
-      <button type="button" className={`menu-row${danger ? " menu-row--danger" : ""}`} onClick={onClick}>
+    <li data-area={area}>
+      <button type="button" className="menu-row" onClick={onClick}>
         <span className="menu-row__icon">
           <Icon icon={icon} />
         </span>
@@ -79,7 +81,13 @@ function AccountPage() {
     <Page className="screen screen--with-nav" hideScrollbar>
       <PageHeader title="Tài khoản" bell={<NotificationBell />} />
       <div className="screen__body">
-        <section className="card profile">
+        <section aria-label="Cài đặt">
+          <ul className="list">
+            <MenuRow icon="zi-tune" area="buy" label="Cỡ chữ" value={textSizeLabel} onClick={() => setSizeOpen(true)} />
+          </ul>
+        </section>
+
+        <section className="card profile block">
           <span className="profile__avatar" aria-hidden>
             {session ? initials(session.displayName) : <Icon icon="zi-user" size={28} />}
           </span>
@@ -95,14 +103,20 @@ function AccountPage() {
           <section className="block">
             <h2 className="block__title">Tài khoản của tôi</h2>
             <ul className="list">
-              <MenuRow icon="zi-user" label="Hồ sơ cá nhân" onClick={() => navigate("/account/profile")} />
+              <MenuRow icon="zi-user" area="org" label="Hồ sơ cá nhân" onClick={() => navigate("/account/profile")} />
               {permissions?.isCooperativeOwner && (
-                <MenuRow icon="zi-user-check" label="Duyệt thương lái" onClick={() => navigate("/account/trader-requests")} />
+                <MenuRow icon="zi-user-check" area="sell" label="Duyệt thương lái" onClick={() => navigate("/account/trader-requests")} />
               )}
-              <MenuRow icon="zi-notif" label="Tùy chọn thông báo" onClick={() => navigate("/account/notifications")} />
-              <MenuRow icon="zi-leave" label="Đăng xuất" danger onClick={() => setLogoutOpen(true)} />
-              <MenuRow icon="zi-link" label="Hủy liên kết Zalo" danger onClick={() => setUnlinkOpen(true)} />
+              <MenuRow icon="zi-notif" area="people" label="Tùy chọn thông báo" onClick={() => navigate("/account/notifications")} />
             </ul>
+            <Actions>
+              <Button fullWidth size="large" variant="secondary" type="danger" onClick={() => setLogoutOpen(true)}>
+                Đăng xuất
+              </Button>
+              <Button fullWidth size="large" variant="secondary" type="danger" onClick={() => setUnlinkOpen(true)}>
+                Hủy liên kết Zalo
+              </Button>
+            </Actions>
           </section>
         ) : (
           <div className="card link-box">
@@ -117,21 +131,19 @@ function AccountPage() {
         )}
 
         {session && import.meta.env.DEV && <TestRoleSwitcher key={session.accountId} />}
-
-        <section className="block">
-          <h2 className="block__title">Cài đặt</h2>
-          <ul className="list">
-            <MenuRow icon="zi-tune" label="Cỡ chữ" value={textSizeLabel} onClick={() => setSizeOpen(true)} />
-          </ul>
-        </section>
+        {session && import.meta.env.DEV && (
+          <Button fullWidth variant="secondary" size="large" onClick={() => navigate("/dev/payment-sandbox")}>
+            Thử thanh toán · bản dev
+          </Button>
+        )}
 
         <section className="block">
           <h2 className="block__title">Thông tin và hỗ trợ</h2>
           <ul className="list">
-            <MenuRow icon="zi-info-circle" label="Thông tin HTX và hỗ trợ" onClick={() => setInfoOpen(true)} />
-            <MenuRow icon="zi-shield-solid" label="Chính sách bảo mật" onClick={() => setPolicyOpen(true)} />
-            <MenuRow icon="zi-note" label="Điều khoản sử dụng" onClick={() => setTermsOpen(true)} />
-            {session && <MenuRow icon="zi-delete" label="Xóa dữ liệu của tôi" onClick={() => setPolicyOpen(true)} />}
+            <MenuRow icon="zi-info-circle" area="farm" label="Thông tin HTX và hỗ trợ" onClick={() => setInfoOpen(true)} />
+            <MenuRow icon="zi-shield-solid" area="org" label="Chính sách bảo mật" onClick={() => setPolicyOpen(true)} />
+            <MenuRow icon="zi-note" area="people" label="Điều khoản sử dụng" onClick={() => setTermsOpen(true)} />
+            {session && <MenuRow icon="zi-delete" area="stone" label="Xóa dữ liệu của tôi" onClick={() => setPolicyOpen(true)} />}
           </ul>
         </section>
 

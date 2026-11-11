@@ -53,6 +53,22 @@ export type SupplierDebtRow = {
   outstanding: number;
 };
 
+export type ReceiptDebtRow = {
+  receiptId: string;
+  code: string | null;
+  receiptDate: string;
+  payable: number;
+  returned: number;
+  paid: number;
+  refunded: number;
+  outstanding: number;
+};
+
+export type SupplierDebtDetail = {
+  totals: SupplierDebtRow;
+  receipts: ReceiptDebtRow[];
+};
+
 export type SupplierTypeFilter = "all" | SupplierType;
 
 export type SupplierStatusFilter = "inUse" | "discontinued";

@@ -14,6 +14,8 @@ export type AuthProvider = {
 export type RequestOptions = {
   method?: "GET" | "POST" | "PUT" | "DELETE";
   body?: unknown;
+  /** Gửi multipart (tải tệp); trình duyệt tự đặt Content-Type kèm boundary. */
+  form?: FormData;
   /** false: không gắn token cho API công khai. Mặc định true. */
   auth?: boolean;
   /** Token dùng riêng cho request này (đăng xuất, xả hàng đợi thu hồi phiên). */

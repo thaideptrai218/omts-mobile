@@ -1,10 +1,12 @@
 import type { RaftListItem, RaftView, SaveRaft } from "@/features/farming/models/Raft";
-import type { WaterDetail, WaterEditingStatus, WaterFilter, WaterListItem, WaterThresholds, WaterValues, ZoneWaterThresholds } from "@/features/farming/models/WaterMeasurement";
+import type { WaterDateRange, WaterDetail, WaterEditingStatus, WaterFilter, WaterListItem, WaterChartData, WaterRange, WaterRecognition, WaterThresholds, WaterValues, ZoneWaterThresholds } from "@/features/farming/models/WaterMeasurement";
 import type { SaveZone, ZoneListItem, ZoneLookupItem, ZoneSearchParams, ZoneView } from "@/features/farming/models/Zone";
-import type { ZoneLicenses, ZoneLicenseView } from "@/features/farming/models/ZoneLicense";
+import type { SaveLicense, ZoneLicenses, ZoneLicenseView } from "@/features/farming/models/ZoneLicense";
 import type { Paged } from "@/models/Pagination";
 
 import { api } from "@/services/httpClient";
+import { todayIso } from "@/utils/format";
+import { appendPhoto } from "@/utils/imageFile";
 
 export const USAGE = { inUse: 101, discontinued: 102 } as const;
 
@@ -48,6 +50,13 @@ export function updateRaft(id: string, body: SaveRaft) {
   return api<RaftView>(`/api/rafts/${id}`, { method: "PUT", body });
 }
 
+/** Ảnh duy nhất của bè; ảnh mới thay ảnh cũ. */
+export function uploadRaftPhoto(id: string, photo: Blob) {
+  const form = new FormData();
+  appendPhoto(form, "file", photo);
+  return api<RaftView>(`/api/rafts/${id}/photo`, { method: "POST", form });
+}
+
 export function setRaftInUse(id: string, inUse: boolean, reason: string, rowVersion: string | null) {
   return api<RaftView>(`/api/rafts/${id}/${inUse ? "reactivate" : "discontinue"}`, { method: "POST", body: { reason: reason || null, rowVersion } });
 }
@@ -58,6 +67,29 @@ export function zoneLicenses(zoneId: string) {
 
 export function getLicense(id: string) {
   return api<ZoneLicenseView>(`/api/zone-licenses/${id}`);
+}
+
+export function createLicense(values: SaveLicense, file: Blob | null) {
+  return api<ZoneLicenseView>("/api/zone-licenses", { method: "POST", form: licenseForm(values, file) });
+}
+
+export function updateLicense(id: string, values: SaveLicense, file: Blob | null) {
+  return api<ZoneLicenseView>(`/api/zone-licenses/${id}`, { method: "PUT", form: licenseForm(values, file) });
+}
+
+export function replaceLicense(id: string, values: SaveLicense, file: Blob | null) {
+  return api<ZoneLicenseView>(`/api/zone-licenses/${id}/replace`, { method: "POST", form: licenseForm(values, file) });
+}
+
+/** Mỗi trường một ô form; `zoneIds` lặp lại theo từng vùng, trường bỏ trống thì không gửi. */
+function licenseForm({ zoneIds, ...fields }: SaveLicense, file: Blob | null) {
+  const form = new FormData();
+  Object.entries(fields).forEach(([name, value]) => {
+    if (value) form.append(name, value);
+  });
+  zoneIds.forEach((zoneId) => form.append("zoneIds", zoneId));
+  if (file) appendPhoto(form, "file", file);
+  return form;
 }
 
 export function cooperativeThresholds() {
@@ -72,8 +104,17 @@ export function setZoneThresholds(zoneId: string, body: WaterThresholds) {
   return api<ZoneWaterThresholds>(`/api/zones/${zoneId}/water-thresholds`, { method: "PUT", body });
 }
 
-export function listWater(zoneId: string, filter: WaterFilter, page: number) {
-  return api<Paged<WaterListItem>>(`/api/zones/${zoneId}/water-measurements${query({ status: filter, page, pageSize: 20 })}`);
+/** Không truyền khoảng ngày thì backend trả 3 tháng gần nhất. */
+export function listWater(zoneId: string, filter: WaterFilter, page: number, range: WaterDateRange | null = null) {
+  return api<Paged<WaterListItem>>(`/api/zones/${zoneId}/water-measurements${query({ status: filter, from: range?.from, to: range?.to, page, pageSize: 20 })}`);
+}
+
+/** Số đo đã xác nhận theo ngày (30 ngày gần nhất) hoặc theo tháng (12 tháng gần nhất, mặc định của server). */
+export function waterChart(zoneId: string, range: WaterRange) {
+  const to = todayIso();
+  const from = new Date(Date.parse(to) - 29 * 86400000).toISOString().slice(0, 10);
+  const params = range === "days" ? { groupBy: "day", from, to } : { groupBy: "month" };
+  return api<WaterChartData>(`/api/zones/${zoneId}/water-measurements/chart${query(params)}`);
 }
 
 export function getWater(id: string) {
@@ -83,6 +124,14 @@ export function getWater(id: string) {
 /** Nhập tay một lần đo. `clientOperationId` chống lưu trùng khi bấm hai lần hoặc gửi lại sau mất mạng. */
 export function recordWater(zoneId: string, values: WaterValues, confirm: boolean, clientOperationId: string) {
   return api<WaterDetail>(`/api/zones/${zoneId}/water-measurements`, { method: "POST", body: { ...values, confirm, clientOperationId } });
+}
+
+/** Gửi ảnh máy đo: server lưu ảnh, đọc số và tạo bản nháp, kể cả khi đọc không được. Người dùng xác nhận sau. */
+export function recognizeWater(zoneId: string, photo: Blob, clientOperationId: string) {
+  const form = new FormData();
+  appendPhoto(form, "photo", photo);
+  form.append("clientOperationId", clientOperationId);
+  return api<WaterRecognition>(`/api/zones/${zoneId}/water-measurements/recognize`, { method: "POST", form });
 }
 
 export function confirmWater(id: string, values: WaterValues) {

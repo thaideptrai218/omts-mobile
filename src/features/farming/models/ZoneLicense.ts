@@ -34,6 +34,19 @@ export type ZoneLicenseView = {
   replacesDocumentId: string | null;
   replacedByDocumentId: string | null;
   fileUrl: string | null;
+  rowVersion: string | null;
+};
+
+export type SaveLicense = {
+  documentType: string;
+  documentNumber: string;
+  effectiveDate: string | null;
+  expiryDate: string | null;
+  issuingAuthority: string | null;
+  holder: string | null;
+  legalScope: string | null;
+  zoneIds: string[];
+  rowVersion?: string | null;
 };
 
 export type ZoneLicenses = {
