@@ -8,7 +8,7 @@ import { Facts } from "@/components/Facts/Facts";
 import { Row } from "@/components/Row/Row";
 import { Rows } from "@/components/Rows/Rows";
 import { Section } from "@/components/Section/Section";
-import { clearHarvestDone, markHarvestDone } from "@/features/sales/services/salesService";
+import { clearHarvestDone, markHarvestDone, PURCHASE_STATUS } from "@/features/sales/services/salesService";
 import { useAction } from "@/hooks/useAction";
 import { dateTime, num } from "@/utils/format";
 
@@ -28,7 +28,7 @@ export default function PurchaseHarvest({ row, onUpdated }: { row: PurchaseReque
   const harvest = row.harvest;
   const [asking, setAsking] = useState<"mark" | "clear" | null>(null);
   const { busy, run } = useAction();
-  if (row.statusId !== 3202 || !harvest) return null;
+  if (row.statusId !== PURCHASE_STATUS.accepted || !harvest) return null;
 
   const confirm = async () => {
     const mark = asking === "mark";

@@ -13,6 +13,7 @@ const SERVER_FIELD: Record<string, string> = {
   "Requested cages": "Số lồng đặt mua",
   "Accepted cages": "Số lồng chấp nhận",
   "Pickup date": "Ngày nhận hàng",
+  "Pay later": "Cho trả sau",
   "Product": "Sản phẩm",
   "Product unavailable": "Sản phẩm đã ngừng bán hoặc ngoài thời gian bán",
   "Customer profile": "Hồ sơ thương lái",
