@@ -1,6 +1,7 @@
 import type { ProblemDetails } from "@/models/ProblemDetails";
 import { ApiError, isNetworkError } from "@/services/errors";
 import { FIELD, LINK, MESSAGES } from "@/constants/messages";
+import { date } from "@/utils/format";
 
 /** Tên trường backend gửi trong `field` của MSG01 (tiếng Anh) → tên hiện cho người dùng. */
 const SERVER_FIELD: Record<string, string> = {
@@ -58,6 +59,25 @@ const SERVER_FIELD: Record<string, string> = {
   "Locked payroll period": "Kỳ công đã gửi hoặc chốt lương, không đổi cài đặt được",
   "Effective date already used": "Ngày áp dụng đã có cài đặt",
   "Job type already exists": "Tên loại việc đã tồn tại",
+  // Phân công, chấm công, yêu cầu của nhân viên (OMTS-132: LABOR-02, LABOR-04, LABOR-05, LABOR-10).
+  "Date (today or later)": "Ngày làm việc (chỉ từ hôm nay trở đi, trước khi vào ca)",
+  "Date (today only)": "Ngày làm việc (chỉ ghi giờ cho hôm nay)",
+  Employees: "Danh sách nhân viên",
+  "Check-in": "Giờ vào ca (phải trước giờ ra)",
+  "Check-out": "Giờ ra ca (phải sau giờ vào)",
+  "Start time": "Giờ bắt đầu (không được sau giờ hiện tại)",
+  Days: "Ngày nghỉ (đến ngày không được trước từ ngày)",
+  "Day (today or earlier)": "Ngày quên chấm công (hôm nay hoặc trước đó)",
+  "Requested time": "Giờ cần ghi (không được sau giờ hiện tại)",
+  Type: "Loại yêu cầu",
+  Approved: "Quyết định duyệt",
+  Period: "Khoảng ngày (tối đa 62 ngày)",
+  "QR code": "Mã QR chấm công",
+  // Cài đặt chấm công (LABOR-15) và loại việc (LABOR-11).
+  "Break start": "Giờ bắt đầu nghỉ",
+  "Break end": "Giờ hết nghỉ (phải sau giờ bắt đầu nghỉ)",
+  "Rounding unit": "Đơn vị làm tròn",
+  "Hourly rate": "Tiền công mỗi giờ (số nguyên lớn hơn 0)",
   "Location token": "Vị trí Zalo",
   "Display name": FIELD.displayName,
   Reason: FIELD.reason,
@@ -186,6 +206,15 @@ const SERVER_TEXT: Record<string, string | ((details: ProblemDetails) => string)
   "MSG-CYCLE-03": "Chưa có lô giống để chọn: cần hoàn tất phiếu nhập hàng của giống trước.",
   "MSG-CYCLE-07": "Đây là đóng sớm nên cần Chủ HTX đồng ý. Đánh dấu ô xác nhận khi Chủ HTX đã đồng ý rồi đóng lại.",
   MSG69: MESSAGES.MSG69,
+  // OMTS-132 (WorkMessages.cs, UserMessages.PayrollLocksDate): `lockedUntil`, `date` là trường mở rộng của lỗi.
+  "MSG-LABOR-04": (d) => `Kỳ lương chứa ngày này đã gửi duyệt hoặc đã chốt nên không thay đổi được.${d.lockedUntil ? ` Hãy chọn ngày sau ${date(String(d.lockedUntil))}.` : ""}`,
+  "MSG-LABOR-06": "Có nhân viên đã được phân công bè khác trong ngày này và chưa vào ca. Hãy xác nhận chuyển sang bè mới rồi gửi lại.",
+  "MSG-LABOR-07": "Nhân viên đã vào ca hôm nay nên không đổi hay gỡ phân công được. Muốn chuyển sang bè khác, dùng “Đổi việc cho đội”.",
+  "MSG-LABOR-13": "Không nhận ra mã QR này hoặc mã đã hết hạn. Nhờ nhân viên mở mã chấm công mới, hoặc ghi thủ công.",
+  "MSG-LABOR-14": (d) => `Nhân viên này đã có giờ ${/check-out/i.test(String(d.detail ?? "")) ? "ra" : "vào"} hôm nay. Giờ đã ghi được giữ nguyên.`,
+  "MSG-LABOR-16": "Không duyệt được yêu cầu này: kỳ lương của ngày đó đã gửi duyệt hoặc đã chốt, hoặc giờ vào và giờ ra sẽ không đúng thứ tự. Bạn có thể từ chối kèm lời nhắn.",
+  "MSG-LABOR-25": (d) => `Lương ngày ${date(String(d.date ?? ""))} đã chốt. Bạn không gửi yêu cầu cho ngày này được.`,
+  "MSG-LABOR-26": (d) => `Chủ HTX đã ${/rejected/i.test(String(d.detail ?? "")) ? "từ chối" : "duyệt"} yêu cầu này nên không hủy được nữa.`,
   NOT_FOUND: "Bản ghi không tồn tại.",
   UNEXPECTED_ERROR: MESSAGES.UNEXPECTED,
   TOO_MANY_REQUESTS: "Bạn thao tác quá nhanh. Vui lòng đợi một phút rồi thử lại.",
