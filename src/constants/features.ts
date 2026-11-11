@@ -261,7 +261,7 @@ export const FEATURE_HINTS: Record<keyof typeof FEATURES, string> = {
 
 /** Chức năng backend chưa có API: bản dev mở màn dữ liệu mẫu `/mock/<key>`, bản production mở trang "chưa có". */
 export const MOCK_FEATURES: FeatureKey[] = [
-  "cycles", "seeding", "cultivationLog", "materialUsage", "harvestSettings", "customers", "claims",
+  "materialUsage", "harvestSettings", "customers", "claims",
   "receivables", "receipts", "reconcile", "refunds", "bankAccount", "payroll", "payRates", "payslips", "payrollSettings",
   "reports", "auditLog", "broadcast", "payment", "pickup",
 ];
@@ -281,6 +281,9 @@ export const FEATURE_ROUTES: Partial<Record<FeatureKey, string>> = {
   orders: "/account/purchases",
   weighSlips: "/account/weighings",
   myInvoices: "/account/invoices",
+  cycles: "/manage/cycles",
+  seeding: "/manage/cycles?for=seeding",
+  cultivationLog: "/manage/cycles?for=logs",
   harvest: "/manage/harvest",
   portWeighing: "/manage/weighings",
   salesOrders: "/manage/purchase-requests",

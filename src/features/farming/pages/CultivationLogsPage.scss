@@ -1,0 +1,51 @@
+/* Nhật ký nuôi: ảnh xếp lưới hai cột cho dễ bấm, mỗi lần đi bè là một thẻ. */
+.log-list {
+  display: grid;
+  gap: 12px;
+}
+
+.log-entry {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+}
+
+.log-entry__title {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 700;
+}
+
+.log-entry__notes {
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+.log-entry__meta {
+  margin: 0;
+  color: var(--ink-2);
+}
+
+.log-photos {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.log-photos:empty {
+  display: none;
+}
+
+.log-photo-tile {
+  display: grid;
+  gap: 8px;
+}
+
+.log-photo {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius: 12px;
+  background: var(--surface);
+}

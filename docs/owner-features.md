@@ -21,6 +21,11 @@ không lớn thêm theo số màn. Bản build 28/10: cả app 1,2 MB, file lớ
 | | Chi tiết bè: các hàng, lịch sử bố trí, chi phí vật tư; ngừng dùng/dùng lại | `/manage/rafts/:raftId` | `GET api/rafts/{id}`, `…/discontinue`, `…/reactivate` |
 | | Thêm bè (số hàng, chiều dài), sửa thông tin bè | `/manage/zones/:id/rafts/new`, `/manage/rafts/:raftId/edit` | `POST api/zones/{id}/rafts`, `PUT api/rafts/{id}` |
 | | Xem giấy tờ pháp lý | `/manage/licenses/:id` | `GET api/zone-licenses/{id}` |
+| Chu kỳ nuôi | Chọn vùng rồi bè; vào từ Thả giống hoặc Nhật ký nuôi thì bè đang nuôi mở thẳng màn đó (11/11/2026) | `/manage/cycles`, `?for=seeding`, `?for=logs` | `GET api/zones/{id}/cultivation-cycles` |
+| | Các chu kỳ của bè, bắt đầu chu kỳ mới với ước tính kế hoạch | `/manage/cycles/raft/:raftId` | `GET/POST api/rafts/{id}/cultivation-cycles` |
+| | Chi tiết và tổng kết chu kỳ; sửa ngày bắt đầu và kế hoạch; hủy chu kỳ bắt đầu nhầm; đóng chu kỳ có đánh giá, đóng sớm thì Quản lý vùng xác nhận Chủ HTX đã đồng ý | `/manage/cycles/:cycleId` | `GET/PUT api/cultivation-cycles/{id}`, `…/summary`, `…/cancel`, `…/close/preview`, `…/close` |
+| | Thả giống: các luống, tổng theo lô giống, ghi phiên, sửa hoặc xóa phiên có lý do, đánh dấu thả giống xong | `/manage/cycles/:cycleId/seeding` | `api/cultivation-cycles/{id}/seeding-records`, `…/seeding-complete`, `GET api/rafts/{id}/seed-lots`, `PUT api/seeding-records/{id}`, `…/remove` |
+| | Nhật ký nuôi: ngày đi bè, ghi chú, 1 đến 10 ảnh; sửa hoặc xóa có lý do | `/manage/cycles/:cycleId/logs` | `api/cultivation-cycles/{id}/cultivation-logs`, `PUT api/cultivation-logs/{id}`, `…/remove` |
 | Chỉ số nước | Số đo theo vùng, lọc trạng thái, cảnh báo vượt ngưỡng; nhập tay (nháp hoặc xác nhận ngay) | `/manage/water?zone=` | `GET/POST api/zones/{id}/water-measurements` |
 | | Chi tiết số đo: xác nhận bản nháp, sửa số đo (có lý do, báo người khác đang sửa), hủy, các phiên bản | `/manage/water/:id` | `GET api/water-measurements/{id}`, `…/confirm`, `…/corrections`, `…/void`, `…/editing` |
 | Mua hàng | Nhà cung cấp: danh sách, chi tiết, thêm/sửa, ngừng dùng/dùng lại | `/manage/suppliers…` | `api/suppliers` |
@@ -67,7 +72,6 @@ Domain đã có bảng nhưng OMTS.Api chưa có controller, nên mobile chỉ h
 
 | Chức năng (FeatureKey) | Ghi chú |
 |---|---|
-| Chu kỳ nuôi, thả giống, nhật ký nuôi (`cycles`, `seeding`, `cultivationLog`) | Entity `CultivationCycle`, `SeedingEvent`, `CultivationLogEntry` |
 | Thu hoạch, lô truy xuất (`harvest`, tra cứu `trace` vẫn dùng dữ liệu mẫu) | `HarvestEvent`, `TracePublication` |
 | Hóa đơn, cân tại cảng, công nợ thương lái, phiếu thu, đối soát, hoàn tiền (`portWeighing`, `receivables`, `receipts`, `reconcile`, `refunds`) | Yêu cầu mua theo lồng đã có; chưa nối sang `SalesOrder`, hóa đơn hay cân thực nhận |
 | Khiếu nại chất lượng, trả hàng của thương lái (`claims`) | `QualityClaim`, `PhysicalReturn` |

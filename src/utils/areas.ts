@@ -16,7 +16,7 @@ export const FEATURE_AREA: Record<FeatureKey, AreaKey> = {
 
 const PATH_AREAS: [string, AreaKey][] = [
   ["/manage/zones", "farm"], ["/manage/water", "farm"], ["/manage/rafts", "farm"], ["/manage/licenses", "farm"],
-  ["/manage/raft-costs", "farm"], ["/manage/harvest", "farm"], ["/trace", "farm"],
+  ["/manage/raft-costs", "farm"], ["/manage/harvest", "farm"], ["/manage/cycles", "farm"], ["/trace", "farm"],
   ["/manage/purchases", "buy"], ["/manage/supplier", "buy"], ["/manage/input-items", "buy"],
   ["/manage/purchase-requests", "sell"], ["/manage/sales-products", "sell"], ["/account/purchases", "sell"],
   ["/manage/weighings", "sell"], ["/manage/invoices", "sell"], ["/account/weighings", "sell"], ["/account/invoices", "sell"],
