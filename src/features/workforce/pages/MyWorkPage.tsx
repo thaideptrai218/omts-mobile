@@ -1,11 +1,12 @@
 import type { LeaveRow } from "@/features/workforce/models/LeaveRequest";
 import { newOperationId } from "@/utils/operationId";
 import { useEffect, useState } from "react";
-import { Button, Input, Sheet } from "zmp-ui";
+import { Button, Input } from "zmp-ui";
 import FormError from "@/components/FormError/FormError";
 import DateField from "@/components/DateField/DateField";
 import { Badge } from "@/components/Badge/Badge";
 import { Chips } from "@/components/Chips/Chips";
+import { ConfirmSheet } from "@/components/ConfirmSheet/ConfirmSheet";
 import { Empty } from "@/components/Empty/Empty";
 import { Facts } from "@/components/Facts/Facts";
 import { Loadable } from "@/components/Loadable/Loadable";
@@ -15,6 +16,7 @@ import { Rows } from "@/components/Rows/Rows";
 import { Section } from "@/components/Section/Section";
 import WorkforceGate from "@/features/workforce/components/WorkforceGate/WorkforceGate";
 import MyPurchaseShifts from "@/features/workforce/components/MyPurchaseShifts/MyPurchaseShifts";
+import NativePicker from "@/features/workforce/components/NativePicker/NativePicker";
 import { useLoad } from "@/hooks/useLoad";
 import { errorText } from "@/utils/errorText";
 
@@ -32,6 +34,7 @@ function MyWorkContent() {
   const [operationId, setOperationId] = useState(newOperationId);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [sent, setSent] = useState("");
   const [cancelling, setCancelling] = useState<LeaveRow | null>(null);
   const [qr, setQr] = useState<{ image: string; expiresAt: string } | null>(null);
   const [now, setNow] = useState(Date.now);
@@ -40,10 +43,10 @@ function MyWorkContent() {
   useEffect(() => { const timer = window.setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(timer); }, []);
   const send = async () => {
     if (!reason.trim() || !from || to < from) { setError("Chọn đúng khoảng ngày nghỉ và nhập lý do."); return; }
-    setBusy(true); setError("");
+    setBusy(true); setError(""); setSent("");
     try {
       await requestLeave({ from, to, reason: reason.trim(), clientOperationId: operationId });
-      setOperationId(newOperationId()); setReason(""); await data.reload();
+      setOperationId(newOperationId()); setReason(""); setSent("Đã gửi yêu cầu nghỉ phép đến Chủ HTX."); await data.reload();
     } catch (e) { setError(errorText(e)); } finally { setBusy(false); }
   };
   const showQr = async () => {
@@ -66,43 +69,47 @@ function MyWorkContent() {
             ? <><img src={qr.image} alt="Mã QR chấm công cá nhân" /><p>Còn {Math.ceil((Date.parse(qr.expiresAt) - now) / 1000)} giây</p></>
             : <p role="status">Mã đã hết hạn. Bấm “Hiện mã chấm công” để lấy mã mới.</p>}</div>}
         </div>
-        <Input label="Tháng" type={"month" as never} value={month} onChange={(e) => { if (/^\d{4}-\d{2}$/.test(e.target.value)) setMonth(e.target.value); }} />
+        <div className="button-stack"><NativePicker label="Tháng" type="month" hint="Bấm vào ô để chọn tháng." value={month} onChange={(value) => { if (/^\d{4}-\d{2}$/.test(value)) setMonth(value); }} /></div>
         <Chips options={[["work", "Phân công"], ["attendance", "Chấm công"], ["requests", "Nghỉ phép"]]} value={tab} onChange={setTab} />
         {tab === "work" && <><MyPurchaseShifts key={month} from={month + "-01"} to={month + "-" + lastDay} /><Section title="Phân công trong tháng">{work.assignments.length ? <Rows>{work.assignments.map((a) =>
           <Row key={a.id} title={a.job} meta={date(a.date) + " · Bè " + (a.raftCode ?? "—")} badge={<Badge text={a.checkedOutAt ? "Đã ra ca" : a.checkedInAt ? "Đang làm" : "Chưa vào ca"} tone={a.checkedInAt ? "success" : "neutral"} />} />)}</Rows>
           : <Empty title="Chưa có phân công trong tháng này" />}</Section></>}
-        {tab === "attendance" && <Section title="Công đã ghi nhận">{work.attendance.length ? work.attendance.map((a) => <div className="card form" key={a.date}>
+        {tab === "attendance" && <Section title="Công đã ghi nhận">{work.attendance.length ? <div className="workforce-cards">{work.attendance.map((a) => <div className="card form" key={a.date}>
           <p className="block__title">{date(a.date)}</p>
           <Badge text={a.complete ? "Đủ giờ vào / ra" : "Thiếu giờ vào hoặc ra"} tone={a.complete ? "success" : "warning"} />
           <Facts items={[["Vào", dateTime(a.checkedInAt)], ["Ra", dateTime(a.checkedOutAt)], ...a.jobs.map((j): [string, string] => [j.job, num(j.hours, "giờ")])]} />
           {a.periods.map((p, i) => <p className="form__hint" key={i}>{p.job} · bè {p.raft} · {dateTime(p.startsAt)} → {dateTime(p.endsAt)}</p>)}
           {!a.complete && <p className="form__hint">Liên hệ Chủ HTX để kiểm tra giờ bị thiếu. Ngày này chưa tính giờ công.</p>}
-        </div>) : <Empty title="Chưa có chấm công trong tháng này" />}</Section>}
+        </div>)}</div> : <Empty title="Chưa có chấm công trong tháng này" />}</Section>}
         {tab === "requests" && <>
           <Section title="Gửi yêu cầu nghỉ phép"><div className="card form">
-            <DateField label="Từ ngày" value={from} onChange={setFrom} />
-            <DateField label="Đến ngày" value={to} onChange={setTo} />
-            <Input.TextArea label="Lý do" maxLength={500} value={reason} onChange={(e) => setReason(e.target.value)} disabled={busy} />
-            <Button fullWidth size="large" loading={busy} disabled={busy} onClick={() => void send()}>Gửi Chủ HTX</Button>
+            <DateField label="Từ ngày (bắt buộc)" value={from} onChange={setFrom} />
+            <DateField label="Đến ngày (bắt buộc)" value={to} onChange={setTo} />
+            <Input.TextArea label="Lý do (bắt buộc)" maxLength={500} value={reason} onChange={(e) => { setReason(e.target.value); setSent(""); }} disabled={busy} />
+            <Button fullWidth size="large" loading={busy} disabled={busy} onClick={() => void send()}>Gửi yêu cầu nghỉ phép</Button>
+            {sent && <p className="status-note" role="status">{sent}</p>}
           </div></Section>
-          <Section title="Yêu cầu đã gửi">{work.requests.length ? <Rows>{work.requests.map((x) => <Row key={x.id}
-            title={date(x.from) + " – " + date(x.to)} meta={<>{x.reason}{x.response && <><br />Phản hồi: {x.response}</>}</>}
-            onClick={x.approved === null && !x.cancelledAt ? () => { setCancelling(x); setError(""); } : undefined}
-            badge={<Badge text={x.cancelledAt ? "Đã hủy" : x.approved === null ? "Chờ duyệt · bấm để hủy" : x.approved ? "Đã duyệt" : "Từ chối"} tone={x.approved === null ? "warning" : x.approved ? "success" : "danger"} />} />)}</Rows>
+          <Section title="Yêu cầu đã gửi">{work.requests.length ? <div className="workforce-cards">{work.requests.map((x) => <div className="card form" key={x.id}>
+            <p className="block__title">{date(x.from)} – {date(x.to)}</p>
+            <p>{x.reason}</p>
+            {x.response && <p>Phản hồi: {x.response}</p>}
+            <Badge text={x.cancelledAt ? "Đã hủy" : x.approved === null ? "Chờ duyệt" : x.approved ? "Đã duyệt" : "Từ chối"} tone={x.approved === null ? "warning" : x.approved ? "success" : "danger"} />
+            {x.approved === null && !x.cancelledAt && <Button fullWidth size="large" variant="secondary" disabled={busy} onClick={() => { setCancelling(x); setError(""); }}>Hủy yêu cầu này</Button>}
+          </div>)}</div>
             : <Empty title="Chưa gửi yêu cầu nào" />}</Section>
         </>}
-        <FormError text={error} />
-        <Button fullWidth size="large" variant="secondary" disabled={busy} onClick={() => void data.reload()}>Tải lại</Button>
-        <Sheet visible={cancelling !== null} onClose={() => { if (!busy) setCancelling(null); }} autoHeight mask handler title="Hủy yêu cầu nghỉ phép">
-          <div className="sheet-form form workforce-sheet"><p>Hủy yêu cầu từ {date(cancelling?.from)} đến {date(cancelling?.to)}?</p><FormError text={error} />
-            <Button fullWidth size="large" disabled={busy} loading={busy} onClick={() => {
-              if (!cancelling || busy) return;
-              setBusy(true); setError("");
-              void cancelLeave(cancelling.id).then(async () => { setCancelling(null); await data.reload(); })
-                .catch(e => setError(errorText(e))).finally(() => setBusy(false));
-            }}>Xác nhận hủy yêu cầu</Button>
-          </div>
-        </Sheet>
+        {!cancelling && <FormError text={error} />}
+        <div className="button-stack"><Button fullWidth size="large" variant="secondary" disabled={busy} onClick={() => void data.reload()}>Tải lại</Button></div>
+        <ConfirmSheet visible={cancelling !== null} title="Hủy yêu cầu nghỉ phép" danger busy={busy}
+          message={<><p>Hủy yêu cầu từ {date(cancelling?.from)} đến {date(cancelling?.to)}? Yêu cầu đã hủy không khôi phục được.</p><FormError text={error} /></>}
+          confirmText="Xác nhận hủy yêu cầu" cancelText="Không, giữ yêu cầu"
+          onClose={() => { if (!busy) setCancelling(null); }}
+          onConfirm={() => {
+            if (!cancelling || busy) return;
+            setBusy(true); setError("");
+            void cancelLeave(cancelling.id).then(async () => { setCancelling(null); await data.reload(); })
+              .catch(e => setError(errorText(e))).finally(() => setBusy(false));
+          }} />
       </>}</Loadable>
   </ManagePage>;
 }

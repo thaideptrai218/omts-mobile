@@ -1,15 +1,16 @@
 import { ComponentType, lazy, ReactElement, Suspense } from "react";
-import { Header, Page } from "zmp-ui";
+
+import { ManagePage } from "@/components/ManagePage/ManagePage";
 
 /** Khung tải màn dùng chung cho các nhóm nghiệp vụ. */
 function PageFallback() {
   return (
-    <Page className="screen screen--detail" hideScrollbar>
-      <Header title="" className="detail-header" />
-      <div className="screen__body">
-        <div className="skeleton skeleton--form" aria-busy />
+    <ManagePage title="Đang mở màn hình">
+      <div className="loading" role="status" aria-busy>
+        <p className="loading__text">Đang tải...</p>
+        <div className="skeleton skeleton--form" aria-hidden />
       </div>
-    </Page>
+    </ManagePage>
   );
 }
 

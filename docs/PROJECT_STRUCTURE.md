@@ -29,7 +29,7 @@ omts-mobile/
 │   │   ├── organization/      Nhân viên, tài khoản, vai trò, hồ sơ HTX
 │   │   ├── purchasing/        Nhà cung cấp, vật tư, phiếu nhập
 │   │   ├── sales/             Yêu cầu mua theo lồng, sản phẩm bán
-│   │   ├── traceability/      Tra cứu nguồn gốc, lô mẫu được ghi rõ
+│   │   ├── traceability/      Tra cứu nguồn gốc theo mã QR của hóa đơn
 │   │   └── workforce/         Phân công, chấm công, nghỉ phép
 │   ├── hooks/                 useLoad, useAction, usePaged, useScan, useOpenFeature
 │   ├── models/                Kiểu dùng chung: Pagination, Http, UI, Navigation, Coordinates

@@ -44,10 +44,13 @@ Cấu trúc hiện hành: `docs/PROJECT_STRUCTURE.md` (theo cây thư mục ngư
   báo in-app, thương lái nhận thông báo khi được duyệt. Mật khẩu chỉ dùng cho bản web. Hợp đồng API liên kết
   ở `docs/zalo-account-linking.md`. Khi dev ngoài Zalo đặt
   `window.__OMTS_FAKE_ZALO__` (xem `src/services/zaloService.ts`).
+  Bản dev chạy trên trình duyệt (ngoài Zalo) thay màn liên kết bằng **đăng nhập tài khoản demo** (chốt 10/11/2026): năm nút
+  `owner`, `quanlyvung1`, `thuonglai1`, `nhanvien1`, `nhanvien2` (`src/features/auth/data/demoAccounts.ts`), mật khẩu `VITE_DEV_DEMO_PASSWORD`
+  trong `.env.development.local`; các tài khoản do `seed --bootstrap --demo` của backend tạo. Bản production và trong Zalo không có màn này.
 - **Dashboard chạy theo quyền**: `GET api/me/permissions` → `permissionsAtom`; `src/utils/featureAccess.ts`
   quyết định `FeatureKey` nào hiện (mã chức năng của backend, chủ HTX, thương lái). `ROLES`
-  (`src/constants/roles.ts`) chỉ còn cung cấp `stats`, `tasks`, `actions` mẫu theo vai trò gần nhất (`roleKeyFor`);
-  `tasks[].feature` và `actions` là `FeatureKey` lấy từ `FEATURES` (`src/constants/features.ts`). `useOpenFeature`
+  (`src/constants/roles.ts`) chỉ còn cung cấp `actions` theo vai trò gần nhất (`roleKeyFor`), là `FeatureKey` lấy từ
+  `FEATURES` (`src/constants/features.ts`). Số liệu trang chủ chỉ lấy từ API, không để số mẫu. `useOpenFeature`
   mở `trace` ở tab `/trace`, còn lại mở `/feature/:key` (`src/pages/FeaturePage.tsx`, chỉ là khung "đang xây dựng").
   Thêm chức năng: thêm vào `FEATURES` và `FEATURE_ACCESS`, gắn vào role; khi có màn hình thật thì thêm route riêng
   trong nhóm tương ứng ở `src/routes/`. Chưa liên kết tài khoản thì trang chủ chỉ có ô tra cứu truy xuất.
@@ -57,12 +60,20 @@ Cấu trúc hiện hành: `docs/PROJECT_STRUCTURE.md` (theo cây thư mục ngư
 - **Style**: token màu ở `:root` trong `src/assets/styles/app.scss`, bản tối ghi đè dưới `body[zaui-theme="dark"]`
   (Tailwind cũng dùng selector này cho dark mode). Màu ZaUI đổi qua biến `--zaui-light-*`.
   `--capsule-space` chừa vùng menu Zalo, `--top-safe` chừa thanh trạng thái; header tự vẽ phải dùng hai biến này.
-- **Giao diện cho người lớn tuổi** (đã chốt): xanh Zalo `#006AF5`, chữ thân bài 16 đến 18px, chữ phụ `--ink-2`
-  đạt tương phản 7:1, vùng chạm tối thiểu 48px, mức độ (gấp, cần chú ý, mới) luôn có nhãn chữ chứ không chỉ màu.
+- **Giao diện "Bến hàu" cho người lớn tuổi** (chốt 09/11/2026): đầu trang màu biển có viền sóng (`Waves`), nền trang màu
+  cát, trang chủ có hình con hàu (`OysterArt`). Mỗi khu vực một màu và một hình riêng (`AreaKey`, `src/utils/areas.ts`,
+  `AreaArt`): vùng nuôi xanh ngọc, mua hàng cam san hô, bán hàng xanh rong, nhân công tím, tổ chức xanh dương; màu đầu
+  trang `ManagePage` tự lấy theo đường dẫn, màn mới nhớ thêm vào `PATH_AREAS`. Màu vàng phao chỉ dành cho nút Quét mã, số
+  chưa đọc và báo việc cần xử lý. Nút có gờ dày và lún xuống khi bấm; góc bo 12 đến 18px. Font Be Vietnam Pro nhúng trong
+  `src/assets/fonts` (OFL, 100 KB, thiếu thì về font máy). Chữ trắng trên mọi nền màu tối thiểu 5,8:1, chữ phụ `--ink-2`
+  đạt 7:1, chế độ tối giữ cùng ngưỡng. Cỡ chữ gốc 18px, lựa chọn "Chữ rất lớn" 21px; không có chữ đọc nào dưới
+  16px (không viết dưới `0.9375rem`). Nút và ô nhập tối thiểu 56px (đã áp toàn cục cho ZaUI trong `app.scss`), nút phụ
+  48px, cách nhau tối thiểu 12px; dòng menu tối thiểu 72px. Danh sách chức năng dùng dòng ngắn `FEATURE_HINTS`, câu dài
+  để ở trang của chức năng. Mức độ (gấp, cần chú ý, mới) là nhãn có viền và chữ, không chỉ dựa vào màu.
   Cỡ chữ và line-height viết bằng **rem**, vì lựa chọn "Cỡ chữ" (`src/services/textSizeService.ts`) đổi `font-size` của
   thẻ `<html>` qua `data-text-size`. Viết px thì chữ sẽ không phóng theo lựa chọn này.
-  Mọi tab dùng `PageHeader` nền xanh, trang chi tiết tô `Header` của ZaUI cùng màu, nên `app-config.json` đặt
-  `textColor: white`. Thêm màn hình có đầu trang nền sáng thì chữ trên thanh trạng thái sẽ không đọc được.
+  Mọi tab dùng `PageHeader` nền biển, trang phụ dùng `ManagePage` (thanh "Quay lại" và tiêu đề lớn trên nền màu khu vực), nên
+  `app-config.json` đặt `textColor: white`. Thêm màn hình có đầu trang nền sáng thì chữ trên thanh trạng thái sẽ không đọc được.
 - Chữ trên giao diện và comment trong code viết bằng tiếng Việt.
 - Commit theo Conventional Commits kèm mã Jira: `type(scope): tóm tắt OMTS-<n>`; tiêu đề PR
   `type(scope): tóm tắt [OMTS-<n>]` (CI kiểm tra), merge bằng Squash and merge. Xem `CONTRIBUTING.md`.
@@ -196,15 +207,15 @@ Cấu trúc hiện hành: `docs/PROJECT_STRUCTURE.md` (theo cây thư mục ngư
 - **Menu của Zalo cố định ở góc trên bên phải** mọi màn hình. Không đặt nút hay thông tin dưới
   vùng đó; chọn màu sáng/tối cho menu sao cho đủ tương phản.
 - Giữ nút "trở lại" ở góc trên bên trái các trang phụ (Android); iOS vuốt từ mép trái.
-- Bottom navigation tối đa 4 tab. OMTS dùng (chốt 28/10/2026) `src/components/BottomNav/BottomNav.tsx`: Tổng quan | nút quét
-  QR tròn nổi ở giữa | Tài khoản. Nút giữa là hành động, không phải tab: quét bằng `scanQr` rồi mở màn theo loại mã
+- Bottom navigation tối đa 4 tab. OMTS dùng (chốt 28/10/2026) `src/components/BottomNav/BottomNav.tsx`: Tổng quan | Quét mã
+  (quả phao vàng tròn nhô lên khỏi thanh) | Tài khoản. Nút giữa là hành động, không phải tab: quét bằng `scanQr` rồi mở màn theo loại mã
   (`src/utils/scanTargets.ts`, hiện có mã truy xuất; điểm danh và loại khác thêm quy tắc ở đó). Thông báo mở từ
   chuông góc trên bên trái của các trang chính (`PageHeader bell`), không phải tab. Truy xuất và Thông báo là trang chi
   tiết. Quét QR của Zalo cần quyền được Zalo duyệt (mục 5).
 - Luôn có trạng thái đang tải, lỗi, mất kết nối. Phản hồi kết quả bằng modal, popup hoặc trang kết quả;
   modal thông báo thành công tự tắt sau 1,5 giây.
 - Vùng chạm 7 đến 9 mm; ưu tiên component ZaUI (`zmp-ui`).
-- Font hệ thống; cỡ chữ 20, 18, 16, 15, 14, 12, 10.
+- Hướng dẫn của Zalo khuyên font hệ thống; OMTS chủ động nhúng Be Vietnam Pro (mục 0). Cỡ chữ trong hướng dẫn: 20, 18, 16, 15, 14, 12, 10.
   Màu: NL300 nội dung chính, NL700 nội dung phụ, NL500 đoạn mô tả dài; BL300 link,
   GL300 thành công, OL300 cảnh báo, RL300 lỗi.
 
@@ -307,10 +318,10 @@ Cấu trúc hiện hành: `docs/PROJECT_STRUCTURE.md` (theo cây thư mục ngư
 - **Mọi chữ hiện cho người dùng bằng tiếng Việt** (chốt 28/10/2026), kể cả thông báo MSGxx: backend trả chữ tiếng
   Anh trong `detail` nhưng app không hiện chữ đó, mà dịch theo `code` ở `errorText` (`src/utils/errorText.ts`,
   một chỗ duy nhất). Thêm mã lỗi mới ở backend thì thêm chữ tiếng Việt vào `SERVER_TEXT`; thêm loại thông báo
-  mới thì thêm vào `KINDS` của `src/features/notifications/pages/InboxPage.tsx`. Nghiệm thu so khớp MSGxx nguyên văn tiếng Anh
+  mới thì thêm vào `KINDS` của `src/features/notifications/utils/notificationKinds.ts` (câu tiếng Việt dựng từ `messageParams`, màn mở khi bấm). Nghiệm thu so khớp MSGxx nguyên văn tiếng Anh
   cần thống nhất lại với SRS.
-- Số liệu và việc cần làm trên dashboard vẫn là dữ liệu mẫu trong `src/constants` và feature sở hữu dữ liệu
-  (`roles.ts`, `content.ts`) cho tới khi các module đó nối API; chức năng hiện ra đã lọc theo quyền thật.
+- Trang chủ không còn số mẫu (gỡ 05/11/2026): chỉ Chủ HTX có số liệu từ API, các vai trò khác chỉ có chức năng theo quyền.
+  Tra cứu truy xuất đọc trang công khai `GET /api/origin/{mã QR}` (không đăng nhập), mở từ mã QR của hóa đơn hoặc dán đường link; chưa tra được bằng mã lô gõ tay (chốt 10/11/2026).
 - `nativeStorage` của zmp-sdk không ghi gì khi chạy ngoài Zalo (`npm start`): phiên chỉ sống trong một lần
   mở trang, tải lại trang là mất; trong Zalo cần quyền native storage được duyệt.
 - Thông tin HTX trong `src/constants/cooperative.ts` (mã số, địa chỉ, điện thoại, kênh hỗ trợ) là dữ liệu mẫu,

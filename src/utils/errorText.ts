@@ -4,6 +4,12 @@ import { FIELD, LINK, MESSAGES } from "@/constants/messages";
 
 /** Tên trường backend gửi trong `field` của MSG01 (tiếng Anh) → tên hiện cho người dùng. */
 const SERVER_FIELD: Record<string, string> = {
+  "Work plan": "Kế hoạch ngày làm",
+  "Work plan required": "Cần tạo kế hoạch và chọn người phụ trách trước khi phân công",
+  "Work plan already assigned": "Kế hoạch đã phân công hoặc mời nhân viên; không thể sửa nội dung ca",
+  "Work plan already answered": "Kế hoạch đã có phản hồi",
+  "Work plan mismatch": "Bè, ngày và loại việc phải khớp kế hoạch đã duyệt",
+  "Plan responsible": "Người phụ trách phải có quyền phân công tại vùng này và đã nhận kế hoạch",
   "Requested cages": "Số lồng đặt mua",
   "Accepted cages": "Số lồng chấp nhận",
   "Pickup date": "Ngày nhận hàng",
@@ -12,6 +18,7 @@ const SERVER_FIELD: Record<string, string> = {
   "Customer profile": "Hồ sơ thương lái",
   "Client operation": "Lần gửi yêu cầu",
   "Purchase request status": "Trạng thái yêu cầu mua",
+  "Purchase request": "Đơn hàng",
   "Answered purchase request": "Yêu cầu đã được phản hồi hoặc đã hủy",
   "Work date": "Ngày làm việc",
   "Staffing capacity": "Số lồng và năng suất nhân viên",
@@ -104,6 +111,12 @@ const SERVER_FIELD: Record<string, string> = {
   "Returned quantity": "Số lượng trả",
   "Refund amount": "Tiền hoàn lại",
   "Debt reduction amount": "Tiền trừ công nợ",
+  "Refund amount + Debt reduction amount": "Tổng tiền trừ công nợ và tiền hoàn lại",
+  "Refund method": "Hình thức hoàn tiền",
+  "Effective date": "Ngày hiệu lực",
+  "Expiry date": "Ngày hết hạn",
+  Zones: "Vùng áp dụng",
+  File: "Tệp giấy tờ",
   "Cancel payments": "Hủy các lần trả tiền",
   Employee: "Nhân viên",
   Birthday: "Ngày sinh",

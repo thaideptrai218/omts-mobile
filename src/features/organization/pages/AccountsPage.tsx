@@ -34,7 +34,7 @@ function AccountsPage() {
 
   return (
     <ManagePage title="Tài khoản">
-      <SearchBox placeholder="Tìm theo tên, tên đăng nhập, số điện thoại" onSearch={setSearch} />
+      <SearchBox label="Tìm tài khoản" placeholder="Tên, tên đăng nhập, số điện thoại" onSearch={setSearch} />
       <Chips options={FILTERS} value={filter} onChange={setFilter} />
       <PagedList list={list} unit="tài khoản" emptyIcon="zi-user-settings" emptyTitle="Không có tài khoản nào">
         {(a) => {

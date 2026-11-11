@@ -1,11 +1,12 @@
 import type { ReceiptView } from "@/features/purchasing/models/PurchaseReceipt";
 import type { PaymentMethod } from "@/features/purchasing/models/SupplierPayment";
 import { useState } from "react";
-import { Button, Input, Modal, Select, Sheet, Switch, useNavigate, useParams } from "zmp-ui";
+import { Button, Input, Select, Sheet, Switch, useNavigate, useParams } from "zmp-ui";
 
 import FormError from "@/components/FormError/FormError";
 import { Actions } from "@/components/Actions/Actions";
 import { Badge } from "@/components/Badge/Badge";
+import { ConfirmSheet } from "@/components/ConfirmSheet/ConfirmSheet";
 import { Facts } from "@/components/Facts/Facts";
 import { Loadable } from "@/components/Loadable/Loadable";
 import { ManagePage } from "@/components/ManagePage/ManagePage";
@@ -21,13 +22,14 @@ import { errorText } from "@/utils/errorText";
 import { MESSAGES } from "@/constants/messages";
 import { date, dateTime, money, num, parseNumber, todayIso } from "@/utils/format";
 import { INPUT_GROUP, PAYMENT_METHOD, statusLabel } from "@/utils/labels";
+import { MetaLines } from "@/features/purchasing/components/MetaLines/MetaLines";
 import { cancelReceipt, completeReceipt, getReceipt, newDeduplicationKey, RECEIPT_COMPLETED, RECEIPT_DRAFT, recordSupplierPayment } from "@/features/purchasing/services/purchasingService";
 
 import DateField from "@/components/DateField/DateField";
 
 /**
  * Chi tiết phiếu nhập: dòng hàng, tiền, các lần trả tiền và trả hàng. Phiếu nháp thì sửa hoặc hoàn tất; phiếu hoàn
- * tất còn nợ thì ghi trả tiền; phiếu chưa hủy thì hủy kèm lý do. Trả hàng làm trên bản web.
+ * tất còn nợ thì ghi trả tiền; phiếu chưa hủy thì hủy kèm lý do; phiếu đã hoàn tất còn hàng thì trả nhà cung cấp.
  */
 function PurchaseDetailPage() {
   const allowed = useBusinessPermission();
@@ -58,45 +60,72 @@ function PurchaseDetailPage() {
     return Boolean(saved);
   };
 
+  // Nháp thì hoàn tất; đã hoàn tất còn nợ thì ghi trả tiền. Hai điều kiện loại trừ nhau nên chân trang chỉ có một nút chính.
+  const isDraft = data?.statusId === RECEIPT_DRAFT;
+  const canPay = data !== null && allowed("SUPPLIER_PAYMENTS", "Create") && data.statusId === RECEIPT_COMPLETED && data.outstanding > 0;
+  const footer = isDraft ? (
+    <Button fullWidth size="large" onClick={() => setCompleting(true)}>
+      Hoàn tất
+    </Button>
+  ) : canPay ? (
+    <Button fullWidth size="large" onClick={() => setPaying(true)}>
+      Ghi trả tiền
+    </Button>
+  ) : undefined;
+
   return (
-    <ManagePage title="Phiếu nhập">
+    <ManagePage title="Phiếu nhập" footer={footer}>
       <Loadable data={data} error={error} reload={() => void reload()}>
         {(r) => {
           const st = statusLabel(r.status);
-          const isDraft = r.statusId === RECEIPT_DRAFT;
-          const canPay = allowed("SUPPLIER_PAYMENTS", "Create") && r.statusId === RECEIPT_COMPLETED && r.outstanding > 0;
+          const canReturn = allowed("PURCHASE_RECEIPTS", "Create", r.zone.id) && r.statusId === RECEIPT_COMPLETED && r.lines.some((l) => l.returnable > 0);
           const canCancel = allowed("PURCHASE_RECEIPTS", "Delete", r.zone.id) && (r.statusId === RECEIPT_DRAFT || r.statusId === RECEIPT_COMPLETED);
           const hasPayments = r.payments.some((p) => p.status === "Recorded");
           return (
             <>
-              <Facts
-                items={[
-                  ["Mã phiếu", r.code],
-                  ["Trạng thái", <Badge key="st" text={st.text} tone={st.tone} />],
-                  ["Ngày nhập", date(r.receiptDate)],
-                  ["Nhà cung cấp", r.supplier.name],
-                  ["Vùng nuôi", `${r.zone.code ?? ""} ${r.zone.name ?? ""}`.trim()],
-                  ["Bè", r.raft?.code],
-                  ["Ghi chú", r.notes],
-                  ["Lý do hủy", r.cancelReason],
-                  ["Hoàn tất lúc", r.completedAt ? dateTime(r.completedAt) : null],
-                  ["Hủy lúc", r.cancelledAt ? dateTime(r.cancelledAt) : null],
-                ]}
-              />
+              <Section title="Tình trạng phiếu">
+                <Facts
+                  items={[
+                    ["Mã phiếu", r.code],
+                    ["Trạng thái", <Badge key="st" text={st.text} tone={st.tone} />],
+                    ["Còn nợ", <span key="o" className={r.outstanding > 0 ? "text-danger" : undefined}>{money(r.outstanding)}</span>],
+                    ["Lý do hủy", r.cancelReason],
+                  ]}
+                />
+              </Section>
 
-              <Section title="Dòng hàng">
-                <Rows>
-                  {r.lines.map((l) => (
-                    <Row
-                      key={l.id}
-                      title={l.itemName}
-                      meta={`${INPUT_GROUP[l.group] ?? l.group} · ${num(l.quantity, l.unit ?? undefined)} × ${money(l.unitPrice)}${
-                        l.returnedQuantity > 0 ? ` · Đã trả ${num(l.returnedQuantity)}` : ""
-                      }${l.seedLotCode ? ` · Lô giống ${l.seedLotCode}` : ""}`}
-                      value={money(l.lineAmount)}
-                    />
-                  ))}
-                </Rows>
+              {(isDraft || canReturn || canCancel) && (
+                <Actions>
+                  {isDraft && (
+                    <Button variant="secondary" size="large" onClick={() => navigate(`/manage/purchases/${r.id}/edit`)}>
+                      Sửa
+                    </Button>
+                  )}
+                  {canReturn && (
+                    <Button variant="secondary" size="large" onClick={() => navigate(`/manage/purchases/${r.id}/return`)}>
+                      Trả hàng
+                    </Button>
+                  )}
+                  {canCancel && (
+                    <Button variant="tertiary" type="danger" size="large" onClick={() => setCancelling(true)}>
+                      Hủy phiếu
+                    </Button>
+                  )}
+                </Actions>
+              )}
+
+              <Section title="Thông tin phiếu">
+                <Facts
+                  items={[
+                    ["Ngày nhập", date(r.receiptDate)],
+                    ["Nhà cung cấp", r.supplier.name],
+                    ["Vùng nuôi", `${r.zone.code ?? ""} ${r.zone.name ?? ""}`.trim()],
+                    ["Bè", r.raft?.code],
+                    ["Ghi chú", r.notes],
+                    ["Hoàn tất lúc", r.completedAt ? dateTime(r.completedAt) : null],
+                    ["Hủy lúc", r.cancelledAt ? dateTime(r.cancelledAt) : null],
+                  ]}
+                />
               </Section>
 
               <Section title="Tiền">
@@ -108,9 +137,31 @@ function PurchaseDetailPage() {
                     ["Trả hàng", r.returned > 0 ? money(r.returned) : null],
                     ["Đã trả", money(r.paid)],
                     ["Đã hoàn lại", r.refunded > 0 ? money(r.refunded) : null],
-                    ["Còn nợ", <span key="o" className={r.outstanding > 0 ? "text-danger" : undefined}>{money(r.outstanding)}</span>],
                   ]}
                 />
+              </Section>
+
+              <Section title="Dòng hàng">
+                <Rows>
+                  {r.lines.map((l) => (
+                    <Row
+                      key={l.id}
+                      title={l.itemName}
+                      meta={
+                        <MetaLines
+                          items={[
+                            ["Nhóm", INPUT_GROUP[l.group] ?? l.group],
+                            ["Số lượng", num(l.quantity, l.unit ?? undefined)],
+                            ["Đơn giá", money(l.unitPrice)],
+                            ["Thành tiền", money(l.lineAmount)],
+                            ["Đã trả lại", l.returnedQuantity > 0 ? num(l.returnedQuantity) : null],
+                            ["Lô giống", l.seedLotCode],
+                          ]}
+                        />
+                      }
+                    />
+                  ))}
+                </Rows>
               </Section>
 
               {r.payments.length > 0 && (
@@ -122,7 +173,15 @@ function PurchaseDetailPage() {
                         <Row
                           key={p.id}
                           title={money(p.amount)}
-                          meta={`${date(p.paymentDate)} · ${PAYMENT_METHOD[p.method] ?? p.method}${p.referenceCode ? ` · ${p.referenceCode}` : ""}`}
+                          meta={
+                            <MetaLines
+                              items={[
+                                ["Ngày trả", date(p.paymentDate)],
+                                ["Hình thức", PAYMENT_METHOD[p.method] ?? p.method],
+                                ["Mã giao dịch", p.referenceCode],
+                              ]}
+                            />
+                          }
                           badge={p.status !== "Recorded" ? <Badge text={ps.text} tone={ps.tone} /> : undefined}
                         />
                       );
@@ -135,46 +194,42 @@ function PurchaseDetailPage() {
                 <Section title="Trả hàng">
                   <Rows>
                     {r.returns.map((x) => (
-                      <Row key={x.id} title={x.code} meta={`${date(x.returnDate)}${x.reason ? ` · ${x.reason}` : ""}`} value={money(x.returnValue)} />
+                      <Row
+                        key={x.id}
+                        title={x.code}
+                        meta={
+                          <MetaLines
+                            items={[
+                              ["Ngày trả", date(x.returnDate)],
+                              ["Lý do", x.reason],
+                              ["Giá trị", money(x.returnValue)],
+                            ]}
+                          />
+                        }
+                      />
                     ))}
                   </Rows>
                 </Section>
               )}
 
-              {isDraft && (
-                <Actions>
-                  <Button variant="secondary" size="large" onClick={() => navigate(`/manage/purchases/${r.id}/edit`)}>
-                    Sửa
-                  </Button>
-                  <Button size="large" onClick={() => setCompleting(true)}>
-                    Hoàn tất
-                  </Button>
-                </Actions>
-              )}
-              {canPay && (
-                <Actions>
-                  <Button size="large" onClick={() => setPaying(true)}>
-                    Ghi trả tiền
-                  </Button>
-                </Actions>
-              )}
-              {canCancel && (
-                <Actions>
-                  <Button variant="tertiary" type="danger" size="large" onClick={() => setCancelling(true)}>
-                    Hủy phiếu
-                  </Button>
-                </Actions>
-              )}
-
-              <Modal
+              <ConfirmSheet
                 visible={completing}
                 title="Hoàn tất phiếu nhập?"
-                description="Phiếu hoàn tất sẽ được tính vào công nợ nhà cung cấp và không sửa được nữa."
+                message={
+                  <div className="form">
+                    <Facts
+                      items={[
+                        ["Nhà cung cấp", r.supplier.name],
+                        ["Tổng phải trả", money(r.payable)],
+                      ]}
+                    />
+                    <p>Phiếu hoàn tất sẽ được tính vào công nợ nhà cung cấp và không sửa được nữa.</p>
+                  </div>
+                }
+                confirmText="Hoàn tất"
+                busy={busy}
                 onClose={() => setCompleting(false)}
-                actions={[
-                  { text: "Để sau", close: true },
-                  { text: "Hoàn tất", highLight: true, disabled: busy, onClick: () => void complete() },
-                ]}
+                onConfirm={() => void complete()}
               />
 
               <ReasonSheet
@@ -183,6 +238,7 @@ function PurchaseDetailPage() {
                 intro="Phiếu đã hủy không dùng lại được. Muốn nhập lại, lập phiếu mới."
                 confirmText="Hủy phiếu"
                 required
+                danger
                 maxLength={1000}
                 busy={busy}
                 onClose={() => setCancelling(false)}
@@ -258,11 +314,11 @@ function PaymentSheet({ visible, receipt, onClose, onPaid }: { visible: boolean;
         <p className="form__intro">
           Phiếu {receipt.code} còn nợ {money(receipt.outstanding)}.
         </p>
-        <NumberInput label="Số tiền (đồng)" value={amount} onChange={setAmount} disabled={busy} helperText="Bội số của 1.000 đồng." />
-        <Button variant="tertiary" size="small" onClick={() => setAmount(String(receipt.outstanding))} disabled={busy}>
+        <NumberInput label="Số tiền (bắt buộc)" value={amount} onChange={setAmount} disabled={busy} helperText="Bội số của 1.000 đồng." />
+        <Button fullWidth variant="secondary" size="large" onClick={() => setAmount(String(receipt.outstanding))} disabled={busy}>
           Trả hết {money(receipt.outstanding)}
         </Button>
-        <DateField label="Ngày trả" value={paymentDate} onChange={setPaymentDate} disabled={busy} />
+        <DateField label="Ngày trả (bắt buộc)" value={paymentDate} onChange={setPaymentDate} disabled={busy} />
         <Select label="Hình thức" value={method} onChange={(v) => setMethod(v as PaymentMethod)} closeOnSelect disabled={busy}>
           {(Object.keys(PAYMENT_METHOD) as PaymentMethod[]).map((k) => (
             <Select.Option key={k} value={k} title={PAYMENT_METHOD[k]} />

@@ -8,6 +8,7 @@ import { Rows } from "@/components/Rows/Rows";
 import { Section } from "@/components/Section/Section";
 import { useLoad } from "@/hooks/useLoad";
 import { date, money } from "@/utils/format";
+import { MetaLines } from "@/features/purchasing/components/MetaLines/MetaLines";
 import { listRaftMaterialCosts } from "@/features/purchasing/services/purchasingService";
 
 /**
@@ -46,8 +47,14 @@ function RaftCostsPage() {
                         <Row
                           key={r.raft.id}
                           title={`Bè ${r.raft.code ?? ""}`}
-                          meta={r.receipts.map((x) => `${x.code} (${date(x.receiptDate)})`).join(", ")}
-                          value={money(r.materialCost)}
+                          meta={
+                            <MetaLines
+                              items={[
+                                ["Chi phí", money(r.materialCost)],
+                                ["Phiếu nhập", r.receipts.map((x) => `${x.code} (${date(x.receiptDate)})`).join(", ")],
+                              ]}
+                            />
+                          }
                           // Bè chỉ có một phiếu thì mở thẳng phiếu đó.
                           onClick={r.receipts.length === 1 ? () => navigate(`/manage/purchases/${r.receipts[0].receiptId}`) : undefined}
                         />

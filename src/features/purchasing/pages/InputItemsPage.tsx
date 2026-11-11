@@ -5,6 +5,7 @@ import { Button, Input, Select, Sheet } from "zmp-ui";
 import FormError from "@/components/FormError/FormError";
 import { Badge } from "@/components/Badge/Badge";
 import { Chips } from "@/components/Chips/Chips";
+import { ConfirmSheet } from "@/components/ConfirmSheet/ConfirmSheet";
 import { Empty } from "@/components/Empty/Empty";
 import { Loadable } from "@/components/Loadable/Loadable";
 import { ManagePage } from "@/components/ManagePage/ManagePage";
@@ -87,11 +88,27 @@ function ItemSheet({
   onSaved: (item: InputItem) => void;
 }) {
   const existing = item && item !== "new" ? item : null;
+  // Sheet của ZaUI không portal ra ngoài và khung có transform, nên sheet xác nhận phải đặt cạnh sheet sửa, không lồng bên trong.
+  const [stopping, setStopping] = useState<(() => void) | null>(null);
   return (
-    <Sheet visible={item !== null} onClose={onClose} autoHeight mask handler swipeToClose title={existing ? "Sửa vật tư" : "Thêm vật tư"}>
-      {/* Đổi key để form nạp lại giá trị mỗi lần mở cho một vật tư khác. */}
-      {item !== null && <ItemForm key={existing?.id ?? "new"} existing={existing} defaultGroup={defaultGroup} onClose={onClose} onSaved={onSaved} />}
-    </Sheet>
+    <>
+      <Sheet visible={item !== null} onClose={onClose} autoHeight mask handler swipeToClose title={existing ? "Sửa vật tư" : "Thêm vật tư"}>
+        {/* Đổi key để form nạp lại giá trị mỗi lần mở cho một vật tư khác. */}
+        {item !== null && <ItemForm key={existing?.id ?? "new"} existing={existing} defaultGroup={defaultGroup} onClose={onClose} onSaved={onSaved} onAskStop={(stop) => setStopping(() => stop)} />}
+      </Sheet>
+      <ConfirmSheet
+        visible={stopping !== null}
+        title="Ngừng dùng vật tư này?"
+        message={`${existing?.name ?? "Vật tư này"} sẽ không chọn được khi lập phiếu nhập mới. Có thể dùng lại sau.`}
+        confirmText="Ngừng dùng vật tư"
+        danger
+        onClose={() => setStopping(null)}
+        onConfirm={() => {
+          stopping?.();
+          setStopping(null);
+        }}
+      />
+    </>
   );
 }
 
@@ -100,11 +117,13 @@ function ItemForm({
   defaultGroup,
   onClose,
   onSaved,
+  onAskStop,
 }: {
   existing: InputItem | null;
   defaultGroup: InputItemGroup;
   onClose: () => void;
   onSaved: (item: InputItem) => void;
+  onAskStop: (stop: () => void) => void;
 }) {
   const [code, setCode] = useState(existing?.code ?? "");
   const [name, setName] = useState(existing?.name ?? "");
@@ -141,14 +160,14 @@ function ItemForm({
   return (
     <div className="sheet-form form">
       {locked && <p className="form__hint">Vật tư đã có trong phiếu nhập nên không đổi được mã, nhóm và đơn vị.</p>}
-      <Input label="Mã" value={code} onChange={(e) => setCode(e.target.value)} maxLength={50} disabled={busy || locked} />
-      <Input label="Tên" value={name} onChange={(e) => setName(e.target.value)} maxLength={200} disabled={busy} />
+      <Input label="Mã (bắt buộc)" value={code} onChange={(e) => setCode(e.target.value)} maxLength={50} disabled={busy || locked} />
+      <Input label="Tên (bắt buộc)" value={name} onChange={(e) => setName(e.target.value)} maxLength={200} disabled={busy} />
       <Select label="Nhóm" value={group} onChange={(v) => setGroup(v as InputItemGroup)} closeOnSelect disabled={busy || locked}>
         {(Object.keys(INPUT_GROUP) as InputItemGroup[]).map((k) => (
           <Select.Option key={k} value={k} title={INPUT_GROUP[k]} />
         ))}
       </Select>
-      <Input label="Đơn vị (cái, cuộn, kg…)" value={unit} onChange={(e) => setUnit(e.target.value)} maxLength={50} disabled={busy || locked} />
+      <Input label="Đơn vị (bắt buộc)" helperText="Ví dụ: cái, cuộn, kg…" value={unit} onChange={(e) => setUnit(e.target.value)} maxLength={50} disabled={busy || locked} />
       <Input.TextArea label="Mô tả" value={description} onChange={(e) => setDescription(e.target.value)} maxLength={500} showCount disabled={busy} />
       <FormError text={error} />
       <Button fullWidth size="large" loading={busy} disabled={busy} onClick={save}>
@@ -161,7 +180,11 @@ function ItemForm({
           variant="tertiary"
           type={inUse ? "danger" : "highlight"}
           disabled={busy}
-          onClick={() => void submit(() => setInputItemInUse(existing.id, !inUse))}
+          onClick={() => {
+            const toggle = () => void submit(() => setInputItemInUse(existing.id, !inUse));
+            if (inUse) onAskStop(toggle);
+            else toggle();
+          }}
         >
           {inUse ? "Ngừng dùng vật tư này" : "Dùng lại vật tư này"}
         </Button>

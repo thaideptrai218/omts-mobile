@@ -38,7 +38,7 @@ function EmployeesPage() {
         </Button>
       }
     >
-      <SearchBox placeholder="Tìm theo tên hoặc số điện thoại" onSearch={setSearch} />
+      <SearchBox label="Tìm nhân viên" placeholder="Tên hoặc số điện thoại" onSearch={setSearch} />
       <Chips options={FILTERS} value={filter} onChange={setFilter} />
       <PagedList list={list} unit="nhân viên" emptyIcon="zi-group" emptyTitle="Không có nhân viên nào" emptyText={search ? "Thử tìm bằng tên hoặc số khác." : undefined}>
         {(e) => {

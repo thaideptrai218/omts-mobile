@@ -12,6 +12,7 @@ import { useAction } from "@/hooks/useAction";
 import { useLoad } from "@/hooks/useLoad";
 import { date, money } from "@/utils/format";
 import { PAYMENT_METHOD, statusLabel } from "@/utils/labels";
+import { MetaLines } from "@/features/purchasing/components/MetaLines/MetaLines";
 import { listSupplierPayments } from "@/features/purchasing/services/purchasingService";
 
 const PAGE_SIZE = 20;
@@ -38,6 +39,9 @@ function SupplierPaymentsPage() {
 
   return (
     <ManagePage title="Trả tiền nhà cung cấp">
+      <Button fullWidth variant="secondary" size="large" onClick={() => navigate("/manage/supplier-debts")}>
+        Xem công nợ từng nhà cung cấp
+      </Button>
       <Loadable data={data} error={error} reload={() => void reload()}>
         {(result) => {
           const rows = [...result.page.items, ...extra];
@@ -63,9 +67,17 @@ function SupplierPaymentsPage() {
                       <Row
                         key={p.id}
                         title={p.supplier.name}
-                        meta={`${date(p.paymentDate)} · ${PAYMENT_METHOD[p.method] ?? p.method}${p.receiptCode ? ` · ${p.receiptCode}` : " · Chưa gắn phiếu"}`}
+                        meta={
+                          <MetaLines
+                            items={[
+                              ["Số tiền", money(p.amount)],
+                              ["Ngày trả", date(p.paymentDate)],
+                              ["Hình thức", PAYMENT_METHOD[p.method] ?? p.method],
+                              ["Phiếu nhập", p.receiptCode || "Chưa gắn phiếu"],
+                            ]}
+                          />
+                        }
                         badge={p.status !== "Recorded" ? <Badge text={st.text} tone={st.tone} /> : undefined}
-                        value={money(p.amount)}
                         onClick={p.receiptId ? () => navigate(`/manage/purchases/${p.receiptId}`) : undefined}
                       />
                     );

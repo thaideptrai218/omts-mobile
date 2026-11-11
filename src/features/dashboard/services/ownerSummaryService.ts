@@ -25,7 +25,7 @@ export async function loadOwnerSummary(): Promise<OwnerSummary> {
     settle(api<DebtRow[]>("/api/suppliers/debts")),
     settle(api<ReceiptSearch>(`/api/purchase-receipts?StatusId=${DRAFT_RECEIPT}&PageSize=1`)),
     settle(listTraderRequests()),
-    settle(listPurchaseRequests(false, "AWAITING_RESPONSE")),
+    settle(listPurchaseRequests("awaitingResponse")),
   ]);
 
   const stats: Stat[] = [];

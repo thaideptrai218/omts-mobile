@@ -7,6 +7,8 @@ import "@vietmap/vietmap-gl-js/dist/vietmap-gl.css";
 import { VIETMAP_API_KEY } from "@/constants/env";
 import { coordinateText } from "@/utils/coordinates";
 
+import "@/features/farming/components/LocationMap/LocationMap.scss";
+
 export default function LocationMap({ initial, center, onConfirm }: { initial: Coordinates | null; center?: Coordinates | null; onConfirm: (position: Coordinates) => void }) {
   const container = useRef<HTMLDivElement>(null);
   const [start] = useState(initial);
@@ -32,7 +34,7 @@ export default function LocationMap({ initial, center, onConfirm }: { initial: C
         if (!map || disposed) return;
         setSelected(position);
         if (!marker) {
-          marker = new vietmapgl.Marker({ color: "#006AF5", draggable: true }).setLngLat([position.longitude, position.latitude]).addTo(map);
+          marker = new vietmapgl.Marker({ color: "#0050C8", draggable: true }).setLngLat([position.longitude, position.latitude]).addTo(map);
           marker.on("dragend", () => { const point = marker!.getLngLat(); setSelected({ latitude: point.lat, longitude: point.lng }); });
         } else marker.setLngLat([position.longitude, position.latitude]);
       };
@@ -41,16 +43,16 @@ export default function LocationMap({ initial, center, onConfirm }: { initial: C
       map.on("error", (event) => {
         failed = true;
         const status = (event.error as Error & { status?: number }).status;
-        if (!disposed) setError(status === 423 || status === 429 ? "VIETMAP đang giới hạn dịch vụ bản đồ. Bạn vẫn có thể nhập tọa độ bằng tay hoặc lấy vị trí qua Zalo." : "Không tải được bản đồ. Vui lòng kiểm tra kết nối và cấu hình dịch vụ.");
+        if (!disposed) setError(status === 423 || status === 429 ? "Bản đồ đang bị giới hạn lượt tải. Bạn vẫn có thể nhập tọa độ bằng tay hoặc lấy vị trí điện thoại." : "Không tải được bản đồ. Vui lòng kiểm tra kết nối và cấu hình dịch vụ.");
       });
       if (typeof ResizeObserver !== "undefined") { observer = new ResizeObserver(() => map?.resize()); observer.observe(container.current); }
-    } catch { setError("Thiết bị chưa mở được bản đồ. Bạn có thể nhập tọa độ bằng tay hoặc dùng Zalo."); }
+    } catch { setError("Thiết bị chưa mở được bản đồ. Bạn có thể nhập tọa độ bằng tay hoặc lấy vị trí điện thoại."); }
     return () => { disposed = true; window.clearTimeout(timer); observer?.disconnect(); marker?.remove(); map?.remove(); };
   }, [attempt, start, viewCenter]);
-  if (!VIETMAP_API_KEY) return <p className="form__hint">Chưa cấu hình dịch vụ bản đồ. Bạn có thể nhập tọa độ bằng tay hoặc dùng Zalo.</p>;
+  if (!VIETMAP_API_KEY) return <p className="form__hint">Chưa cấu hình dịch vụ bản đồ. Bạn có thể nhập tọa độ bằng tay hoặc lấy vị trí điện thoại.</p>;
   return <>
     <p className="form__hint">Chạm trên bản đồ để đặt ghim, kéo ghim để chỉnh. Sau đó bấm Dùng tọa độ này.</p>
-    <div ref={container} style={{ height: "42vh", minHeight: "16rem", width: "100%", borderRadius: "1rem" }} role="region" aria-label="Bản đồ chọn vị trí" />
+    <div ref={container} className="location-map" role="region" aria-label="Bản đồ chọn vị trí" />
     {!ready && !error && <p role="status">Đang tải bản đồ…</p>}
     {error && <div role="alert"><p>{error}</p><Button variant="secondary" onClick={() => setAttempt((value) => value + 1)}>Thử lại bản đồ</Button></div>}
     {selected && <p>Vĩ độ: {coordinateText(selected.latitude)} · Kinh độ: {coordinateText(selected.longitude)}</p>}

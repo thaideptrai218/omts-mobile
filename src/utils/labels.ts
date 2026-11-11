@@ -26,7 +26,7 @@ const STATUS: Record<string, Label> = {
 
 export function statusLabel(status: string | null | undefined): Label {
   if (!status) return { text: "—", tone: "neutral" };
-  return STATUS[status] ?? { text: status, tone: "neutral" };
+  return STATUS[status] ?? { text: "Trạng thái khác", tone: "neutral" };
 }
 
 /** Mã trạng thái phép đo nước (`statusCode`). */
@@ -38,7 +38,7 @@ const WATER_STATUS: Record<string, Label> = {
 };
 
 export function waterStatusLabel(code: string | null | undefined): Label {
-  return (code && WATER_STATUS[code]) || { text: code ?? "—", tone: "neutral" };
+  return (code && WATER_STATUS[code]) || { text: code ? "Trạng thái khác" : "—", tone: "neutral" };
 }
 
 export const LICENSE_STATE: Record<string, Label> = {
@@ -55,6 +55,7 @@ export const DOCUMENT_TYPE: Record<string, string> = {
   AQUACULTURE_LICENSE: "Giấy phép nuôi trồng thủy sản trên biển",
   FOOD_SAFETY_COMMITMENT: "Cam kết an toàn thực phẩm",
   SEA_AREA_ALLOCATION: "Quyết định giao khu vực biển",
+  OTHER: "Giấy tờ khác",
 };
 
 export const SUPPLIER_TYPE: Record<string, string> = {

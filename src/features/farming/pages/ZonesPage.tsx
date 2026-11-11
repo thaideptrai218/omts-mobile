@@ -38,7 +38,7 @@ function ZonesPage() {
         </Button>
       }
     >
-      <SearchBox placeholder="Tìm theo mã, tên vùng" onSearch={setSearch} />
+      <SearchBox label="Tìm vùng nuôi" placeholder="Nhập mã hoặc tên vùng" onSearch={setSearch} />
       <Chips options={FILTERS} value={filter} onChange={setFilter} />
       <Loadable data={data} error={error} reload={() => void reload()}>
         {(page) =>

@@ -1,9 +1,12 @@
 import type { ProfileView } from "@/features/account/models/Profile";
 import { FormEvent, useCallback, useEffect, useState } from "react";
-import { Button, Header, Icon, Input, Modal, Page, useSnackbar } from "zmp-ui";
+import { Button, Icon, Input, Modal, useSnackbar } from "zmp-ui";
 
 import FormError from "@/components/FormError/FormError";
+import { Loadable } from "@/components/Loadable/Loadable";
+import { ManagePage } from "@/components/ManagePage/ManagePage";
 import { errorText } from "@/utils/errorText";
+import { roleName } from "@/utils/labels";
 import { FIELD, MESSAGES } from "@/constants/messages";
 import { getProfile, updateProfile } from "@/features/account/services/profileService";
 
@@ -77,21 +80,18 @@ function ProfilePage() {
   const isStaff = profile?.subjectType === "Staff";
 
   return (
-    <Page className="screen screen--detail" hideScrollbar>
-      <Header title="Hồ sơ cá nhân" className="detail-header" />
-      <div className="screen__body">
-        {!profile && !loadError && <div className="skeleton skeleton--form" aria-busy />}
-        {loadError && (
-          <div className="empty">
-            <p className="empty__title">Không tải được hồ sơ</p>
-            <p className="empty__text">{loadError}</p>
-            <Button size="large" onClick={() => void load()}>
-              Thử lại
-            </Button>
-          </div>
-        )}
-
-        {profile && (
+    <ManagePage
+      title="Hồ sơ cá nhân"
+      footer={
+        profile ? (
+          <Button fullWidth size="large" loading={saving} disabled={saving} onClick={(e) => void save(e)}>
+            Lưu thay đổi
+          </Button>
+        ) : undefined
+      }
+    >
+      <Loadable data={profile} error={loadError} reload={() => void load()}>
+        {(p) => (
           <form className="form" onSubmit={save} noValidate>
             <section className="card readonly">
               <dl className="info info--flat">
@@ -99,26 +99,26 @@ function ProfilePage() {
                   <dt>Tên đăng nhập</dt>
                   <dd>
                     <button type="button" className="readonly__value" onClick={() => openSnackbar({ text: MESSAGES.MSG20, type: "info", duration: 6000 })}>
-                      {profile.username}
+                      {p.username}
                       <Icon icon="zi-lock" />
                     </button>
                   </dd>
                 </div>
                 <div>
                   <dt>Loại tài khoản</dt>
-                  <dd>{SUBJECT_LABEL[profile.subjectType]}</dd>
+                  <dd>{SUBJECT_LABEL[p.subjectType]}</dd>
                 </div>
                 {isStaff && (
                   <div>
                     <dt>Vai trò và vùng nuôi</dt>
                     <dd>
-                      {profile.grants.length === 0 ? (
+                      {p.grants.length === 0 ? (
                         "Chưa được cấp quyền"
                       ) : (
                         <ul className="plain-list">
-                          {profile.grants.map((g, i) => (
+                          {p.grants.map((g, i) => (
                             <li key={i}>
-                              {g.role}, {g.allZones ? "toàn HTX" : (g.zoneName ?? "một vùng")}
+                              {roleName(g.role)}, {g.allZones ? "toàn HTX" : (g.zoneName ?? "một vùng")}
                             </li>
                           ))}
                         </ul>
@@ -130,7 +130,7 @@ function ProfilePage() {
             </section>
 
             <Input
-              label="Tên hiển thị"
+              label="Tên hiển thị (bắt buộc)"
               size="large"
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
@@ -139,17 +139,14 @@ function ProfilePage() {
               disabled={saving}
             />
 
-            <ContactRow label="Số điện thoại Zalo đã liên kết" value={profile.phoneNumber} />
-            <ContactRow label="Email" value={profile.email} />
+            <ContactRow label="Số điện thoại Zalo đã liên kết" value={p.phoneNumber} />
+            <ContactRow label="Email" value={p.email} />
             <p className="form__hint">Muốn đổi số điện thoại hoặc email, liên hệ HTX.</p>
 
-            <FormError text={error} />
-            <Button htmlType="submit" fullWidth size="large" loading={saving} disabled={saving}>
-              Lưu thay đổi
-            </Button>
+            <FormError text={error || loadError} />
           </form>
         )}
-      </div>
+      </Loadable>
 
       <Modal
         visible={!!conflict}
@@ -169,7 +166,7 @@ function ProfilePage() {
           { text: "Hủy", close: true },
         ]}
       />
-    </Page>
+    </ManagePage>
   );
 }
 

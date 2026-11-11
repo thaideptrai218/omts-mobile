@@ -1,72 +1,226 @@
 /*
- * Giao diện cho người lớn tuổi: màu xanh của Zalo (#006AF5, bảng màu ZaUI), chữ lớn, tương phản cao,
- * vùng chạm rộng. Cỡ chữ và khoảng cách dòng tính bằng rem để đổi theo lựa chọn "Cỡ chữ"
- * (thuộc tính data-text-size trên thẻ <html>, xem src/services/textSizeService.ts).
- * Màu chữ phụ đậm hơn mặc định của ZaUI (#767A7F) để đạt tương phản 7:1 trên nền trắng.
+ * "Bến hàu": biển gặp bãi cát. Đầu trang màu biển có viền sóng, nền trang màu cát, mỗi khu vực chức năng một màu và một
+ * hình riêng để người lớn tuổi nhớ đường bằng màu và hình. Nút có gờ dày, trông như bấm được và lún xuống khi bấm.
+ * Chữ đọc không dưới 16px (0,9375rem ở gốc 18px), chữ trắng trên mọi nền màu đạt tối thiểu 5,8:1.
+ * Cỡ chữ và khoảng cách dòng tính bằng rem để đổi theo lựa chọn "Cỡ chữ" (thuộc tính data-text-size trên thẻ <html>,
+ * xem src/services/textSizeService.ts); ZaUI tự viết px nên phải ghi đè bằng rem ở dưới đây.
  */
+
+// ZaUI viết lại nhiều thuộc tính dưới selector chế độ tối (độ ưu tiên cao hơn), nên phải ghi đè cả hai nơi.
+$dark: 'body[zaui-theme="dark"]';
+
+/* Be Vietnam Pro: font thiết kế cho tiếng Việt, dấu rõ và không dính dòng. Nhúng sẵn trong app, thiếu thì về font máy. */
+$vietnamese-range: "U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB";
+$latin-range: "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD";
+
+@each $weight in (400, 500, 700) {
+  @font-face {
+    font-family: "Be Vietnam Pro";
+    font-style: normal;
+    font-weight: $weight;
+    font-display: swap;
+    src: url("../fonts/be-vietnam-pro-vietnamese-#{$weight}-normal.woff2") format("woff2");
+    unicode-range: #{$vietnamese-range};
+  }
+
+  @font-face {
+    font-family: "Be Vietnam Pro";
+    font-style: normal;
+    font-weight: $weight;
+    font-display: swap;
+    src: url("../fonts/be-vietnam-pro-latin-#{$weight}-normal.woff2") format("woff2");
+    unicode-range: #{$latin-range};
+  }
+}
+
+html body {
+  font-family: "Be Vietnam Pro", -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
 html {
-  font-size: 16px;
+  font-size: 18px;
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
 }
 
 html[data-text-size="xlarge"] {
-  font-size: 18px;
+  font-size: 21px;
 }
 
 :root {
-  --brand: #006af5;
-  --brand-pressed: #0250b6;
-  --brand-soft: #e5f0ff;
-  /* Xanh đậm hơn một chút cho chữ trên nền trắng. */
-  --brand-text: #0052cc;
-  --header-bg: #006af5;
-  --page: #f2f4f7;
+  /* Biển: màu nút chính và đầu trang. Cát: nền trang. Phao: màu nhấn duy nhất, dành cho nút Quét mã và số chưa đọc. */
+  --brand: #0b5a7d;
+  --brand-pressed: #07415f;
+  --brand-soft: #d9eff3;
+  --brand-text: #07496a;
+  --header-bg: #0a4c6e;
+  --buoy: #ffc72c;
+  --buoy-edge: #c99700;
+  --on-buoy: #10303f;
+  --page: #fff6e3;
   --surface: #ffffff;
-  --ink: #141415;
-  --ink-2: #44484d;
-  --line: #d6d9dc;
-  --ok: #157f3b;
+  --ink: #102a38;
+  --ink-2: #3a5260;
+  /* Viền thẻ nhạt màu cát; viền ô nhập và chip đậm hơn (tối thiểu 3:1) vì phải nhận ra được đó là chỗ bấm. */
+  --line: #e0cfa8;
+  --line-soft: #efe3c8;
+  --line-strong: #4f7482;
+  /* Gờ dưới của thẻ và nút phụ. */
+  --edge: rgba(122, 94, 40, 0.22);
+  --ok: #0a5a2b;
   --ok-soft: #e3f5e9;
-  --warn: #a65200;
-  --warn-soft: #fff1e0;
-  --danger: #c4170f;
+  --warn: #7a4a00;
+  --warn-soft: #fff0cf;
+  --danger: #8f1009;
   --danger-soft: #ffe9e8;
+
+  /* Khu vực chưa xác định dùng màu biển; [data-area] ở dưới ghi đè. */
+  --area: var(--brand);
+  --area-dark: var(--brand-pressed);
+  --area-soft: #d9eff3;
+  --area-text: #0b5a7d;
 
   /* Chừa chỗ cho nút menu cố định của Zalo ở góc trên bên phải. */
   --capsule-space: 104px;
   /* Thanh trạng thái trong suốt: lấy safe area, tối thiểu 28px cho máy Android không báo safe area. */
   --top-safe: max(var(--zaui-safe-area-inset-top, 0px), 28px);
+  /* Điểm bắt đầu của nội dung: băng mất mạng (OfflineBanner đo và gán --offline-height) đã gồm cả thanh trạng thái. */
+  --top-clear: max(var(--top-safe), var(--offline-height, 0px));
   --bottom-safe: var(--zaui-safe-area-inset-bottom, 0px);
-  --nav-height: 64px;
-  --radius: 16px;
+  --nav-height: 80px;
+  --radius: 18px;
+  --radius-sm: 12px;
 
-  /* Màu ZaUI: giữ xanh mặc định, làm đậm chữ phụ, viền ô nhập và chữ tab chưa chọn. */
-  --zaui-light-input-border-color: #8f9499;
-  --zaui-light-input-placeholder-color: #767a7f;
-  --zaui-light-input-helper-text-color: var(--ink-2);
+  /*
+   * Biến của ZaUI: bản tối cũng khai báo ở :root, vì ZaUI tính các biến nút từ --zaui-dark-color-primary ngay tại :root,
+   * đặt ở body thì các biến dẫn xuất không đổi theo.
+   */
+  --zaui-light-color-primary: #0b5a7d;
+  --zaui-light-button-primary-background-pressed: #07415f;
+  --zaui-light-button-primary-danger-background: #8f1009;
+  --zaui-light-button-primary-danger-background-pressed: #6f0c07;
+  --zaui-light-button-secondary-background: #ffffff;
+  --zaui-light-button-secondary-background-pressed: #d9eff3;
+  --zaui-light-button-secondary-text: #07496a;
+  --zaui-light-button-secondary-danger-background: #ffffff;
+  --zaui-light-button-secondary-danger-background-pressed: #ffe9e8;
+  --zaui-light-button-secondary-danger-text: #8f1009;
+  --zaui-light-button-secondary-neutral-background: #ffffff;
+  --zaui-light-button-secondary-neutral-background-pressed: #e9ebed;
+  --zaui-light-button-tertiary-background-pressed: #d9eff3;
+  --zaui-light-button-tertiary-text: #07496a;
+  --zaui-light-button-tertiary-danger-text: #8f1009;
+  --zaui-light-button-background-disabled: #e9ebed;
+  --zaui-light-button-text-disabled: #5b5f64;
+  --zaui-light-input-border-color: #4f7482;
+  --zaui-light-input-hover-border-color: #0b5a7d;
+  --zaui-light-input-placeholder-color: #55595e;
+  --zaui-light-input-helper-text-color: #44484d;
+  --zaui-light-input-disabled-color: #44484d;
+  --zaui-light-input-status-error: #8f1009;
+  --zaui-light-input-error-text-color: #8f1009;
+  --zaui-light-checkbox-border-color: #767a7f;
+  --zaui-light-checkbox-checked-background: #0b5a7d;
+  --zaui-light-radio-border-color: #767a7f;
+  --zaui-light-radio-checked-background: #0b5a7d;
+  --zaui-light-switch-bg-color: #0b5a7d;
+  --zaui-light-switch-off-bg-color: #767a7f;
+  --zaui-light-picker-option-color: #44484d;
+  --zaui-light-picker-option-2nd-color: #44484d;
+  --zaui-light-picker-option-selected-color: #07496a;
+  --zaui-light-option-selected-color: #07496a;
+  --zaui-light-progress-completed: #0b5a7d;
+  --zaui-light-slider-track-active-bg-color: #0b5a7d;
+  --zaui-light-slider-thumb-bg-color: #0b5a7d;
+  --zaui-light-tabbar-active-line: #0b5a7d;
+  --zaui-light-tabbar-label: #44484d;
+  --zaui-light-bottom-navigation-active-color: #0b5a7d;
+
+  --zaui-dark-color-primary: #0b5a7d;
+  --zaui-dark-button-primary-background-pressed: #07415f;
+  --zaui-dark-button-primary-danger-background: #8f1009;
+  --zaui-dark-button-primary-danger-background-pressed: #6f0c07;
+  --zaui-dark-button-secondary-background: #0f3645;
+  --zaui-dark-button-secondary-background-pressed: #0f3b4c;
+  --zaui-dark-button-secondary-text: #9fdcea;
+  --zaui-dark-button-secondary-danger-background: #0f3645;
+  --zaui-dark-button-secondary-danger-background-pressed: #3d1210;
+  --zaui-dark-button-secondary-danger-text: #ffa39e;
+  --zaui-dark-button-secondary-neutral-background: #0f3645;
+  --zaui-dark-button-tertiary-background-pressed: #0f3b4c;
+  --zaui-dark-button-tertiary-text: #9fdcea;
+  --zaui-dark-button-tertiary-danger-text: #ffa39e;
+  --zaui-dark-button-background-disabled: #36383a;
+  --zaui-dark-button-text-disabled: #c4c8cc;
+  --zaui-dark-input-border-color: #a4a9ae;
+  --zaui-dark-input-hover-border-color: #9fdcea;
+  --zaui-dark-input-placeholder-color: #a4a9ae;
+  --zaui-dark-input-helper-text-color: #c4c8cc;
+  --zaui-dark-input-disabled-color: #c4c8cc;
+  --zaui-dark-input-status-error: #ffa39e;
+  --zaui-dark-input-error-text-color: #ffa39e;
+  --zaui-dark-checkbox-border-color: #a4a9ae;
+  --zaui-dark-checkbox-checked-background: #0b5a7d;
+  --zaui-dark-radio-border-color: #a4a9ae;
+  --zaui-dark-radio-checked-background: #0b5a7d;
+  --zaui-dark-switch-bg-color: #0b5a7d;
+  --zaui-dark-switch-off-bg-color: #8f9499;
+  --zaui-dark-picker-option-color: #c4c8cc;
+  --zaui-dark-picker-option-2nd-color: #c4c8cc;
+  --zaui-dark-picker-option-selected-color: #9fdcea;
+  --zaui-dark-option-selected-color: #9fdcea;
+  --zaui-dark-progress-completed: #9fdcea;
+  --zaui-dark-slider-track-active-bg-color: #9fdcea;
+  --zaui-dark-slider-thumb-bg-color: #9fdcea;
+  --zaui-dark-tabbar-active-line: #9fdcea;
+  --zaui-dark-tabbar-label: #c4c8cc;
+  --zaui-dark-bottom-navigation-active-color: #9fdcea;
 }
 
 body[zaui-theme="dark"] {
-  --brand-soft: #0d2a52;
-  --brand-text: #8fc1ff;
-  /* Nền đầu trang tối hơn để đỡ chói khi dùng chế độ tối, chữ trắng vẫn rõ. */
-  --header-bg: #0a4fb3;
-  --page: #0e0f10;
-  --surface: #1d1e20;
-  --ink: #f4f5f6;
-  --ink-2: #c4c8cc;
-  --line: #36383a;
-  --ok: #5fd38a;
+  --brand-soft: #0f3b4c;
+  --brand-text: #9fdcea;
+  --page: #082431;
+  --surface: #0f3645;
+  --ink: #f1f8fa;
+  --ink-2: #bfd5dc;
+  --line: #2f5a6b;
+  --line-soft: #234a59;
+  --line-strong: #8fb0bc;
+  --edge: rgba(0, 0, 0, 0.35);
+  --ok: #7fe0a0;
   --ok-soft: #12321f;
-  --warn: #ffb560;
+  --warn: #ffc27a;
   --warn-soft: #3a2608;
-  --danger: #ff8a84;
+  --danger: #ffa39e;
   --danger-soft: #3d1210;
+  --area-soft: #0f3b4c;
+  --area-text: #9fdcea;
+}
 
-  --zaui-dark-input-border-color: #8f9499;
-  --zaui-dark-input-placeholder-color: #8f9499;
-  --zaui-dark-input-helper-text-color: var(--ink-2);
+/* Mỗi khu vực: màu chính, gờ đậm, nền nhạt, rồi nền nhạt và màu chữ ở chế độ tối. */
+$areas: (
+  farm: (#0a6f6c, #074e4c, #d3efe9, #0d3f3d, #8fe3d8),
+  buy: (#b0401a, #7f2d10, #fde4d6, #4a2212, #ffb693),
+  sell: (#2a7339, #1c5127, #dcf1da, #173d20, #9be0a6),
+  people: (#6b3a94, #4c296a, #ece0f6, #36214a, #d6b6f2),
+  org: (#1d579b, #143e70, #dce9f8, #17345a, #a9cdf7),
+  stone: (#54636d, #3b474f, #e4e9ec, #2c3a42, #c4d2da),
+);
+
+@each $name, $c in $areas {
+  [data-area="#{$name}"] {
+    --header-bg: #{nth($c, 1)};
+    --area: #{nth($c, 1)};
+    --area-dark: #{nth($c, 2)};
+    --area-soft: #{nth($c, 3)};
+    --area-text: #{nth($c, 1)};
+  }
+
+  #{$dark} [data-area="#{$name}"] {
+    --area-soft: #{nth($c, 4)};
+    --area-text: #{nth($c, 5)};
+  }
 }
 
 body {
@@ -74,74 +228,371 @@ body {
 }
 
 button:focus-visible {
-  outline: 3px solid var(--brand);
+  outline: 3px solid var(--brand-text);
   outline-offset: 2px;
 }
 
-/* ---------- Component ZaUI: phóng chữ và vùng chạm ---------- */
+/* ---------- Component ZaUI: phóng chữ, vùng chạm và phẳng hóa toàn cục ---------- */
 
+/* Nút: tối thiểu 56px, chữ xuống dòng thay vì bị cắt. Nút chỉ có icon giữ khung vuông 48px ở dưới. */
 .zaui-btn {
+  border-radius: var(--radius);
   font-size: 1.125rem;
   line-height: 1.5rem;
-  font-weight: 600;
+  font-weight: 700;
 }
 
-.zaui-btn-large {
+.zaui-btn:not(.zaui-btn-icon-only) {
   height: auto;
   min-height: 56px;
+  padding: 8px 16px;
+  white-space: normal;
+}
+
+.zaui-btn-small:not(.zaui-btn-icon-only) {
+  min-height: 48px;
+  padding: 6px 12px;
+  font-size: 1rem;
+  line-height: 1.375rem;
+}
+
+.zaui-btn-icon-only,
+.zaui-btn-icon-only.zaui-btn-small,
+.zaui-btn-icon-only.zaui-btn-medium {
+  width: 48px;
+  height: 48px;
+  padding: 12px;
+}
+
+.zaui-btn-icon-only.zaui-btn-small .zaui-btn-icon {
+  width: 24px;
+  height: 24px;
+}
+
+.zaui-btn-icon-only.zaui-btn-small .zaui-icon {
+  font-size: 24px;
+}
+
+.zaui-btn-small .zaui-btn-icon .zaui-icon {
+  font-size: 20px;
+}
+
+/* Nút chính có gờ dày, nút phụ là khung viền có gờ, nút chữ có gạch chân: nhìn là biết bấm được. Bấm thì lún xuống. */
+.zaui-btn-primary:not(.zaui-btn-disabled) {
+  box-shadow: 0 4px 0 var(--brand-pressed);
+}
+
+.zaui-btn-primary.zaui-btn-danger:not(.zaui-btn-disabled) {
+  box-shadow: 0 4px 0 #5e0a06;
+}
+
+.zaui-btn-secondary {
+  border: 2px solid currentColor;
+}
+
+.zaui-btn-secondary:not(.zaui-btn-disabled) {
+  box-shadow: 0 3px 0 var(--edge);
+}
+
+.zaui-btn-primary:not(.zaui-btn-disabled):active,
+.zaui-btn-secondary:not(.zaui-btn-disabled):active {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 var(--edge);
+}
+
+.zaui-btn-tertiary {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* Bản tối của ZaUI lấy nhầm biến chữ của bản sáng cho nút phụ. Nút chính cần viền để tách khỏi nền tối. */
+#{$dark} .zaui-btn-secondary,
+#{$dark} .zaui-btn-secondary.zaui-btn-highlight {
+  color: var(--zaui-dark-button-secondary-text);
+}
+
+#{$dark} .zaui-btn-secondary.zaui-btn-disabled[disabled] {
+  color: var(--zaui-dark-button-text-disabled);
+}
+
+#{$dark} .zaui-btn-primary {
+  border: 2px solid var(--brand-text);
+}
+
+#{$dark} .zaui-btn-primary.zaui-btn-danger {
+  border-color: var(--danger);
+}
+
+#{$dark} .zaui-btn-primary.zaui-btn-disabled[disabled] {
+  border-color: transparent;
+}
+
+.zaui-action-sheet-action-button.zaui-btn {
+  font-size: 1.125rem;
+  line-height: 1.5rem;
+  font-weight: 700;
+}
+
+/* Ô nhập, Select, DatePicker và Input.Search đều dựng từ .zaui-input: đặt 56px cho mọi cỡ, kể cả cỡ mặc định. */
+.zaui-input,
+#{$dark} .zaui-input {
+  border-width: 2px;
+  border-radius: var(--radius-sm);
+  font-size: 1.125rem;
+  line-height: 1.5rem;
+}
+
+.zaui-input:not(.zaui-input-textarea),
+#{$dark} .zaui-input:not(.zaui-input-textarea) {
+  height: 56px;
+}
+
+/* Ô không có icon mặc định trong suốt, trên nền trang xám trông như ô bị khóa: tô cùng nền với ô có icon. */
+.zaui-input:not(.zaui-input-disabled) {
+  background-color: var(--zaui-light-input-background-color, #ffffff);
+}
+
+#{$dark} .zaui-input:not(.zaui-input-disabled) {
+  background-color: #0b2c3a;
+}
+
+/* Ô có icon: khung ngoài mang viền 2px nên phần trong chỉ còn 52px, tổng vẫn 56px. */
+.zaui-input-affix-wrapper .zaui-input:not(.zaui-input-textarea),
+#{$dark} .zaui-input-affix-wrapper .zaui-input:not(.zaui-input-textarea) {
+  height: 52px;
+}
+
+.zaui-input-affix-wrapper {
+  min-height: 56px;
+  border-width: 2px;
+  border-radius: var(--radius-sm);
+}
+
+.zaui-input-textarea {
+  line-height: 1.625rem;
 }
 
 .zaui-input-label {
   font-size: 1rem;
   line-height: 1.5rem;
-  font-weight: 600;
-}
-
-.zaui-input {
-  font-size: 1.125rem;
-  line-height: 1.5rem;
-}
-
-.zaui-input-large {
-  height: 56px;
+  font-weight: 700;
+  white-space: normal;
 }
 
 .zaui-input-helper-text {
-  font-size: 0.9375rem;
-  line-height: 1.375rem;
-}
-
-.zaui-sheet-content,
-.zaui-modal-content {
   font-size: 1rem;
   line-height: 1.5rem;
+}
+
+.zaui-input-helper-text-content {
+  line-height: 1.5rem;
+}
+
+.zaui-input-helper-text-icon {
+  margin-top: 4px;
+}
+
+.zaui-input-show-count-suffix {
+  font-size: 1rem;
+  line-height: 1.5rem;
+}
+
+/* Danh sách của Select và bánh xe của DatePicker */
+.zaui-select-header,
+.zaui-picker-header {
+  min-height: 60px;
+}
+
+.zaui-select-title,
+.zaui-picker-title {
+  padding: 16px 56px;
+  font-size: 1.25rem;
+  line-height: 1.75rem;
+  font-weight: 700;
+  white-space: normal;
+}
+
+/* Nút đóng 24px quá nhỏ: giữ góc phải nhưng vùng chạm 48px. */
+.zaui-select-close-icon.zaui-btn.zaui-btn-icon-only,
+.zaui-select .zaui-btn.zaui-btn-icon-only.zaui-btn-medium.zaui-select-close-icon,
+.zaui-picker-close-icon.zaui-btn.zaui-btn-icon-only,
+.zaui-picker .zaui-btn.zaui-btn-icon-only.zaui-btn-medium.zaui-picker-close-icon {
+  top: 6px;
+  right: 6px;
+  width: 48px;
+  height: 48px;
+  padding: 12px;
+}
+
+.zaui-select-option {
+  padding: 16px 40px 16px 16px;
+  font-size: 1.125rem;
+  line-height: 1.625rem;
+  white-space: normal;
+}
+
+.zaui-select-group {
+  font-size: 1rem;
+  line-height: 1.5rem;
+}
+
+/* Chiều cao dòng bánh xe do ZaUI tính bằng px nên chỉ đổi cỡ chữ. */
+.zaui-picker-item,
+.zaui-picker-item-2nd {
+  font-size: 1.125rem;
+}
+
+.zaui-picker-item-selected {
+  border-radius: var(--radius-sm);
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+/* Checkbox */
+.zaui-checkbox {
+  width: 32px;
+  height: 32px;
+}
+
+.zaui-checkbox-small .zaui-checkbox {
+  width: 28px;
+  height: 28px;
+}
+
+.zaui-checkbox-inner {
+  border-radius: var(--radius-sm);
+}
+
+.zaui-checkbox-checked .zaui-checkbox-inner-check-icon {
+  width: 20px;
+  height: 16px;
+}
+
+.zaui-checkbox-small .zaui-checkbox-inner-check-icon {
+  width: 14px;
+  height: 11px;
+}
+
+.zaui-checkbox-wrapper,
+.zaui-checkbox-wrapper.zaui-checkbox-small {
+  gap: 12px;
+  min-height: 48px;
+  font-size: 1.0625rem;
+  line-height: 1.5rem;
+  font-weight: 500;
+}
+
+/* Công tắc */
+.zaui-switch-wrapper {
+  min-height: 48px;
+}
+
+.zaui-switch {
+  width: 56px;
+  height: 32px;
+  border-radius: 16px;
+}
+
+.zaui-switch::before {
+  width: 28px;
+  height: 28px;
+}
+
+.zaui-switch:checked::before {
+  transform: translate(24px);
+}
+
+.zaui-switch-small {
+  width: 48px;
+  height: 28px;
+}
+
+.zaui-switch-small::before {
+  width: 24px;
+  height: 24px;
+}
+
+.zaui-switch-small:checked::before {
+  transform: translate(20px);
+}
+
+.zaui-switch-label,
+.zaui-switch-label-small {
+  margin-left: 12px;
+  font-size: 1.0625rem;
+  line-height: 1.5rem;
+}
+
+/* Sheet và Modal */
+.zaui-sheet-content,
+.zaui-modal-content {
+  font-size: 1.0625rem;
+  line-height: 1.625rem;
+}
+
+.zaui-sheet-content {
+  border-radius: 24px 24px 0 0;
+  box-shadow: none;
+}
+
+.zaui-sheet-content .zaui-sheet-content-header {
+  height: auto;
+  min-height: 56px;
+  padding: 8px 16px;
 }
 
 .zaui-sheet-content .zaui-sheet-content-header .zaui-sheet-content-title,
 .zaui-modal-content .zaui-modal-content-title {
-  font-size: 1.25rem;
-  line-height: 1.75rem;
+  font-size: 1.375rem;
+  line-height: 1.875rem;
   font-weight: 700;
+}
+
+.zaui-sheet-content .zaui-sheet-content-handler-wrapper .zaui-sheet-content-handler {
+  border-radius: var(--radius-sm);
+}
+
+.zaui-sheet-content-main,
+.zaui-modal-content-main {
+  padding: 16px;
+}
+
+.zaui-sheet-content-actions,
+.zaui-modal-content-actions {
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px 16px;
 }
 
 .zaui-modal-content {
   width: calc(100vw - 32px);
+  border-radius: var(--radius);
 }
 
-.zaui-modal-content-actions .zaui-modal-content-action {
-  min-height: 48px;
+.zaui-sheet-content-actions .zaui-sheet-content-action,
+.zaui-sheet-content-actions .zaui-sheet-content-action:not(:last-child),
+.zaui-modal-content-actions .zaui-modal-content-action,
+.zaui-modal-content-actions .zaui-modal-content-action:not(:last-child) {
+  width: 100%;
+  margin-right: 0;
   padding: 8px 16px;
-  font-size: 1.125rem;
 }
 
 .zaui-snackbar {
+  border-radius: var(--radius);
   font-size: 1rem;
   line-height: 1.5rem;
 }
 
+.zaui-snackbar-action {
+  height: auto;
+  min-height: 48px;
+  font-size: 1rem;
+}
+
 /*
- * Thanh điều hướng dưới: Tổng quan | nút quét QR tròn nổi lên ở giữa | Tài khoản. Tab đang chọn có nền xanh nhạt
- * sau icon; nút quét to, nổi trên thanh để người lớn tuổi dễ thấy và dễ bấm.
+ * Thanh điều hướng dưới: Tổng quan | Quét mã | Tài khoản. Tab đang chọn có nền bo quanh biểu tượng và chữ đậm chứ không
+ * chỉ đổi màu; nút quét là quả phao vàng tròn nhô lên khỏi thanh, nhìn một lần là thấy.
  */
 .tabbar {
   position: fixed;
@@ -150,12 +601,12 @@ button:focus-visible {
   bottom: 0;
   z-index: 40;
   display: grid;
-  grid-template-columns: 1fr 112px 1fr;
-  height: calc(var(--nav-height) + var(--bottom-safe));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  /* Thêm 2px cho viền trên, để các khối bên trong vẫn cao đúng --nav-height. */
+  height: calc(var(--nav-height) + var(--bottom-safe) + 2px);
   padding-bottom: var(--bottom-safe);
   background: var(--surface);
-  border-top: 1px solid var(--line);
-  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.06);
+  border-top: 2px solid var(--line);
 }
 
 .tabbar__item,
@@ -163,27 +614,28 @@ button:focus-visible {
   display: flex;
   flex-direction: column;
   align-items: center;
-  height: var(--nav-height);
-  color: var(--ink-2);
+  justify-content: center;
+  gap: 2px;
+  min-width: 0;
 }
 
 .tabbar__item {
-  justify-content: center;
-  gap: 2px;
+  height: var(--nav-height);
+  color: var(--ink-2);
 }
 
 .tabbar__icon {
   display: grid;
   place-items: center;
-  width: 56px;
-  height: 32px;
-  border-radius: 16px;
+  width: 64px;
+  height: 34px;
+  border-radius: 17px;
   font-size: 26px;
 }
 
 .tabbar__label {
-  font-size: 0.875rem;
-  line-height: 1.25rem;
+  font-size: 1rem;
+  line-height: 1.375rem;
   font-weight: 500;
 }
 
@@ -201,65 +653,101 @@ button:focus-visible {
 }
 
 .tabbar__scan {
+  position: relative;
   justify-content: flex-end;
-  padding-bottom: 6px;
-  color: var(--brand-text);
+  height: var(--nav-height);
+  padding-bottom: 8px;
+  color: var(--ink);
 }
 
-.tabbar__scan-circle {
-  display: grid;
-  place-items: center;
-  width: 64px;
-  height: 64px;
-  margin-top: -30px;
-  margin-bottom: 2px;
+.tabbar__scan .tabbar__icon {
+  position: absolute;
+  top: -26px;
+  left: 50%;
+  width: 72px;
+  height: 72px;
+  margin-left: -36px;
   border-radius: 50%;
   border: 4px solid var(--surface);
-  background: var(--brand);
-  color: #fff;
-  box-shadow: 0 4px 12px rgba(0, 106, 245, 0.35);
-  transition: transform 0.1s ease;
+  background: var(--buoy);
+  box-shadow: inset 0 -6px 0 var(--buoy-edge);
+  color: var(--on-buoy);
 }
 
-.tabbar__scan:active .tabbar__scan-circle {
-  transform: scale(0.95);
+.tabbar__scan .tabbar__icon .zaui-icon {
+  width: 38px;
+  height: 38px;
+  font-size: 38px;
 }
 
-/* Snackbar không đè lên thanh dưới và nút quét (trình duyệt không hỗ trợ :has thì giữ vị trí mặc định). */
+.tabbar__scan:active .tabbar__icon {
+  box-shadow: inset 0 -2px 0 var(--buoy-edge);
+}
+
+.tabbar__scan:focus-visible {
+  outline-offset: -5px;
+}
+
+/* Snackbar không đè lên thanh dưới (trình duyệt không hỗ trợ :has thì giữ vị trí mặc định). */
 body:has(.tabbar) .zaui-snackbar-bottom {
-  bottom: calc(var(--nav-height) + var(--bottom-safe) + 40px);
+  bottom: calc(var(--nav-height) + var(--bottom-safe) + 12px);
 }
 
-/* Chuông thông báo ở góc trên bên trái đầu trang (góc phải là menu cố định của Zalo). */
+body:has(.page-footer) .zaui-snackbar-bottom {
+  bottom: calc(var(--bottom-safe) + 92px);
+}
+
+/* Snackbar chỉ để đọc: không chặn lần bấm vào nút nằm dưới nó. */
+.zaui-snackbar {
+  pointer-events: none;
+}
+
+/*
+ * Chuông thông báo ở góc trên bên trái đầu trang (góc phải là menu cố định của Zalo). Chữ "Thông báo" viết bằng CSS vì
+ * nút do NotificationBell dựng và đã có aria-label nêu cả số chưa đọc. Số chưa đọc nằm trên nền vàng phao.
+ */
 .page-header > .bell:first-child {
-  padding-right: 0;
+  padding-right: 12px;
 }
 
 .bell {
-  position: relative;
-  display: grid;
-  place-items: center;
-  width: 48px;
-  height: 48px;
-  margin: -6px 0 6px -6px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.16);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: calc(100% - var(--capsule-space));
+  min-height: 48px;
+  margin: 0 0 12px;
+  padding: 0 14px;
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.18);
   color: #fff;
+  font-size: 1rem;
+  line-height: 1.375rem;
+  font-weight: 700;
+}
+
+.bell::after {
+  content: "Thông báo";
+  order: 1;
+}
+
+.bell:active {
+  background: rgba(255, 255, 255, 0.32);
+}
+
+.bell:focus-visible {
+  outline-color: #fff;
 }
 
 .bell__badge {
-  position: absolute;
-  top: 0;
-  right: -4px;
-  min-width: 22px;
-  height: 22px;
-  padding: 0 6px;
-  border-radius: 11px;
-  border: 2px solid var(--header-bg);
-  background: var(--danger);
-  color: #fff;
-  font-size: 0.75rem;
-  line-height: 18px;
+  order: 2;
+  min-width: 1.75rem;
+  padding: 0 7px;
+  border-radius: 14px;
+  background: var(--buoy);
+  color: var(--on-buoy);
+  font-size: 1rem;
+  line-height: 1.5rem;
   font-weight: 700;
   text-align: center;
 }
@@ -273,9 +761,9 @@ body:has(.tabbar) .zaui-snackbar-bottom {
   line-height: 1.5rem;
 }
 
-/* Chừa chỗ cho thanh dưới và phần nút quét nổi lên phía trên nó. */
+/* Chừa chỗ cho thanh dưới và phần phao nhô lên, để nút cuối trang không nằm dưới nút Quét mã. */
 .screen--with-nav {
-  padding-bottom: calc(var(--nav-height) + var(--bottom-safe) + 40px);
+  padding-bottom: calc(var(--nav-height) + var(--bottom-safe) + 44px);
 }
 
 .screen__body {
@@ -288,8 +776,8 @@ body:has(.tabbar) .zaui-snackbar-bottom {
 
 .screen__note {
   margin-top: 24px;
-  font-size: 0.9375rem;
-  line-height: 1.375rem;
+  font-size: 1rem;
+  line-height: 1.5rem;
   color: var(--ink-2);
   text-align: center;
 }
@@ -297,6 +785,52 @@ body:has(.tabbar) .zaui-snackbar-bottom {
 .chevron {
   flex: none;
   color: var(--ink-2);
+}
+
+/* Ngày và lời chúc đầu trang chủ. */
+.sea-note {
+  font-size: 1rem;
+  line-height: 1.5rem;
+  color: var(--brand-text);
+}
+
+.sea-note__date {
+  font-size: 1.125rem;
+  line-height: 1.625rem;
+  font-weight: 700;
+}
+
+.sea-note + .area-card {
+  margin-top: 14px;
+}
+
+/* Dải báo việc cần xử lý: màu phao, bấm vào cuộn tới danh sách. */
+.attention {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 60px;
+  margin-top: 14px;
+  padding: 8px 14px;
+  border-radius: var(--radius);
+  background: var(--buoy);
+  box-shadow: 0 4px 0 var(--buoy-edge);
+  color: var(--on-buoy);
+  text-align: left;
+}
+
+.attention:active {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 var(--buoy-edge);
+}
+
+.attention__text {
+  flex: 1;
+  min-width: 0;
+  font-size: 1.125rem;
+  line-height: 1.5rem;
+  font-weight: 700;
 }
 
 .tone-neutral {
@@ -312,14 +846,19 @@ body:has(.tabbar) .zaui-snackbar-bottom {
   color: var(--danger);
 }
 
-/* Nhãn chữ đi kèm màu, để không phải đoán mức độ chỉ bằng màu sắc. */
+/* Nhãn là khung chữ nhật có viền và chữ, để không phải đoán mức độ chỉ bằng màu sắc. */
 .badge {
   display: inline-block;
-  padding: 0 10px;
-  border-radius: 999px;
-  font-size: 0.9375rem;
+  padding: 1px 12px;
+  border: 1.5px solid currentColor;
+  border-radius: 14px;
+  font-size: 1rem;
   line-height: 1.5rem;
   font-weight: 700;
+}
+.badge--neutral {
+  background: var(--surface);
+  color: var(--ink-2);
 }
 .badge--success {
   background: var(--ok-soft);
@@ -334,6 +873,7 @@ body:has(.tabbar) .zaui-snackbar-bottom {
   color: var(--danger);
 }
 .badge--new {
+  border-color: var(--brand);
   background: var(--brand);
   color: #fff;
 }
@@ -341,10 +881,83 @@ body:has(.tabbar) .zaui-snackbar-bottom {
 /* ---------- Đầu trang ---------- */
 
 .page-header {
+  position: relative;
+  overflow: hidden;
   background: var(--header-bg);
   color: #fff;
-  padding: calc(var(--top-safe) + 12px) 16px 24px;
-  border-radius: 0 0 24px 24px;
+  padding: calc(var(--top-clear) + 12px) 16px 0;
+}
+
+/* Trang chủ: biển sâu ở trên, cạn dần về phía bờ; con hàu nằm ở mép nước, sóng vỗ lên chân hình. */
+.page-header--scene {
+  background: linear-gradient(180deg, #083c5a 0%, #0a4c6e 55%, #0c6a84 100%);
+}
+
+.page-header--scene .page-header__title,
+.page-header--scene .page-header__sub {
+  padding-right: 92px;
+}
+
+.page-header__art {
+  position: absolute;
+  right: 4px;
+  bottom: 14px;
+  width: 112px;
+  height: auto;
+}
+
+/* Sóng */
+.waves {
+  position: relative;
+  z-index: 1;
+  height: 28px;
+  margin: 8px -16px -1px;
+  overflow: hidden;
+}
+
+.waves--tall {
+  height: 48px;
+  margin-top: 4px;
+}
+
+.waves__layer {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 200%;
+  height: 100%;
+}
+
+.waves__layer--back path {
+  fill: rgba(255, 255, 255, 0.16);
+}
+
+.waves__layer--mid path {
+  fill: rgba(255, 255, 255, 0.28);
+}
+
+.waves__sand {
+  fill: var(--page);
+}
+
+.waves__foam {
+  fill: none;
+  stroke: #fff;
+  stroke-width: 3;
+  vector-effect: non-scaling-stroke;
+}
+
+/* Chỉ một lớp sóng ở trang chủ trôi thật chậm; người bật giảm chuyển động thì đứng yên. */
+@media (prefers-reduced-motion: no-preference) {
+  .waves--tall .waves__layer--back {
+    animation: wave-drift 16s linear infinite;
+  }
+}
+
+@keyframes wave-drift {
+  to {
+    transform: translateX(-33.3333%);
+  }
 }
 
 /* Dòng đầu tiên nằm ngang hàng với menu Zalo nên phải chừa chỗ bên phải. */
@@ -370,7 +983,7 @@ body:has(.tabbar) .zaui-snackbar-bottom {
 }
 
 .page-header__sub {
-  margin-top: 8px;
+  margin-top: 4px;
   font-size: 1rem;
   line-height: 1.5rem;
 }
@@ -382,16 +995,19 @@ body:has(.tabbar) .zaui-snackbar-bottom {
   width: 100%;
   margin-top: 16px;
   min-height: 56px;
-  padding: 8px 16px;
-  border-radius: 14px;
-  border: 1.5px solid rgba(255, 255, 255, 0.6);
-  background: rgba(255, 255, 255, 0.16);
+  padding: 8px 12px;
+  border-radius: var(--radius);
+  border: 2px solid #fff;
   color: #fff;
   text-align: left;
 }
 
 .role-chip:active {
-  background: rgba(255, 255, 255, 0.28);
+  background: rgba(255, 255, 255, 0.24);
+}
+
+.role-chip:focus-visible {
+  outline-color: #fff;
 }
 
 .role-chip__text {
@@ -408,14 +1024,96 @@ body:has(.tabbar) .zaui-snackbar-bottom {
 
 .role-chip__scope {
   display: block;
-  font-size: 0.9375rem;
-  line-height: 1.375rem;
+  font-size: 1rem;
+  line-height: 1.5rem;
 }
 
-/* Trang chi tiết dùng Header của ZaUI (cố định ở đỉnh), tô cùng màu với đầu trang các tab. */
+/*
+ * Khung của ManagePage: thanh "Quay lại" dính ở đỉnh, tiêu đề lớn trên nền màu khu vực, viền sóng, nội dung, chân trang
+ * dính ở đáy. Các phần nối tiếp nhau trong luồng trang nên tiêu đề dài và chân trang nhiều nút không cần tính trước chiều cao.
+ */
+.screen--manage {
+  display: flex;
+  flex-direction: column;
+}
+
+.screen--manage > .screen__body {
+  flex: 1 0 auto;
+}
+
+.manage-bar {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  flex: none;
+  padding: var(--top-clear) var(--capsule-space) 0 8px;
+  background: var(--header-bg);
+}
+
+.manage-bar__back {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 48px;
+  min-height: 48px;
+  margin: 4px 0;
+  padding: 0 16px 0 10px;
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.18);
+  color: #fff;
+  font-size: 1.125rem;
+  line-height: 1.5rem;
+  font-weight: 700;
+}
+
+.manage-bar__back:active {
+  background: rgba(255, 255, 255, 0.32);
+}
+
+.manage-bar__back:focus-visible {
+  outline-color: #fff;
+  outline-offset: -3px;
+}
+
+.manage-head {
+  position: relative;
+  flex: none;
+  padding: 4px 16px 0;
+  background: var(--header-bg);
+  overflow: hidden;
+}
+
+.manage-title {
+  padding-right: 64px;
+  color: #fff;
+  font-size: 1.5rem;
+  line-height: 2rem;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+/* Hình khu vực mờ ở góc tiêu đề: nhắc đang ở khu nào mà không tranh chỗ với chữ. */
+.manage-head__art {
+  position: absolute;
+  top: 0;
+  right: 14px;
+  width: 56px;
+  height: 56px;
+  color: rgba(255, 255, 255, 0.34);
+  /* Trên nền màu thì đường khắc phải trùng màu nền. */
+  --art-cut: var(--header-bg);
+}
+
+.area-art {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* Các trang còn dùng Header của ZaUI: cố định ở đỉnh, tô cùng màu đầu trang. */
 .screen--detail .detail-header.zaui-header {
-  height: calc(var(--top-safe) + 56px);
-  padding: var(--top-safe) var(--capsule-space) 0 4px;
+  height: calc(var(--top-clear) + 56px);
+  padding: var(--top-clear) var(--capsule-space) 0 4px;
   background: var(--header-bg);
   color: #fff;
 }
@@ -450,7 +1148,7 @@ body:has(.tabbar) .zaui-snackbar-bottom {
 }
 
 .screen--detail .screen__body {
-  padding-top: calc(var(--top-safe) + 56px + 16px);
+  padding-top: calc(var(--top-clear) + 56px + 16px);
 }
 
 /* ---------- Khối nội dung ---------- */
@@ -458,8 +1156,9 @@ body:has(.tabbar) .zaui-snackbar-bottom {
 .card {
   padding: 16px;
   background: var(--surface);
-  border: 1px solid var(--line);
+  border: 1.5px solid var(--line);
   border-radius: var(--radius);
+  box-shadow: 0 3px 0 var(--edge);
 }
 
 .block {
@@ -473,15 +1172,95 @@ body:has(.tabbar) .zaui-snackbar-bottom {
   font-weight: 700;
 }
 
+/* Gạch dưới tiêu đề mục là một làn sóng nhỏ. */
+.block__title::after {
+  content: "";
+  display: block;
+  width: 58px;
+  height: 8px;
+  margin-top: 4px;
+  background: var(--area, var(--brand));
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 58 8'%3E%3Cpath d='M1.500 5Q8 0 14.500 4T27.500 4 40.500 4 56.500 3' fill='none' stroke='%23000' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E") center / 100% 100% no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 58 8'%3E%3Cpath d='M1.500 5Q8 0 14.500 4T27.500 4 40.500 4 56.500 3' fill='none' stroke='%23000' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E") center / 100% 100% no-repeat;
+}
+
 .list {
   background: var(--surface);
-  border: 1px solid var(--line);
+  border: 1.5px solid var(--line);
   border-radius: var(--radius);
+  box-shadow: 0 3px 0 var(--edge);
   overflow: hidden;
 }
 
+/* Thẻ khu vực ở trang chủ: nguyên một khối màu, gờ dày, chân thẻ có sóng. */
+.area-cards {
+  display: grid;
+  gap: 16px;
+}
+
+.area-card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  min-height: 100px;
+  margin-bottom: 5px;
+  padding: 14px 10px 18px 14px;
+  border-radius: 20px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 20' preserveAspectRatio='none'%3E%3Cpath d='M0 9Q30-3 60 9T120 9V20H0Z' fill='%23fff' fill-opacity='.16'/%3E%3C/svg%3E") left bottom / 120px 20px repeat-x, var(--area);
+  box-shadow: 0 5px 0 var(--area-dark);
+  color: #fff;
+  text-align: left;
+}
+
+.area-card:active {
+  transform: translateY(4px);
+  box-shadow: 0 1px 0 var(--area-dark);
+}
+
+.area-card__art {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 68px;
+  height: 68px;
+  padding: 10px;
+  border-radius: 50%;
+  background: #fff;
+  color: var(--area);
+  --art-cut: #fff;
+}
+
+.area-card__text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.area-card__title {
+  font-size: 1.375rem;
+  line-height: 1.75rem;
+  font-weight: 700;
+}
+
+.area-card__hint {
+  font-size: 1rem;
+  line-height: 1.375rem;
+}
+
+.area-card__chevron {
+  flex: none;
+}
+
+.area-card:focus-visible {
+  outline-offset: 3px;
+}
+
 .list > li + li {
-  border-top: 1px solid var(--line);
+  border-top: 1.5px solid var(--line-soft);
 }
 
 /* Việc cần làm */
@@ -505,10 +1284,9 @@ body:has(.tabbar) .zaui-snackbar-bottom {
   content: "";
   position: absolute;
   left: 0;
-  top: 14px;
-  bottom: 14px;
+  top: 0;
+  bottom: 0;
   width: 6px;
-  border-radius: 0 6px 6px 0;
   background: var(--brand);
 }
 
@@ -534,7 +1312,7 @@ body:has(.tabbar) .zaui-snackbar-bottom {
 .task__title {
   font-size: 1.125rem;
   line-height: 1.625rem;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .task__detail {
@@ -543,15 +1321,11 @@ body:has(.tabbar) .zaui-snackbar-bottom {
   color: var(--ink-2);
 }
 
-/* Lưới chức năng */
+/* Lưới chức năng: hai cột khung viền, chữ đủ rộng ở cả gốc 21px. */
 .actions {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px;
-  padding: 12px;
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
 }
 
 .actions__item {
@@ -559,9 +1333,11 @@ body:has(.tabbar) .zaui-snackbar-bottom {
   flex-direction: column;
   align-items: center;
   gap: 8px;
-  min-height: 112px;
-  padding: 12px 4px;
-  border-radius: 12px;
+  min-height: 120px;
+  padding: 12px 8px;
+  background: var(--surface);
+  border: 1.5px solid var(--line);
+  border-radius: var(--radius);
   color: var(--ink);
 }
 
@@ -574,43 +1350,39 @@ body:has(.tabbar) .zaui-snackbar-bottom {
   place-items: center;
   width: 56px;
   height: 56px;
-  border-radius: 16px;
-  background: var(--brand-soft);
+  border: 2px solid var(--brand-text);
+  border-radius: var(--radius);
   color: var(--brand-text);
 }
 
 .actions__label {
-  font-size: 1rem;
-  line-height: 1.375rem;
-  font-weight: 600;
+  font-size: 1.0625rem;
+  line-height: 1.5rem;
+  font-weight: 700;
   text-align: center;
 }
 
-/* Bảng số liệu: một khối, chia ô bằng đường kẻ */
+/* Bảng số liệu: mỗi ô một nền màu nhạt, con số lấy màu đậm của ô. */
 .stats {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  overflow: hidden;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 9rem), 1fr));
+  gap: 12px;
 }
 
 .stats__cell {
-  padding: 16px;
+  padding: 14px;
+  border-radius: var(--radius);
+  background: var(--area-soft);
 }
 
-.stats__cell:nth-child(odd) {
-  border-right: 1px solid var(--line);
-}
-
-.stats__cell:nth-child(-n + 2) {
-  border-bottom: 1px solid var(--line);
+/* Số ô lẻ: ô cuối chiếm trọn hàng để không lộ khoảng trống cạnh nó. */
+.stats__cell:last-child:nth-child(odd) {
+  grid-column: 1 / -1;
 }
 
 .stats__label {
   font-size: 1rem;
-  line-height: 1.375rem;
+  line-height: 1.5rem;
   color: var(--ink-2);
 }
 
@@ -620,6 +1392,7 @@ body:has(.tabbar) .zaui-snackbar-bottom {
   line-height: 2.25rem;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
+  color: var(--area-text);
 }
 
 .stats__unit {
@@ -631,8 +1404,8 @@ body:has(.tabbar) .zaui-snackbar-bottom {
 
 .stats__note {
   margin-top: 4px;
-  font-size: 0.9375rem;
-  line-height: 1.375rem;
+  font-size: 1rem;
+  line-height: 1.5rem;
   font-weight: 500;
 }
 
@@ -657,7 +1430,7 @@ body:has(.tabbar) .zaui-snackbar-bottom {
 .lot {
   margin-top: 24px;
   padding-top: 20px;
-  border-top: 1px solid var(--line);
+  border-top: 1.5px solid var(--line);
 }
 
 .lot__code {
@@ -680,7 +1453,7 @@ body:has(.tabbar) .zaui-snackbar-bottom {
   margin-top: 8px;
   font-size: 1rem;
   line-height: 1.5rem;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--ok);
 }
 
@@ -693,7 +1466,7 @@ body:has(.tabbar) .zaui-snackbar-bottom {
 
 .lot__facts dt {
   font-size: 1rem;
-  line-height: 1.375rem;
+  line-height: 1.5rem;
   color: var(--ink-2);
 }
 
@@ -725,9 +1498,8 @@ body:has(.tabbar) .zaui-snackbar-bottom {
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  border: 3px solid var(--brand);
-  background: var(--surface);
-  box-sizing: border-box;
+  border: 3px solid var(--brand-text);
+  background: var(--buoy);
 }
 
 .journey__step::after {
@@ -751,8 +1523,8 @@ body:has(.tabbar) .zaui-snackbar-bottom {
 }
 
 .journey__date {
-  font-size: 0.9375rem;
-  line-height: 1.375rem;
+  font-size: 1rem;
+  line-height: 1.5rem;
   font-weight: 500;
   color: var(--brand-text);
 }
@@ -789,12 +1561,12 @@ body:has(.tabbar) .zaui-snackbar-bottom {
 .request__name {
   font-size: 1.125rem;
   line-height: 1.625rem;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .request__meta {
-  font-size: 0.9375rem;
-  line-height: 1.375rem;
+  font-size: 1rem;
+  line-height: 1.5rem;
   color: var(--ink-2);
 }
 
@@ -806,7 +1578,6 @@ body:has(.tabbar) .zaui-snackbar-bottom {
 
 .request__actions {
   display: grid;
-  grid-template-columns: 1fr 1fr;
   gap: 12px;
   margin-top: 8px;
 }
@@ -821,9 +1592,9 @@ body:has(.tabbar) .zaui-snackbar-bottom {
   place-items: center;
   width: 44px;
   height: 44px;
-  border-radius: 50%;
+  border-radius: var(--radius);
   background: var(--surface);
-  border: 1px solid var(--line);
+  border: 1.5px solid var(--line);
 }
 
 .notice__text {
@@ -852,8 +1623,8 @@ body:has(.tabbar) .zaui-snackbar-bottom {
 }
 
 .notice__time {
-  font-size: 0.9375rem;
-  line-height: 1.375rem;
+  font-size: 1rem;
+  line-height: 1.5rem;
   color: var(--ink-2);
 }
 
@@ -872,12 +1643,24 @@ body:has(.tabbar) .zaui-snackbar-bottom {
 .empty__badge {
   display: grid;
   place-items: center;
-  width: 72px;
-  height: 72px;
+  width: 88px;
+  height: 88px;
   margin-bottom: 8px;
   border-radius: 50%;
   background: var(--brand-soft);
   color: var(--brand-text);
+}
+
+.empty__badge--art {
+  width: 148px;
+  height: 112px;
+  border-radius: 0;
+  background: none;
+}
+
+.empty__badge--art svg {
+  width: 100%;
+  height: 100%;
 }
 
 .empty__title {
@@ -895,8 +1678,27 @@ body:has(.tabbar) .zaui-snackbar-bottom {
 
 .empty__hint {
   margin-top: 8px;
-  font-size: 0.9375rem;
-  line-height: 1.375rem;
+  font-size: 1rem;
+  line-height: 1.5rem;
+}
+
+.empty__action {
+  width: 100%;
+  margin-top: 12px;
+}
+
+/* Đang tải lần đầu: chữ "Đang tải..." đi kèm khung chờ. */
+.loading {
+  display: grid;
+  gap: 12px;
+}
+
+.loading__text {
+  font-size: 1.125rem;
+  line-height: 1.625rem;
+  font-weight: 700;
+  text-align: center;
+  color: var(--ink);
 }
 
 /* ---------- Tài khoản ---------- */
@@ -911,11 +1713,11 @@ body:has(.tabbar) .zaui-snackbar-bottom {
   flex: none;
   display: grid;
   place-items: center;
-  width: 56px;
-  height: 56px;
+  width: 60px;
+  height: 60px;
   border-radius: 50%;
-  background: var(--brand);
-  color: #fff;
+  background: var(--buoy);
+  color: var(--on-buoy);
   font-size: 1.25rem;
   font-weight: 700;
 }
@@ -957,7 +1759,7 @@ body:has(.tabbar) .zaui-snackbar-bottom {
   padding: 0 4px;
   font-size: 1rem;
   line-height: 1.5rem;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--ok);
 }
 
@@ -966,7 +1768,7 @@ body:has(.tabbar) .zaui-snackbar-bottom {
   align-items: center;
   gap: 12px;
   width: 100%;
-  min-height: 64px;
+  min-height: 72px;
   padding: 12px 16px;
   font-size: 1.125rem;
   line-height: 1.5rem;
@@ -982,17 +1784,17 @@ body:has(.tabbar) .zaui-snackbar-bottom {
   flex: none;
   display: grid;
   place-items: center;
-  width: 40px;
-  height: 40px;
-  border-radius: 12px;
-  background: var(--brand-soft);
-  color: var(--brand-text);
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: var(--area);
+  color: #fff;
 }
 
 .menu-row__label {
   flex: 1;
   min-width: 0;
-  font-weight: 500;
+  font-weight: 700;
 }
 
 .menu-row__value {
@@ -1001,13 +1803,94 @@ body:has(.tabbar) .zaui-snackbar-bottom {
   color: var(--ink-2);
 }
 
+.menu-row--danger,
+.menu-row--danger .menu-row__icon {
+  color: var(--danger);
+}
+
+.menu-row--danger .menu-row__icon {
+  background: var(--danger-soft);
+}
+
+/* Dòng menu lớn (MenuRows): mỗi dòng là một thẻ riêng, cao tối thiểu 80px, ô biểu tượng tô màu khu vực. */
+.menu-rows {
+  display: grid;
+  gap: 12px;
+}
+
+.menu-rows > li {
+  background: var(--surface);
+  border: 1.5px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: 0 3px 0 var(--edge);
+  overflow: hidden;
+}
+
+.menu-rows__row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  min-height: 80px;
+  padding: 12px;
+  text-align: left;
+  color: var(--ink);
+}
+
+.menu-rows__row:active {
+  background: var(--area-soft);
+}
+
+.menu-rows__icon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  background: var(--area);
+  color: #fff;
+}
+
+.menu-rows__icon .zaui-icon {
+  font-size: 30px;
+  width: 30px;
+  height: 30px;
+}
+
+.menu-rows__text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+
+.menu-rows__title {
+  font-size: 1.125rem;
+  line-height: 1.5rem;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.menu-rows__hint {
+  font-size: 1rem;
+  line-height: 1.5rem;
+  color: var(--ink-2);
+}
+
+.menu-rows__badge {
+  margin-top: 4px;
+}
+
 .info {
   padding: 0 16px 24px;
 }
 
 .info div {
   padding: 12px 0;
-  border-bottom: 1px solid var(--line);
+  border-bottom: 1.5px solid var(--line-soft);
 }
 
 .info div:last-child {
@@ -1015,8 +1898,8 @@ body:has(.tabbar) .zaui-snackbar-bottom {
 }
 
 .info dt {
-  font-size: 0.9375rem;
-  line-height: 1.375rem;
+  font-size: 1rem;
+  line-height: 1.5rem;
   color: var(--ink-2);
 }
 
@@ -1025,6 +1908,7 @@ body:has(.tabbar) .zaui-snackbar-bottom {
   font-size: 1.125rem;
   line-height: 1.625rem;
   font-weight: 500;
+  overflow-wrap: anywhere;
 }
 
 .policy p {
@@ -1057,7 +1941,7 @@ body:has(.tabbar) .zaui-snackbar-bottom {
   width: 100%;
   min-height: 72px;
   padding: 12px 4px;
-  border-bottom: 1px solid var(--line);
+  border-bottom: 1.5px solid var(--line-soft);
   text-align: left;
   color: var(--ink);
 }
@@ -1075,7 +1959,7 @@ body:has(.tabbar) .zaui-snackbar-bottom {
   display: block;
   font-size: 1.125rem;
   line-height: 1.625rem;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .choice.is-active .choice__name {
@@ -1084,35 +1968,35 @@ body:has(.tabbar) .zaui-snackbar-bottom {
 
 .choice__hint {
   display: block;
-  font-size: 0.9375rem;
-  line-height: 1.375rem;
+  font-size: 1rem;
+  line-height: 1.5rem;
   color: var(--ink-2);
 }
 
 .choice__check {
   flex: none;
-  color: var(--brand);
+  color: var(--brand-text);
 }
 
-/* Mẫu chữ dùng px để luôn thấy đúng độ chênh giữa hai cỡ, bất kể cỡ đang chọn. */
+/* Mẫu chữ dùng px và đúng bằng cỡ gốc của từng lựa chọn: thấy đúng chữ thân bài sẽ to bao nhiêu. */
 .choice__sample {
   flex: none;
   display: grid;
   place-items: center;
   width: 52px;
   height: 52px;
-  border-radius: 12px;
+  border-radius: 50%;
   background: var(--brand-soft);
   color: var(--brand-text);
   font-weight: 700;
 }
 
 .choice__sample--large {
-  font-size: 20px;
+  font-size: 18px;
 }
 
 .choice__sample--xlarge {
-  font-size: 25px;
+  font-size: 21px;
 }
 
 /* ---------- Màn hình mở đầu ---------- */
@@ -1171,8 +2055,8 @@ body:has(.tabbar) .zaui-snackbar-bottom {
 }
 
 .form__hint {
-  font-size: 0.9375rem;
-  line-height: 1.375rem;
+  font-size: 1rem;
+  line-height: 1.5rem;
   color: var(--ink-2);
 }
 
@@ -1187,13 +2071,13 @@ body:has(.tabbar) .zaui-snackbar-bottom {
   white-space: nowrap;
 }
 
-/* Nút dạng chữ: vùng chạm 48px nhưng không viền, dùng cho "Để sau", "Quay lại". */
+/* Nút dạng chữ: vùng chạm 48px, gạch chân, dùng cho "Để sau", "Quay lại". */
 .link-button {
   min-height: 48px;
   padding: 8px 4px;
-  font-size: 1.0625rem;
+  font-size: 1.125rem;
   line-height: 1.5rem;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--brand-text);
   text-align: center;
   text-decoration: underline;
@@ -1204,18 +2088,19 @@ body:has(.tabbar) .zaui-snackbar-bottom {
   opacity: 0.6;
 }
 
-/* Dòng lỗi của form: icon đỏ kèm chữ, không chỉ dựa vào màu. */
+/* Dòng lỗi của form: viền đỏ, icon kèm chữ, không chỉ dựa vào màu. */
 .form-error {
   display: flex;
   gap: 8px;
   align-items: flex-start;
-  padding: 12px 14px;
-  border-radius: 12px;
+  padding: 12px;
+  border: 2px solid var(--danger);
+  border-radius: var(--radius);
   background: var(--danger-soft);
   color: var(--danger);
   font-size: 1rem;
   line-height: 1.5rem;
-  font-weight: 500;
+  font-weight: 700;
 }
 
 .form-error .zaui-icon {
@@ -1223,22 +2108,25 @@ body:has(.tabbar) .zaui-snackbar-bottom {
   margin-top: 2px;
 }
 
-/* Băng mất mạng (MSG07): cố định ở đỉnh, chừa góc phải cho menu Zalo. */
+/*
+ * Băng mất mạng: cố định ở đỉnh, chừa góc phải cho menu Zalo, nền nâu đậm cố định cho cả hai chế độ. Nằm trên Header
+ * của ZaUI (z-index 999) nhưng dưới sheet và modal. OfflineBanner gán --offline-height để nội dung đẩy xuống dưới băng.
+ */
 .offline-banner {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
-  z-index: 50;
+  z-index: 1000;
   display: flex;
   gap: 8px;
   align-items: flex-start;
   padding: calc(var(--top-safe) + 8px) var(--capsule-space) 10px 16px;
-  background: var(--warn);
+  background: #7a3d00;
   color: #fff;
-  font-size: 0.9375rem;
-  line-height: 1.375rem;
-  font-weight: 500;
+  font-size: 1rem;
+  line-height: 1.5rem;
+  font-weight: 700;
 }
 
 .offline-banner .zaui-icon {
@@ -1249,7 +2137,7 @@ body:has(.tabbar) .zaui-snackbar-bottom {
 /* Khung chờ tải (skeleton) */
 .skeleton {
   border-radius: var(--radius);
-  background: linear-gradient(90deg, var(--line) 25%, var(--surface) 50%, var(--line) 75%);
+  background: linear-gradient(90deg, var(--line-soft) 25%, var(--surface) 50%, var(--line-soft) 75%);
   background-size: 200% 100%;
   animation: skeleton-shimmer 1.4s infinite;
 }
@@ -1286,7 +2174,7 @@ body:has(.tabbar) .zaui-snackbar-bottom {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  min-height: 40px;
+  min-height: 48px;
   color: var(--ink);
   font-size: 1.125rem;
   font-weight: 500;
@@ -1299,7 +2187,7 @@ body:has(.tabbar) .zaui-snackbar-bottom {
 
 .plain-list {
   display: grid;
-  gap: 4px;
+  gap: 12px;
 }
 
 .contact-row {
@@ -1308,7 +2196,7 @@ body:has(.tabbar) .zaui-snackbar-bottom {
   gap: 12px;
   padding: 14px 16px;
   background: var(--surface);
-  border: 1px solid var(--line);
+  border: 1.5px solid var(--line);
   border-radius: var(--radius);
 }
 
@@ -1322,8 +2210,8 @@ body:has(.tabbar) .zaui-snackbar-bottom {
 }
 
 .contact-row__label {
-  font-size: 0.9375rem;
-  line-height: 1.375rem;
+  font-size: 1rem;
+  line-height: 1.5rem;
   color: var(--ink-2);
 }
 
@@ -1334,8 +2222,24 @@ body:has(.tabbar) .zaui-snackbar-bottom {
   overflow-wrap: anywhere;
 }
 
+/*
+ * Sheet nhiều trường: tự cuộn bên trong để nút cuối không bị cắt khi chữ và ô nhập phóng to. Trừ thêm vùng menu Zalo
+ * (44px) và đầu sheet có tiêu đề hai dòng (120px) để sheet cao nhất vẫn nằm dưới menu.
+ */
 .sheet-form {
+  max-height: calc(100vh - var(--top-clear) - 164px);
+  overflow-y: auto;
   padding: 8px 16px 24px;
+}
+
+/* Hai nút xếp chồng trong sheet: nút xác nhận và nút quay lại. */
+.sheet-actions {
+  display: grid;
+  gap: 12px;
+}
+
+.sheet-actions .zaui-btn {
+  margin: 0;
 }
 
 /* Tùy chọn thông báo */
@@ -1347,8 +2251,8 @@ body:has(.tabbar) .zaui-snackbar-bottom {
 
 .pref__note {
   margin-top: 4px;
-  font-size: 0.9375rem;
-  line-height: 1.375rem;
+  font-size: 1rem;
+  line-height: 1.5rem;
   color: var(--ink-2);
 }
 
@@ -1362,7 +2266,7 @@ body:has(.tabbar) .zaui-snackbar-bottom {
   gap: 12px;
   min-height: 56px;
   padding: 8px 0;
-  border-top: 1px solid var(--line);
+  border-top: 1.5px solid var(--line-soft);
 }
 
 .pref__text {
@@ -1380,18 +2284,9 @@ body:has(.tabbar) .zaui-snackbar-bottom {
 }
 
 .pref__reason {
-  font-size: 0.9375rem;
-  line-height: 1.375rem;
+  font-size: 1rem;
+  line-height: 1.5rem;
   color: var(--ink-2);
-}
-
-.menu-row--danger,
-.menu-row--danger .menu-row__icon {
-  color: var(--danger);
-}
-
-.menu-row--danger .menu-row__icon {
-  background: var(--danger-soft);
 }
 
 /* Màn quản lý của Chủ HTX (src/components/manage) */
@@ -1403,6 +2298,7 @@ body:has(.tabbar) .zaui-snackbar-bottom {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
   gap: 12px;
   margin-bottom: 12px;
 }
@@ -1413,13 +2309,14 @@ body:has(.tabbar) .zaui-snackbar-bottom {
 
 .rows {
   background: var(--surface);
-  border: 1px solid var(--line);
+  border: 1.5px solid var(--line);
   border-radius: var(--radius);
+  box-shadow: 0 3px 0 var(--edge);
   overflow: hidden;
 }
 
 .rows > li + li {
-  border-top: 1px solid var(--line);
+  border-top: 1.5px solid var(--line-soft);
 }
 
 .row {
@@ -1427,8 +2324,8 @@ body:has(.tabbar) .zaui-snackbar-bottom {
   align-items: center;
   gap: 12px;
   width: 100%;
-  min-height: 64px;
-  padding: 12px 16px;
+  min-height: 72px;
+  padding: 12px;
   text-align: left;
   color: var(--ink);
 }
@@ -1448,13 +2345,13 @@ button.row:active {
 .row__title {
   font-size: 1.125rem;
   line-height: 1.5rem;
-  font-weight: 600;
+  font-weight: 700;
   overflow-wrap: anywhere;
 }
 
 .row__meta {
-  font-size: 0.9375rem;
-  line-height: 1.375rem;
+  font-size: 1rem;
+  line-height: 1.5rem;
   color: var(--ink-2);
   overflow-wrap: anywhere;
 }
@@ -1468,97 +2365,158 @@ button.row:active {
 
 .row__value {
   flex: none;
-  max-width: 45%;
+  max-width: 40%;
   font-size: 1rem;
   line-height: 1.5rem;
-  font-weight: 600;
+  font-weight: 700;
   text-align: right;
+  overflow-wrap: anywhere;
 }
 
+/* Chip lọc xuống dòng thay vì cuộn ngang, để thấy hết các lựa chọn. */
 .chips {
   display: flex;
-  gap: 8px;
-  margin: 0 -16px 16px;
-  padding: 0 16px;
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-
-.chips::-webkit-scrollbar {
-  display: none;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 16px;
 }
 
 .chip {
-  flex: none;
-  min-height: 40px;
-  padding: 0 16px;
-  border: 1px solid var(--line);
-  border-radius: 999px;
+  min-height: 48px;
+  padding: 8px 16px;
+  border: 2px solid var(--line-strong);
+  border-radius: 24px;
   background: var(--surface);
   color: var(--ink);
   font-size: 1rem;
+  line-height: 1.5rem;
   font-weight: 500;
+  text-align: left;
 }
 
 .chip.is-active {
-  border-color: var(--brand);
-  background: var(--brand);
+  border-color: var(--area);
+  background: var(--area);
   color: #fff;
+  font-weight: 700;
 }
 
 .search {
   margin-bottom: 12px;
 }
 
+.search__label {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 1rem;
+  line-height: 1.5rem;
+  font-weight: 700;
+}
+
+/* Các nút thao tác xếp dọc, chiếm hết chiều rộng, cách nhau 12px (Actions). */
 .action-row {
   display: grid;
-  grid-auto-flow: column;
-  grid-auto-columns: 1fr;
   gap: 12px;
   margin-top: 16px;
 }
 
 .action-row .zaui-btn {
+  width: 100%;
   margin: 0;
 }
 
-.screen--with-footer .screen__body {
-  padding-bottom: calc(96px + var(--bottom-safe));
+/* Hàng "Trước, số trang, Sau": giữ ngang vì nhãn ngắn, số trang nằm giữa. */
+.pager {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  margin-top: 16px;
 }
 
+.pager .zaui-btn {
+  min-width: 0;
+  margin: 0;
+}
+
+/* Chân trang dính ở đáy trong luồng trang: không che nội dung dù có một hay nhiều nút. */
 .page-footer {
-  position: fixed;
-  left: 0;
-  right: 0;
+  position: sticky;
   bottom: 0;
   z-index: 10;
+  flex: none;
   padding: 12px 16px calc(12px + var(--bottom-safe));
   background: var(--surface);
-  border-top: 1px solid var(--line);
+  border-top: 2px solid var(--line);
 }
 
 .page-footer .zaui-btn {
   margin: 0;
 }
 
+.form__group {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.form__legend {
+  margin-bottom: 8px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.form__group > :not(legend) {
+  display: flex;
+  width: 100%;
+  margin-bottom: 12px;
+}
+
+/* Các nút xếp chồng trong một màn: giữ khoảng cách với nhau và với danh sách phía trên. */
+.button-stack {
+  display: grid;
+  gap: 12px;
+  margin: 12px 0 16px;
+}
+
+.record-file {
+  margin-bottom: 16px;
+}
+
+.date-range {
+  margin-bottom: 16px;
+}
+
+.record-photo {
+  display: block;
+  width: 100%;
+  max-height: 220px;
+  object-fit: contain;
+  margin-bottom: 12px;
+  border: 1.5px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--line-soft);
+}
+
+/* Hai ô số liệu: màn hẹp hoặc chữ rất lớn thì tự về một cột. */
 .summary {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 9rem), 1fr));
   gap: 12px;
   margin-bottom: 16px;
 }
 
 .summary__cell {
-  padding: 12px 14px;
+  padding: 12px;
   background: var(--surface);
-  border: 1px solid var(--line);
+  border: 1.5px solid var(--line);
   border-radius: var(--radius);
 }
 
 .summary__label {
   display: block;
-  font-size: 0.875rem;
-  line-height: 1.25rem;
+  font-size: 1rem;
+  line-height: 1.5rem;
   color: var(--ink-2);
 }
 
@@ -1568,6 +2526,7 @@ button.row:active {
   font-size: 1.25rem;
   line-height: 1.75rem;
   font-weight: 700;
+  overflow-wrap: anywhere;
 }
 
 .summary__cell.tone-danger .summary__value {
@@ -1598,31 +2557,33 @@ button.row:active {
   display: grid;
   gap: 12px;
   padding: 12px;
-  border: 1px solid var(--line);
-  border-radius: 12px;
+  border: 1.5px solid var(--line);
+  border-radius: var(--radius);
 }
 
 .line-item__head {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-weight: 600;
+  font-weight: 700;
 }
 
+/* Hai trường cạnh nhau: cần tối thiểu 11rem mỗi cột, không đủ thì xếp một cột. */
 .two-col {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 11rem), 1fr));
   gap: 12px;
 }
 
-/* Nút nhỏ ở đầu mục (Thêm bè, Cấp thêm…): chữ app to hơn mặc định của ZaUI nên để nút tự cao theo chữ. */
-.block__head .zaui-btn {
+/* Nút ở đầu mục (Thêm bè, Cấp thêm…): cỡ nút phụ, tự cao theo chữ và xuống dòng nếu tiêu đề dài. */
+.block__head .zaui-btn:not(.zaui-btn-icon-only) {
   flex: none;
-  height: auto;
-  min-height: 40px;
+  min-width: 0;
+  min-height: 48px;
   margin: 0;
-  padding: 6px 14px;
-  line-height: 1.5rem;
+  padding: 6px 12px;
+  font-size: 1rem;
+  line-height: 1.375rem;
 }
 // Giữ nhóm trường bè theo bố cục form, không thêm viền mặc định của fieldset.
 .raft-form-fields { border: 0; padding: 0; margin: 0; min-width: 0; display: flex; flex-direction: column; gap: 1rem; }

@@ -139,3 +139,15 @@ export type CancelReceiptRequest = {
   cancelPayments: boolean | null;
   rowVersion: string | null;
 };
+
+export type SavePurchaseReturn = {
+  returnDate: string;
+  reason: string;
+  refundAmount: number;
+  refundMethod: PaymentMethod | null;
+  debtReductionAmount: number;
+  lines: {
+    receiptLineId: string;
+    quantity: number;
+  }[];
+};

@@ -1,4 +1,5 @@
-import type { PurchaseStatus } from "@/features/sales/models/PurchaseRequest";
+/** Mã trạng thái của đơn trong danh mục: lời mời ca vẫn trả mã chữ này, không có `statusId`. */
+export type PurchaseRequestStatusCode = "AWAITING_RESPONSE" | "AWAITING_STAFF" | "ACCEPTED" | "DECLINED" | "CANCELLED";
 
 export type PurchaseStaffing = {
   cages: number;
@@ -52,7 +53,7 @@ export type MyPurchaseShift = {
   approved: boolean | null;
   reason: string | null;
   note: string | null;
-  requestStatus: PurchaseStatus;
+  requestStatus: PurchaseRequestStatusCode;
   canRespond: boolean;
   rowVersion: string;
 };

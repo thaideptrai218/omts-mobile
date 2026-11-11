@@ -7,6 +7,7 @@ import { Row } from "@/components/Row/Row";
 import { Rows } from "@/components/Rows/Rows";
 import { useLoad } from "@/hooks/useLoad";
 import { money } from "@/utils/format";
+import { MetaLines } from "@/features/purchasing/components/MetaLines/MetaLines";
 import { listSupplierDebts } from "@/features/purchasing/services/purchasingService";
 
 /** Công nợ HTX còn phải trả từng nhà cung cấp, nhiều nhất lên đầu. */
@@ -40,11 +41,18 @@ function SupplierDebtsPage() {
                     <Row
                       key={r.supplierId}
                       title={r.supplierName}
-                      meta={`Phải trả ${money(r.payable)} · Đã trả ${money(r.paid)}${r.returned > 0 ? ` · Trả hàng ${money(r.returned)}` : ""}${
-                        r.unallocated > 0 ? ` · Trả trước chưa gắn phiếu ${money(r.unallocated)}` : ""
-                      }`}
-                      value={<span className={r.outstanding > 0 ? "text-danger" : undefined}>{money(r.outstanding)}</span>}
-                      onClick={() => navigate(`/manage/suppliers/${r.supplierId}`)}
+                      meta={
+                        <MetaLines
+                          items={[
+                            ["Còn phải trả", <span key="o" className={r.outstanding > 0 ? "text-danger" : undefined}>{money(r.outstanding)}</span>],
+                            ["Phải trả", money(r.payable)],
+                            ["Đã trả", money(r.paid)],
+                            ["Trả hàng", r.returned > 0 ? money(r.returned) : null],
+                            ["Trả trước chưa gắn phiếu", r.unallocated > 0 ? money(r.unallocated) : null],
+                          ]}
+                        />
+                      }
+                      onClick={() => navigate(`/manage/supplier-debts/${r.supplierId}`)}
                     />
                   ))}
                 </Rows>

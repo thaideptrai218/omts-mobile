@@ -49,7 +49,8 @@ function DateField({
       disabled={disabled}
       startDate={startYear ? new Date(startYear, 0, 1) : undefined}
       endDate={endYear ? new Date(endYear, 11, 31) : undefined}
-      action={{ text: "Xong", close: true }}
+      // Picker chỉ báo onChange khi quay bánh xe; chưa quay mà bấm Xong thì nhận ngày đang hiện là hôm nay.
+      action={{ text: "Xong", close: true, onClick: () => { if (!value) onChange(toIso(new Date())); } }}
     />
   );
 }

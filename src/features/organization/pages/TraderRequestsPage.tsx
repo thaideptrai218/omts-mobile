@@ -1,8 +1,13 @@
 import type { TraderRequestView } from "@/features/organization/models/TraderRequest";
 import { useCallback, useEffect, useState } from "react";
-import { Button, Header, Icon, Input, Modal, Page, Sheet, useSnackbar } from "zmp-ui";
+import { Button, useSnackbar } from "zmp-ui";
 
+import { ConfirmSheet } from "@/components/ConfirmSheet/ConfirmSheet";
+import { Empty } from "@/components/Empty/Empty";
 import FormError from "@/components/FormError/FormError";
+import { Loadable } from "@/components/Loadable/Loadable";
+import { ManagePage } from "@/components/ManagePage/ManagePage";
+import { ReasonSheet } from "@/components/ReasonSheet/ReasonSheet";
 import { errorText } from "@/utils/errorText";
 import { FIELD, MESSAGES } from "@/constants/messages";
 import { approveTraderRequest, listTraderRequests, rejectTraderRequest } from "@/features/organization/services/traderRequestsService";
@@ -23,7 +28,7 @@ function TraderRequestsPage() {
   const [loadError, setLoadError] = useState("");
   const [approving, setApproving] = useState<TraderRequestView | null>(null);
   const [rejecting, setRejecting] = useState<TraderRequestView | null>(null);
-  const [reason, setReason] = useState("");
+  const [rejectRound, setRejectRound] = useState(0);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -59,94 +64,89 @@ function TraderRequestsPage() {
     }
   };
 
-  const reject = async () => {
-    if (!rejecting) return;
-    const text = reason.trim();
+  const reject = async (text: string) => {
+    if (!rejecting) return false;
     if (!text || text.length > MAX_REASON) {
       setError(MESSAGES.MSG01(FIELD.reason));
-      return;
+      return false;
     }
     setBusy(true);
     setError("");
     try {
       await rejectTraderRequest(rejecting.accountId, text);
       done(rejecting.accountId, `Đã từ chối yêu cầu của ${rejecting.displayName}.`);
-      setRejecting(null);
+      return true;
     } catch (err) {
       setError(errorText(err));
+      return false;
     } finally {
       setBusy(false);
     }
   };
 
-  return (
-    <Page className="screen screen--detail" hideScrollbar>
-      <Header title="Duyệt thương lái" className="detail-header" />
-      <div className="screen__body">
-        {!requests && !loadError && <div className="skeleton skeleton--form" aria-busy />}
-        {loadError && (
-          <div className="empty">
-            <p className="empty__title">Không tải được danh sách</p>
-            <p className="empty__text">{loadError}</p>
-            <Button size="large" onClick={() => void load()}>
-              Thử lại
-            </Button>
-          </div>
-        )}
-        {requests?.length === 0 && (
-          <div className="empty">
-            <span className="empty__badge">
-              <Icon icon="zi-check-circle" size={32} />
-            </span>
-            <p className="empty__title">Không có yêu cầu nào đang chờ</p>
-            <p className="empty__text">Khi thương lái gửi yêu cầu từ Zalo, bạn sẽ nhận thông báo.</p>
-          </div>
-        )}
-        {requests && requests.length > 0 && (
-          <ul className="request-list">
-            {requests.map((r) => (
-              <li key={r.accountId} className="card request">
-                <p className="request__name">{r.displayName}</p>
-                <p className="request__meta">
-                  {r.phoneNumber} · {requestedAt(r.requestedAt)}
-                </p>
-                {r.note && <p className="request__note">“{r.note}”</p>}
-                <div className="request__actions">
-                  <Button size="large" variant="secondary" onClick={() => { setReason(""); setError(""); setRejecting(r); }}>
-                    Từ chối
-                  </Button>
-                  <Button size="large" onClick={() => setApproving(r)}>
-                    Duyệt
-                  </Button>
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
+  const startReject = (request: TraderRequestView) => {
+    setError("");
+    setRejectRound((round) => round + 1);
+    setRejecting(request);
+  };
 
-      <Modal
+  return (
+    <ManagePage title="Duyệt thương lái">
+      <Loadable data={requests} error={loadError} reload={() => void load()}>
+        {(list) =>
+          list.length === 0 ? (
+            <Empty icon="zi-check-circle" title="Không có yêu cầu nào đang chờ" text="Khi thương lái gửi yêu cầu từ Zalo, bạn sẽ nhận thông báo." />
+          ) : (
+            <ul className="request-list">
+              {list.map((r) => (
+                <li key={r.accountId} className="card request">
+                  <p className="request__name">{r.displayName}</p>
+                  <p className="request__meta">
+                    {r.phoneNumber} · {requestedAt(r.requestedAt)}
+                  </p>
+                  {r.note && <p className="request__note">“{r.note}”</p>}
+                  <div className="request__actions">
+                    <Button fullWidth size="large" onClick={() => setApproving(r)}>
+                      Duyệt
+                    </Button>
+                    <Button fullWidth size="large" variant="secondary" type="danger" onClick={() => startReject(r)}>
+                      Từ chối
+                    </Button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )
+        }
+      </Loadable>
+
+      <ConfirmSheet
         visible={approving !== null}
         title="Duyệt tài khoản thương lái"
-        description={approving ? `${approving.displayName} (${approving.phoneNumber}) sẽ dùng được các chức năng của thương lái ngay.` : ""}
+        message={approving ? `${approving.displayName} (${approving.phoneNumber}) sẽ dùng được các chức năng của thương lái ngay.` : ""}
+        confirmText="Duyệt"
+        busy={busy}
         onClose={() => setApproving(null)}
-        actions={[
-          { text: "Để sau", close: true },
-          { text: "Duyệt", highLight: true, disabled: busy, onClick: () => void approve() },
-        ]}
+        onConfirm={() => void approve()}
       />
 
-      <Sheet visible={rejecting !== null} onClose={() => setRejecting(null)} autoHeight mask handler swipeToClose title="Từ chối yêu cầu">
-        <div className="sheet-form form">
-          <p className="form__intro">Thương lái sẽ thấy lý do này khi mở app.</p>
-          <Input.TextArea label="Lý do" value={reason} onChange={(e) => setReason(e.target.value)} maxLength={MAX_REASON} showCount disabled={busy} />
-          <FormError text={error} />
-          <Button fullWidth size="large" loading={busy} disabled={busy} onClick={() => void reject()}>
-            Từ chối
-          </Button>
-        </div>
-      </Sheet>
-    </Page>
+      {/* Mỗi lần mở là một sheet mới, để lý do đã gõ cho người trước không sang người sau. */}
+      <ReasonSheet
+        key={rejectRound}
+        visible={rejecting !== null}
+        title="Từ chối yêu cầu"
+        intro="Thương lái sẽ thấy lý do này khi mở app."
+        confirmText="Từ chối"
+        required
+        danger
+        maxLength={MAX_REASON}
+        busy={busy}
+        onClose={() => setRejecting(null)}
+        onConfirm={reject}
+      >
+        <FormError text={error} />
+      </ReasonSheet>
+    </ManagePage>
   );
 }
 

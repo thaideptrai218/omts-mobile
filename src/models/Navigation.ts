@@ -11,6 +11,9 @@ export type Feature = {
 
 export type FeatureKey = keyof typeof FEATURES;
 
+/** Khu vực chức năng, mỗi khu vực một màu và một hình: vùng nuôi, mua hàng, bán hàng, nhân công, tổ chức, sắp có. */
+export type AreaKey = "farm" | "buy" | "sell" | "people" | "org" | "stone";
+
 /**
  * Điều kiện để một chức năng xuất hiện trên dashboard, đối chiếu với `GET api/me/permissions`:
  * - `functions`: có quyền trên ít nhất một mã chức năng trong danh mục `PermissionFunctions` của backend;

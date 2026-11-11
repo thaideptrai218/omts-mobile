@@ -1,5 +1,5 @@
-import type { FakeZalo, FakeZaloWindow } from "@/models/Zalo";
-import { chooseImage, getAccessToken, getLocation, getPhoneNumber, openPermissionSetting, scanQRCode } from "zmp-sdk/apis";
+import type { CheckoutOrderParams, CustomPaymentEvent, CustomPaymentSelection, FakeZalo, FakeZaloWindow } from "@/models/Zalo";
+import { CheckoutSDK, chooseImage, EventName, events, getAccessToken, getLocation, getPhoneNumber, openDocument, openPermissionSetting, scanQRCode } from "zmp-sdk/apis";
 
 /** Chỉ gọi sau khi người dùng bấm nút và đã được giải thích mục đích lấy vị trí. */
 export async function zaloLocationToken(): Promise<string> {
@@ -18,6 +18,68 @@ export async function chooseRaftFormImage(): Promise<string | null> {
   if (fake()?.image) return fake()!.image!;
   const { filePaths } = await chooseImage({ count: 1, sourceType: ["album", "camera"], cameraType: "back" });
   return filePaths?.[0] ?? null;
+}
+
+/**
+ * Ảnh do người dùng chủ động chụp hoặc chọn, dạng Blob để tải lên server. `chooseImage` trả blob URL. Khi người dùng
+ * đóng bộ chọn, SDK không báo gì và promise không bao giờ xong, nên nút gọi hàm này không được khóa lúc đang chọn.
+ */
+export async function choosePhoto(): Promise<Blob | null> {
+  try {
+    const path = fake()?.image ?? (await chooseImage({ count: 1, sourceType: ["album", "camera"], cameraType: "back" })).filePaths?.[0];
+    if (!path) return null;
+    return await (await fetch(path)).blob();
+  } catch {
+    throw new Error("Chưa lấy được ảnh. Bạn có thể thử lại hoặc nhập bằng tay.");
+  }
+}
+
+/** Xem tệp PDF trong Zalo. Ngoài Zalo (bản dev giả lập) mở tab mới. */
+export async function openPdf(url: string, title: string): Promise<void> {
+  if (fake()) {
+    window.open(url, "_blank");
+    return;
+  }
+  try {
+    await openDocument({ url, title, share: false, download: false, edit: false });
+  } catch {
+    throw new Error("Chưa mở được tệp PDF. Vui lòng cập nhật Zalo rồi thử lại, hoặc xem trên bản web.");
+  }
+}
+
+const fakeSelections = new Set<(selection: CustomPaymentSelection) => void>();
+
+/** Mở luồng thanh toán của Zalo với tham số server đã ký, trả mã đơn của Zalo. */
+export async function createCheckoutOrder(params: CheckoutOrderParams): Promise<string> {
+  const f = fake();
+  if (f?.checkoutOrderId) {
+    const orderId = f.checkoutOrderId;
+    window.setTimeout(() => fakeSelections.forEach((notify) => notify({ method: JSON.parse(params.method).id, orderId })), 50);
+    return orderId;
+  }
+  const { orderId } = await CheckoutSDK.createOrder(params);
+  return orderId;
+}
+
+/** Người dùng chọn phương thức riêng trên trang thanh toán của Zalo. Trả hàm hủy đăng ký. */
+export function onCustomPaymentSelected(handler: (selection: CustomPaymentSelection) => void) {
+  fakeSelections.add(handler);
+  const listener = (resp: CustomPaymentEvent) => {
+    if (resp?.eventType === "PAY_BY_CUSTOM_METHOD" && resp.data) handler(resp.data);
+  };
+  events.on(EventName.OnDataCallback, listener);
+  return () => {
+    fakeSelections.delete(handler);
+    events.off(EventName.OnDataCallback, listener);
+  };
+}
+
+/** App được mở lại, ví dụ từ app ngân hàng quay về. Trả hàm hủy đăng ký. */
+export function onAppResumed(handler: () => void) {
+  events.on(EventName.AppResumed, handler);
+  return () => {
+    events.off(EventName.AppResumed, handler);
+  };
 }
 
 function fake(): FakeZalo | null {

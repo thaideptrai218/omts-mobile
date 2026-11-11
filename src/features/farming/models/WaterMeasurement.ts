@@ -51,6 +51,11 @@ export type WaterDetail = {
   statusCode: string | null;
   inputSource: "Ocr" | "Manual";
   photoUrl: string | null;
+  ocrDraft: {
+    ph: number | null;
+    salinity: number | null;
+    measuredAt: string | null;
+  };
   thresholdsUsed: WaterThresholds | null;
   alertState: AlertState;
   thresholdExceeded: boolean;
@@ -100,4 +105,64 @@ export type WaterEditingStatus = {
     code: string | null;
     text: string | null;
   } | null;
+};
+
+export type OcrField<T> = {
+  value: T;
+  confidence: number;
+  uncertain: boolean;
+};
+
+/** `NotCalled`: gửi lại cùng mã thao tác, server trả bản nháp đã lưu và không đọc ảnh lần nữa. */
+export type OcrOutcome = {
+  status: "Success" | "Failed" | "NotCalled";
+  ph: OcrField<number> | null;
+  salinity: OcrField<number> | null;
+};
+
+export type WaterRecognition = {
+  measurement: WaterDetail;
+  ocr: OcrOutcome;
+};
+
+/** Ảnh và mã thao tác của một lần gửi đọc ảnh, giữ lại để gửi lại đúng ảnh đó sau lỗi mạng. */
+export type WaterPhotoAttempt = {
+  zoneId: string;
+  photo: Blob;
+  operationId: string;
+};
+
+export type WaterIndicatorStats = {
+  average: number | null;
+  minimum: number | null;
+  maximum: number | null;
+  count: number;
+};
+
+export type WaterChartPeriod = {
+  period: string;
+  from: string;
+  to: string;
+  ph: WaterIndicatorStats;
+  salinity: WaterIndicatorStats;
+  missing: boolean;
+};
+
+export type WaterChartData = {
+  zoneId: string;
+  from: string;
+  to: string;
+  groupBy: "Month" | "Day";
+  thresholds: WaterThresholds;
+  periods: WaterChartPeriod[];
+};
+
+export type WaterRange = "days" | "months";
+
+export type WaterView = "list" | "chart";
+
+/** Khoảng ngày lọc lịch sử số đo, dạng "2026-10-28" theo ngày Việt Nam. */
+export type WaterDateRange = {
+  from: string;
+  to: string;
 };

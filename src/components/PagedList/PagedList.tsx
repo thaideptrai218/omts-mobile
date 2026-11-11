@@ -36,7 +36,7 @@ function PagedList<T>({
             </p>
             <Rows>{items.map(children)}</Rows>
             {list.hasMore && (
-              <Button className="more" fullWidth variant="secondary" loading={list.loading} disabled={list.loading} onClick={list.more}>
+              <Button className="more" fullWidth size="large" variant="secondary" loading={list.loading} disabled={list.loading} onClick={list.more}>
                 Tải thêm
               </Button>
             )}

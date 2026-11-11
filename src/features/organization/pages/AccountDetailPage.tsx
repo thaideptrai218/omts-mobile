@@ -28,6 +28,18 @@ function grantPeriod(g: GrantRow) {
   return g.effectiveTo ? `${date(g.effectiveFrom)} – ${date(g.effectiveTo)}` : `Từ ${date(g.effectiveFrom)}`;
 }
 
+function grantMeta(g: GrantRow) {
+  return `${g.allZones ? "Toàn HTX" : (g.zoneName ?? "—")} · ${grantPeriod(g)}${g.revokeReason ? ` · Lý do thu hồi: ${g.revokeReason}` : ""}`;
+}
+
+function grantState(g: GrantRow) {
+  return (g.state && GRANT_STATE[g.state]) || { text: g.state ?? "—", tone: "neutral" as const };
+}
+
+function grantName(g: GrantRow) {
+  return `${roleName(g.roleName)}, ${g.allZones ? "toàn HTX" : g.zoneName}`;
+}
+
 /**
  * Một tài khoản nhân viên: thông tin liên hệ, hồ sơ nhân viên đã gắn, các lần cấp vai trò theo vùng. Chủ HTX khóa
  * hoặc mở khóa, cấp thêm vai trò, thu hồi vai trò. Mỗi thao tác đều cần lý do để ghi nhật ký hệ thống.
@@ -66,7 +78,21 @@ function AccountDetailPage() {
   };
 
   return (
-    <ManagePage title="Tài khoản">
+    <ManagePage
+      title="Tài khoản"
+      footer={
+        data &&
+        (data.account.status === "Locked" ? (
+          <Button fullWidth size="large" onClick={() => setLocking("unlock")}>
+            Mở khóa
+          </Button>
+        ) : (
+          <Button fullWidth size="large" onClick={() => setGranting(true)}>
+            Cấp thêm vai trò
+          </Button>
+        ))
+      }
+    >
       <Loadable data={data} error={error} reload={() => void reload()}>
         {({ account: a, grants }) => {
           const status = statusLabel(a.status);
@@ -95,26 +121,16 @@ function AccountDetailPage() {
                   </Button>
                 )}
               </Section>
-              <Section
-                title="Vai trò theo vùng"
-                action={
-                  !locked && (
-                    <Button size="small" variant="secondary" onClick={() => setGranting(true)}>
-                      Cấp thêm
-                    </Button>
-                  )
-                }
-              >
+              <Section title="Vai trò theo vùng">
                 {current.length === 0 ? (
                   <Empty icon="zi-shield-solid" title="Chưa có vai trò đang hiệu lực" text="Tài khoản chưa dùng được chức năng nào cho tới khi được cấp vai trò." />
                 ) : (
-                  <Rows>
+                  <ul className="request-list">
                     {current.map((g) => (
-                      <GrantItem key={g.id} grant={g} onClick={() => setRevoking(g)} />
+                      <GrantCard key={g.id} grant={g} onRevoke={() => setRevoking(g)} />
                     ))}
-                  </Rows>
+                  </ul>
                 )}
-                {current.length > 0 && <p className="form__hint">Bấm vào một vai trò để thu hồi.</p>}
               </Section>
               {past.length > 0 && (
                 <Section title="Đã hết hạn hoặc thu hồi">
@@ -125,17 +141,13 @@ function AccountDetailPage() {
                   </Rows>
                 </Section>
               )}
-              <Actions>
-                {locked ? (
-                  <Button size="large" onClick={() => setLocking("unlock")}>
-                    Mở khóa
-                  </Button>
-                ) : (
+              {!locked && (
+                <Actions>
                   <Button size="large" variant="secondary" type="danger" onClick={() => setLocking("lock")}>
                     Khóa tài khoản
                   </Button>
-                )}
-              </Actions>
+                </Actions>
+              )}
               <p className="screen__note">Đặt lại mật khẩu thực hiện trên bản web của OMTS.</p>
             </>
           );
@@ -147,6 +159,7 @@ function AccountDetailPage() {
         title={locking === "lock" ? "Khóa tài khoản" : "Mở khóa tài khoản"}
         intro={locking === "lock" ? "Người này sẽ bị đăng xuất và không vào được OMTS cho tới khi mở khóa." : "Người này sẽ vào lại được OMTS với các vai trò còn hiệu lực."}
         confirmText={locking === "lock" ? "Khóa" : "Mở khóa"}
+        danger={locking === "lock"}
         required
         maxLength={1000}
         busy={busy}
@@ -156,9 +169,10 @@ function AccountDetailPage() {
 
       <ReasonSheet
         visible={revoking !== null}
-        title="Thu hồi vai trò"
-        intro={revoking ? `${roleName(revoking.roleName)}, ${revoking.allZones ? "toàn HTX" : revoking.zoneName}. Người này mất quyền của vai trò này ngay.` : ""}
-        confirmText="Thu hồi"
+        title="Thu hồi vai trò này?"
+        intro={revoking ? `${grantName(revoking)}. Người này mất quyền của vai trò này ngay. Ghi lý do để lưu vào nhật ký hệ thống.` : ""}
+        confirmText="Có, thu hồi"
+        danger
         required
         maxLength={1000}
         busy={busy}
@@ -179,15 +193,28 @@ function AccountDetailPage() {
   );
 }
 
-function GrantItem({ grant: g, onClick }: { grant: GrantRow; onClick?: () => void }) {
-  const state = (g.state && GRANT_STATE[g.state]) || { text: g.state ?? "—", tone: "neutral" as const };
+/** Vai trò đã hết hạn hoặc đã thu hồi: chỉ xem. */
+function GrantItem({ grant: g }: { grant: GrantRow }) {
+  const state = grantState(g);
+  return <Row title={roleName(g.roleName)} meta={grantMeta(g)} badge={<Badge text={state.text} tone={state.tone} />} />;
+}
+
+/** Vai trò đang hiệu lực: nút thu hồi hiện rõ trên từng vai trò, không ẩn trong thao tác bấm vào dòng. */
+function GrantCard({ grant: g, onRevoke }: { grant: GrantRow; onRevoke: () => void }) {
+  const state = grantState(g);
   return (
-    <Row
-      title={roleName(g.roleName)}
-      meta={`${g.allZones ? "Toàn HTX" : (g.zoneName ?? "—")} · ${grantPeriod(g)}${g.revokeReason ? ` · Lý do thu hồi: ${g.revokeReason}` : ""}`}
-      badge={<Badge text={state.text} tone={state.tone} />}
-      onClick={onClick}
-    />
+    <li className="card request">
+      <p className="request__name">{roleName(g.roleName)}</p>
+      <p className="request__meta">{grantMeta(g)}</p>
+      <p className="row__badges">
+        <Badge text={state.text} tone={state.tone} />
+      </p>
+      <div className="request__actions">
+        <Button fullWidth size="large" variant="secondary" type="danger" onClick={onRevoke}>
+          Thu hồi vai trò
+        </Button>
+      </div>
+    </li>
   );
 }
 
@@ -227,7 +254,7 @@ function GrantSheet({ visible, accountId, onClose, onGranted }: { visible: boole
     <Sheet visible={visible} onClose={onClose} autoHeight mask handler swipeToClose title="Cấp vai trò">
       <div className="sheet-form form">
         {options.error && <FormError text={options.error} />}
-        <Select label="Vai trò" placeholder="Chọn vai trò" mask closeOnSelect value={roleId} onChange={(v) => setRoleId(String(v ?? ""))} disabled={busy || !options.data}>
+        <Select label="Vai trò (bắt buộc)" placeholder="Chọn vai trò" mask closeOnSelect value={roleId} onChange={(v) => setRoleId(String(v ?? ""))} disabled={busy || !options.data}>
           {(options.data?.roles ?? []).map((r) => (
             <Select.Option key={r.id} value={r.id} title={roleName(r.name)} />
           ))}
@@ -238,19 +265,22 @@ function GrantSheet({ visible, accountId, onClose, onGranted }: { visible: boole
             <Select.Option key={z.id} value={z.id} title={z.name ?? z.code ?? ""} />
           ))}
         </Select>
-        <div className="two-col">
-          <DateField label="Hiệu lực từ" value={from} onChange={setFrom} disabled={busy} />
-          <DateField label="Đến (không bắt buộc)" value={to} onChange={setTo} disabled={busy} />
-        </div>
+        <DateField label="Hiệu lực từ" value={from} onChange={setFrom} disabled={busy} />
+        <DateField label="Đến (không bắt buộc)" value={to} onChange={setTo} disabled={busy} />
         {to && (
           <button type="button" className="link-button" onClick={() => setTo(null)}>
             Bỏ ngày kết thúc
           </button>
         )}
         <FormError text={error} />
-        <Button fullWidth size="large" loading={busy} disabled={busy} onClick={() => void submit()}>
-          Cấp vai trò
-        </Button>
+        <div className="sheet-actions">
+          <Button fullWidth size="large" loading={busy} disabled={busy} onClick={() => void submit()}>
+            Cấp vai trò
+          </Button>
+          <Button fullWidth size="large" variant="secondary" disabled={busy} onClick={onClose}>
+            Không, quay lại
+          </Button>
+        </div>
       </div>
     </Sheet>
   );

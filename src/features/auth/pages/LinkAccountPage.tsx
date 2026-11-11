@@ -1,9 +1,13 @@
 import type { LinkAccountStep as Step } from "@/features/auth/models/LinkAccount";
 import { useSetAtom } from "jotai";
-import { FormEvent, useState } from "react";
-import { Button, Header, Icon, Input, Page, useNavigate } from "zmp-ui";
+import { FormEvent, useEffect, useState } from "react";
+import { Button, Icon, Input, useNavigate } from "zmp-ui";
 
+import { Empty } from "@/components/Empty/Empty";
 import FormError from "@/components/FormError/FormError";
+import { ManagePage } from "@/components/ManagePage/ManagePage";
+import DemoLogin from "@/features/auth/components/DemoLogin/DemoLogin";
+import { demoLoginAvailable } from "@/features/auth/services/demoLoginService";
 import { linkZaloAccount, requestTraderAccess } from "@/features/auth/services/linkService";
 import { maskPhone } from "@/utils/masking";
 import { errorText } from "@/utils/errorText";
@@ -21,7 +25,7 @@ const MAX_NOTE = 500;
  * hồ sơ HTX đã tạo và phát phiên. Số chưa có tài khoản: thương lái nhập tên, gửi yêu cầu và chờ Chủ HTX duyệt.
  * Không có mật khẩu, mã xác minh hay quên mật khẩu.
  */
-function LinkAccountPage() {
+function ZaloLinkPage() {
   const navigate = useNavigate();
   const setFlash = useSetAtom(flashMessageAtom);
   const [step, setStep] = useState<Step>({ kind: "link" });
@@ -83,10 +87,24 @@ function LinkAccountPage() {
     });
   };
 
+  const footer =
+    step.kind === "link" ? (
+      <Button fullWidth size="large" loading={busy} disabled={busy} onClick={() => void link()}>
+        Liên kết bằng số điện thoại Zalo
+      </Button>
+    ) : step.kind === "request" ? (
+      <Button fullWidth size="large" loading={busy} disabled={busy} onClick={sendRequest}>
+        Gửi yêu cầu
+      </Button>
+    ) : step.kind === "rejected" ? (
+      <Button fullWidth size="large" onClick={() => setStep({ kind: "request", maskedPhone: "" })}>
+        Gửi lại yêu cầu
+      </Button>
+    ) : undefined;
+
   return (
-    <Page className="screen screen--detail" hideScrollbar>
-      <Header title={step.kind === "request" ? "Gửi yêu cầu cho HTX" : "Liên kết tài khoản"} className="detail-header" />
-      <div className="screen__body form">
+    <ManagePage title={step.kind === "request" ? "Gửi yêu cầu cho HTX" : "Liên kết tài khoản"} footer={footer}>
+      <div className="form">
         {step.kind === "link" && (
           <>
             <div className="empty empty--compact">
@@ -97,9 +115,6 @@ function LinkAccountPage() {
               <p className="empty__text">{LINK.why}</p>
             </div>
             <FormError text={error} />
-            <Button fullWidth size="large" loading={busy} disabled={busy} onClick={() => void link()}>
-              Liên kết bằng số điện thoại Zalo
-            </Button>
           </>
         )}
 
@@ -107,7 +122,7 @@ function LinkAccountPage() {
           <form className="form" onSubmit={sendRequest} noValidate>
             {step.maskedPhone && <p className="form__intro">{LINK.phoneNotFound(step.maskedPhone)}</p>}
             <p className="form__hint">{LINK.requestIntro}</p>
-            <Input label="Họ và tên" size="large" value={name} onChange={(e) => setName(e.target.value)} maxLength={MAX_NAME} autoComplete="name" disabled={busy} />
+            <Input label="Họ và tên (bắt buộc)" size="large" value={name} onChange={(e) => setName(e.target.value)} maxLength={MAX_NAME} autoComplete="name" disabled={busy} />
             <Input.TextArea
               label="Lời nhắn cho HTX (không bắt buộc)"
               value={note}
@@ -118,35 +133,19 @@ function LinkAccountPage() {
               disabled={busy}
             />
             <FormError text={error} />
-            <Button htmlType="submit" fullWidth size="large" loading={busy} disabled={busy}>
-              Gửi yêu cầu
-            </Button>
           </form>
         )}
 
-        {step.kind === "pending" && (
-          <div className="empty">
-            <span className="empty__badge">
-              <Icon icon="zi-clock-1" size={32} />
-            </span>
-            <p className="empty__title">Đang chờ HTX duyệt</p>
-            <p className="empty__text">{LINK.pending(step.name)}</p>
-          </div>
-        )}
+        {step.kind === "pending" && <Empty icon="zi-clock-1" title="Đang chờ HTX duyệt" text={LINK.pending(step.name)} />}
 
         {step.kind === "rejected" && (
-          <>
-            <div className="empty empty--compact">
-              <span className="empty__badge">
-                <Icon icon="zi-close-circle" size={32} />
-              </span>
-              <p className="empty__title">Yêu cầu chưa được duyệt</p>
-              <p className="empty__text">{LINK.rejected(step.reason)}</p>
-            </div>
-            <Button fullWidth size="large" onClick={() => setStep({ kind: "request", maskedPhone: "" })}>
-              Gửi lại yêu cầu
-            </Button>
-          </>
+          <div className="empty empty--compact">
+            <span className="empty__badge">
+              <Icon icon="zi-close-circle" size={32} />
+            </span>
+            <p className="empty__title">Yêu cầu chưa được duyệt</p>
+            <p className="empty__text">{LINK.rejected(step.reason)}</p>
+          </div>
         )}
 
         {declined && (
@@ -161,8 +160,20 @@ function LinkAccountPage() {
           </button>
         </div>
       </div>
-    </Page>
+    </ManagePage>
   );
+}
+
+/** Trong Zalo là "Liên kết tài khoản"; bản dev chạy trên trình duyệt thì đăng nhập bằng tài khoản demo. */
+function LinkAccountPage() {
+  const [demo, setDemo] = useState<boolean | null>(null);
+  useEffect(() => {
+    let alive = true;
+    void demoLoginAvailable().then((value) => { if (alive) setDemo(value); });
+    return () => { alive = false; };
+  }, []);
+  if (demo === null) return null;
+  return demo ? <DemoLogin /> : <ZaloLinkPage />;
 }
 
 export default LinkAccountPage;

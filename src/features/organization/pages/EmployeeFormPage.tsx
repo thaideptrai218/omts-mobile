@@ -45,23 +45,30 @@ function EmployeeFormPage() {
     const [employee, zones] = await Promise.all([id ? getEmployee(id) : Promise.resolve(null), lookupZones()]);
     return { employee, zones };
   }, [id]);
+  const title = editing ? "Sửa nhân viên" : "Thêm nhân viên";
+
+  // Nút Lưu nằm ở chân trang và cần dữ liệu của form, nên khi đã tải xong thì form tự dựng ManagePage của nó.
+  if (data) {
+    return (
+      <EmployeeForm
+        title={title}
+        employee={data.employee}
+        zones={data.zones}
+        onSaved={(saved) => navigate(`/manage/employees/${saved.id}`, { replace: true })}
+      />
+    );
+  }
 
   return (
-    <ManagePage title={editing ? "Sửa nhân viên" : "Thêm nhân viên"}>
+    <ManagePage title={title}>
       <Loadable data={data} error={error} reload={() => void reload()}>
-        {({ employee, zones }) => (
-          <EmployeeForm
-            employee={employee}
-            zones={zones}
-            onSaved={(saved) => navigate(`/manage/employees/${saved.id}`, { replace: true })}
-          />
-        )}
+        {() => null}
       </Loadable>
     </ManagePage>
   );
 }
 
-function EmployeeForm({ employee, zones, onSaved }: { employee: EmployeeView | null; zones: ZoneLookupItem[]; onSaved: (e: EmployeeView) => void }) {
+function EmployeeForm({ title, employee, zones, onSaved }: { title: string; employee: EmployeeView | null; zones: ZoneLookupItem[]; onSaved: (e: EmployeeView) => void }) {
   const [form, setForm] = useState<Form>(() => formFrom(employee));
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -107,43 +114,57 @@ function EmployeeForm({ employee, zones, onSaved }: { employee: EmployeeView | n
   };
 
   return (
-    <div className="form">
-      <Input label="Họ tên" value={form.fullName} onChange={text("fullName")} maxLength={200} disabled={busy} />
-      <Input label="Số điện thoại" value={form.phoneNumber} onChange={text("phoneNumber")} inputMode="tel" maxLength={20} disabled={busy} helperText="Số Zalo của nhân viên, dùng để liên kết tài khoản." />
-      <DateField label="Ngày sinh" value={form.birthday} onChange={set("birthday")} disabled={busy} startYear={1940} endYear={new Date().getFullYear()} />
-      <Input label="Địa chỉ" value={form.address} onChange={text("address")} maxLength={500} disabled={busy} />
-      <div className="two-col">
-        <Input label="Phường/xã" value={form.ward} onChange={text("ward")} maxLength={200} disabled={busy} />
-        <Input label="Khu vực" value={form.area} onChange={text("area")} maxLength={200} disabled={busy} />
-      </div>
-      <Select
-        label="Vùng làm việc"
-        placeholder="Chọn vùng nuôi"
-        multiple
-        closeOnSelect={false}
-        mask
-        value={form.workingZoneIds}
-        onChange={(v) => set("workingZoneIds")(((Array.isArray(v) ? v : []) as (string | number)[]).map(String))}
-        disabled={busy}
-      >
-        {zoneOptions.map((z) => (
-          <Select.Option key={z.id} value={z.id} title={`${z.name ?? z.code}${z.statusId === 101 ? "" : " (ngừng dùng)"}`} />
-        ))}
-      </Select>
-      <Section title="Tài khoản ngân hàng">
+    <ManagePage
+      title={title}
+      footer={
+        <Button fullWidth size="large" loading={busy} disabled={busy} onClick={() => void save()}>
+          Lưu
+        </Button>
+      }
+    >
+      <Section step={1} title="Thông tin cá nhân">
+        <div className="form">
+          <Input label="Họ tên (bắt buộc)" value={form.fullName} onChange={text("fullName")} maxLength={200} disabled={busy} />
+          <Input label="Số điện thoại" value={form.phoneNumber} onChange={text("phoneNumber")} inputMode="tel" maxLength={20} disabled={busy} helperText="Số Zalo của nhân viên, dùng để liên kết tài khoản." />
+          <DateField label="Ngày sinh" value={form.birthday} onChange={set("birthday")} disabled={busy} startYear={1940} endYear={new Date().getFullYear()} />
+        </div>
+      </Section>
+      <Section step={2} title="Địa chỉ và vùng làm việc">
+        <div className="form">
+          <Input label="Địa chỉ" value={form.address} onChange={text("address")} maxLength={500} disabled={busy} />
+          <Input label="Phường/xã" value={form.ward} onChange={text("ward")} maxLength={200} disabled={busy} />
+          <Input label="Khu vực" value={form.area} onChange={text("area")} maxLength={200} disabled={busy} />
+          <Select
+            label="Vùng làm việc"
+            placeholder="Chọn vùng nuôi"
+            multiple
+            closeOnSelect={false}
+            mask
+            value={form.workingZoneIds}
+            onChange={(v) => set("workingZoneIds")(((Array.isArray(v) ? v : []) as (string | number)[]).map(String))}
+            disabled={busy}
+          >
+            {zoneOptions.map((z) => (
+              <Select.Option key={z.id} value={z.id} title={`${z.name ?? z.code}${z.statusId === 101 ? "" : " (ngừng dùng)"}`} />
+            ))}
+          </Select>
+        </div>
+      </Section>
+      <Section step={3} title="Tài khoản ngân hàng">
         <div className="form">
           <Input label="Ngân hàng" value={form.bankName} onChange={text("bankName")} maxLength={200} disabled={busy} />
           <Input label="Số tài khoản" value={form.accountNumber} onChange={text("accountNumber")} inputMode="numeric" maxLength={50} disabled={busy} />
           <Input label="Chủ tài khoản" value={form.accountHolderName} onChange={text("accountHolderName")} maxLength={200} disabled={busy} />
         </div>
       </Section>
-      <Input.TextArea label="Thông tin khác" value={form.otherInformation} onChange={text("otherInformation")} maxLength={1000} showCount disabled={busy} />
-      <Input.TextArea label="Ghi chú" value={form.notes} onChange={text("notes")} maxLength={1000} showCount disabled={busy} />
-      <FormError text={error} />
-      <Button fullWidth size="large" loading={busy} disabled={busy} onClick={() => void save()}>
-        Lưu
-      </Button>
-    </div>
+      <Section step={4} title="Thông tin thêm">
+        <div className="form">
+          <Input.TextArea label="Thông tin khác" value={form.otherInformation} onChange={text("otherInformation")} maxLength={1000} showCount disabled={busy} />
+          <Input.TextArea label="Ghi chú" value={form.notes} onChange={text("notes")} maxLength={1000} showCount disabled={busy} />
+          <FormError text={error} />
+        </div>
+      </Section>
+    </ManagePage>
   );
 }
 

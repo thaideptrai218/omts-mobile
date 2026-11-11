@@ -1,0 +1,37 @@
+/* Ô đánh dấu dạng khung lớn: bấm vào chữ hay bất kỳ chỗ nào trong khung đều được. */
+.harvest-option.zaui-checkbox-wrapper {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 3.5rem;
+  padding: 12px;
+  border: 2px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  box-sizing: border-box;
+}
+
+/* Một luống và ô "đã thu hết" của nó: hai khung sát nhau, cách luống kế tiếp 12px. */
+.harvest-lane {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.harvest-notice {
+  margin-bottom: 12px;
+}
+
+/* Một đơn trong phiếu ghi lô: dòng tên thương lái và sản phẩm, dòng mã đơn và số lồng đã thu. */
+.harvest-order {
+  display: grid;
+  gap: 4px;
+}
+
+.harvest-order__title {
+  font-weight: 700;
+}
+
+.harvest-order__meta {
+  color: var(--ink-2);
+}

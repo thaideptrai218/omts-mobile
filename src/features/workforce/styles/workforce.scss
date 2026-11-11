@@ -1,0 +1,74 @@
+/* Danh sách thẻ đứng liền nhau trong một cột: cách đều 12px. */
+.workforce-cards {
+  display: grid;
+  gap: 12px;
+}
+
+/* Danh sách chọn nhân viên: mỗi người là một khung lớn, cả khung bấm được, các khung cách nhau 12px. */
+.crew-list {
+  display: grid;
+  gap: 12px;
+}
+
+.crew-list .crew-choice {
+  min-height: 3.5rem;
+  padding: 12px;
+  border: 2px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+}
+
+/* Kết quả thành công, đặt ngay dưới nút vừa bấm. */
+.status-note {
+  padding: 12px;
+  border: 2px solid var(--ok);
+  border-radius: var(--radius);
+  background: var(--ok-soft);
+  color: var(--ok);
+  font-size: 1rem;
+  line-height: 1.5rem;
+  font-weight: 700;
+}
+
+/* Ô chọn tháng, chọn giờ: nhãn nằm trên, cả khung bấm được, chữ lớn. */
+.native-picker {
+  display: grid;
+  gap: 4px;
+}
+
+.native-picker__label {
+  font-size: 1rem;
+  line-height: 1.5rem;
+  font-weight: 700;
+}
+
+.native-picker__input {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  min-height: 3.5rem;
+  padding: 0 12px;
+  border: 2px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 1.125rem;
+  line-height: 1.5rem;
+  box-sizing: border-box;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.native-picker__input:disabled {
+  color: var(--ink-2);
+}
+
+body[zaui-theme="dark"] .native-picker__input {
+  color-scheme: dark;
+}
+
+.native-picker__hint {
+  font-size: 1rem;
+  line-height: 1.5rem;
+  color: var(--ink-2);
+}

@@ -1,20 +1,16 @@
 import NotificationBell from "@/features/notifications/components/NotificationBell/NotificationBell";
 import { useAtomValue } from "jotai";
-import { Button, Icon, Page, useNavigate } from "zmp-ui";
+import { Button, Page, useNavigate } from "zmp-ui";
 
-import ActionGrid from "@/features/dashboard/components/ActionGrid/ActionGrid";
+import { AreaCard } from "@/components/AreaCard/AreaCard";
+import { seaGreeting } from "@/constants/seaGreetings";
+import HomeMenu from "@/features/dashboard/components/HomeMenu/HomeMenu";
 import OwnerDashboard from "@/features/dashboard/components/OwnerDashboard/OwnerDashboard";
 import PageHeader from "@/components/PageHeader/PageHeader";
 import TestRoleSwitcher from "@/features/development/components/TestRoleSwitcher/TestRoleSwitcher";
-import StatPanel from "@/features/dashboard/components/StatPanel/StatPanel";
-import TaskList from "@/features/dashboard/components/TaskList/TaskList";
 import TraceLookup from "@/features/traceability/components/TraceLookup/TraceLookup";
 import { COOPERATIVE } from "@/constants/cooperative";
-import {
-  canUseFeature,
-  describeGrants,
-  roleKeyFor,
-} from "@/utils/featureAccess";
+import { describeGrants, roleKeyFor } from "@/utils/featureAccess";
 import { ROLES } from "@/constants/roles";
 import { permissionsAtom, sessionAtom } from "@/features/auth/state/authAtoms";
 
@@ -46,8 +42,7 @@ function today(now: Date) {
 
 /**
  * Tổng quan. Chưa liên kết: tra cứu truy xuất công khai và lối vào liên kết tài khoản. Đã đăng nhập: chức năng
- * lọc theo `GET api/me/permissions`; số liệu và việc cần làm vẫn là dữ liệu mẫu theo vai trò gần nhất
- * cho tới khi các module đó nối API.
+ * lọc theo `GET api/me/permissions`. Số liệu chỉ lấy từ API, hiện có ở Tổng quan của Chủ HTX.
  */
 function HomePage() {
   const navigate = useNavigate();
@@ -62,6 +57,7 @@ function HomePage() {
           kicker={COOPERATIVE.shortName}
           title="Truy xuất nguồn gốc hàu"
           subtitle="Quét mã QR trên bao bì để xem hàu được nuôi ở đâu và thu hoạch khi nào."
+          scene
         />
         <div className="screen__body">
           <div className="card">
@@ -82,62 +78,40 @@ function HomePage() {
   }
 
   const role = permissions ? ROLES[roleKeyFor(permissions)] : null;
-  const actions =
-    permissions && role
-      ? role.actions.filter((key) => canUseFeature(permissions, key))
-      : [];
-  const tasks =
-    permissions && role
-      ? role.tasks.filter((t) => canUseFeature(permissions, t.feature))
-      : [];
 
   return (
     <Page className="screen screen--with-nav" hideScrollbar>
       <PageHeader
         bell={<NotificationBell />}
-        kicker={`${greeting(now)}, ${today(now)}`}
+        kicker={greeting(now)}
         title={session.displayName}
         subtitle={permissions ? describeGrants(permissions) : undefined}
+        scene
       />
       <div className="screen__body">
+        <div className="sea-note">
+          <p className="sea-note__date">{today(now)}</p>
+          <p>{seaGreeting(now)}</p>
+        </div>
         {!permissions || !role ? (
           <div className="skeleton skeleton--dashboard" aria-busy />
         ) : permissions.isCooperativeOwner ? (
-          <OwnerDashboard role={role} />
+          <OwnerDashboard role={role} permissions={permissions} />
         ) : permissions.subjectType === "Trader" ? (
           <>
-            <div className="card form">
-              <p className="block__title">Mua hàng cùng HTX</p>
-              <p className="form__hint">Chọn sản phẩm, đặt số lồng và gửi yêu cầu đến Chủ HTX. Bạn có thể xem phản hồi trong Mua hàng của tôi.</p>
-              <Button fullWidth size="large" onClick={() => navigate("/account/purchases")}>Mua hàng của tôi</Button>
-            </div>
-            <ActionGrid actions={actions} />
+            <AreaCard area="sell" title="Mua hàng của tôi" hint="Đặt lồng, xem phản hồi" onClick={() => navigate("/account/purchases")} />
+            <HomeMenu role={role} permissions={permissions} exclude="orders" />
           </>
         ) : (
           <>
-            {role.key === "accountant" && <TaskList title={role.tasksTitle} tasks={tasks} />}
-            {role.key !== "accountant" && <div className="card form">
-              <p className="block__title">Công việc và giờ làm của bạn</p>
-              <p className="form__hint">Xem phân công, đưa mã chấm công cho Quản lý vùng và theo dõi giờ đã ghi nhận.</p>
-              <Button fullWidth size="large" onClick={() => navigate("/account/work")}>Mở công việc cá nhân</Button>
-            </div>}
-            <ActionGrid actions={actions} />
-            {actions.length === 0 && (
-              <div className="empty">
-                <span className="empty__badge">
-                  <Icon icon="zi-lock" size={32} />
-                </span>
-                <p className="empty__title">Chưa có chức năng nào</p>
-                <p className="empty__text">
-                  Tài khoản của bạn chưa được cấp quyền. Liên hệ Chủ HTX để được
-                  phân công.
-                </p>
-              </div>
+            {role.key !== "accountant" && (
+              <AreaCard area="people" title="Công việc của tôi" hint="Phân công, chấm công" onClick={() => navigate("/account/work")} />
             )}
-            {role.key === "accountant" && <StatPanel stats={role.stats} />}
+            <HomeMenu role={role} permissions={permissions} exclude={role.key !== "accountant" ? "myWork" : undefined} />
             {role.note && <p className="screen__note">{role.note}</p>}
           </>
         )}
+        {/* Ô thử vai trò chỉ có ở bản dev; để cuối trang cho trang chủ giống bản thật. */}
         {import.meta.env.DEV && <TestRoleSwitcher key={session.accountId} />}
       </div>
     </Page>
