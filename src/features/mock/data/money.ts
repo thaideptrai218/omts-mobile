@@ -205,34 +205,6 @@ export const MONEY_MODULES: MockModule[] = [
     ],
   },
   {
-    key: "supplierStatement",
-    title: "Sao kê công nợ theo kỳ",
-    useCases: "PURCHASE-04",
-    records: [
-      {
-        id: "SK-1",
-        title: "Trại giống Đồng Rui",
-        meta: "01/10/2026 đến 05/11/2026",
-        amount: 6500000,
-        facts: [
-          ["Đầu kỳ", "5.000.000 đ"],
-          ["Cuối kỳ", "6.500.000 đ"],
-          ["Tuổi nợ", "20 ngày"],
-        ],
-        sections: [
-          {
-            title: "Phát sinh, theo ngày",
-            rows: [
-              { title: "Phiếu nhập PN-2610-08", meta: "16/10/2026 · Dư nợ 17.000.000 đ", value: "+12.000.000 đ" },
-              { title: "Trả hàng TH-2610-02", meta: "20/10/2026 · Dư nợ 16.500.000 đ", value: "-500.000 đ" },
-              { title: "Trả tiền chuyển khoản", meta: "02/11/2026 · Dư nợ 6.500.000 đ", value: "-10.000.000 đ" },
-            ],
-          },
-        ],
-      },
-    ],
-  },
-  {
     key: "payroll",
     title: "Bảng lương",
     useCases: "LABOR-12 đến LABOR-14",

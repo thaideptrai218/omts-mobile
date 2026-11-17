@@ -2,6 +2,7 @@ import type { MyInvoice } from "@/features/sales/models/SalesInvoice";
 import { useEffect, useState } from "react";
 import { Button, useLocation, useNavigate } from "zmp-ui";
 
+import { Actions } from "@/components/Actions/Actions";
 import { Badge } from "@/components/Badge/Badge";
 import { Empty } from "@/components/Empty/Empty";
 import { Facts } from "@/components/Facts/Facts";
@@ -74,6 +75,17 @@ export default function MyInvoicesPage() {
             </div>
           ))}
         </Section>
+        {/* CLAIM-01: hóa đơn đã hủy không khiếu nại được; trường hợp đã trả hàng hay đang có khiếu nại chờ thì server báo. */}
+        {opened.isPaid !== null && (
+          <Section title="Hàng có vấn đề?">
+            <p className="form__hint">Gửi khiếu nại kèm ảnh, HTX sẽ kiểm tra và trả lời bạn.</p>
+            <Actions>
+              <Button variant="secondary" size="large" onClick={() => navigate(`/account/claims/new?invoice=${encodeURIComponent(opened.id)}`)}>
+                Gửi khiếu nại về hóa đơn này
+              </Button>
+            </Actions>
+          </Section>
+        )}
       </ManagePage>
     );
   }

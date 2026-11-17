@@ -1,8 +1,9 @@
-import type { InputItem, InputItemGroup } from "@/features/purchasing/models/InputItem";
+import type { InputItem, InputItemGroup, SaveInputItem } from "@/features/purchasing/models/InputItem";
 import { useState } from "react";
 import { Button, Input, Select, Sheet } from "zmp-ui";
 
 import FormError from "@/components/FormError/FormError";
+import { num } from "@/utils/format";
 import { Badge } from "@/components/Badge/Badge";
 import { Chips } from "@/components/Chips/Chips";
 import { ConfirmSheet } from "@/components/ConfirmSheet/ConfirmSheet";
@@ -22,7 +23,7 @@ import { createInputItem, listInputItems, setInputItemInUse, STATUS_IN_USE, upda
  * một sheet. Vật tư đã có phiếu nhập (`isUsed`) không đổi được mã, nhóm và đơn vị (backend kiểm tra).
  */
 function InputItemsPage() {
-  const [group, setGroup] = useState<InputItemGroup>("RaftMaterial");
+  const [group, setGroup] = useState<InputItemGroup>("Material");
   const { data, error, reload, setData } = useLoad(() => listInputItems({ group }), [group]);
   const [editing, setEditing] = useState<InputItem | "new" | null>(null);
 
@@ -60,7 +61,7 @@ function InputItemsPage() {
                   <Row
                     key={x.id}
                     title={x.name}
-                    meta={`${x.code ?? ""} · ${x.unit ?? ""}${x.description ? ` · ${x.description}` : ""}`}
+                    meta={`${x.code} · tồn ${num(x.onHand, x.unit)}${x.description ? ` · ${x.description}` : ""}`}
                     badge={x.statusId !== STATUS_IN_USE ? <Badge text={st.text} tone={st.tone} /> : undefined}
                     onClick={() => setEditing(x)}
                   />
@@ -148,10 +149,22 @@ function ItemForm({
   };
 
   const save = () => {
-    if (!code.trim()) return setError(MESSAGES.MSG01("Mã"));
     if (!name.trim()) return setError(MESSAGES.MSG01("Tên"));
     if (!unit.trim()) return setError(MESSAGES.MSG01("Đơn vị"));
-    const body = { code: code.trim(), name: name.trim(), group, unit: unit.trim(), description: description.trim() || null, rowVersion: existing?.rowVersion };
+    // Backend thay mọi trường khi lưu: gửi lại nhóm, ghi chú, định mức, giá vốn đã đặt trên web để không bị xóa.
+    const body: SaveInputItem = {
+      code: code.trim() || null,
+      name: name.trim(),
+      group,
+      unit: unit.trim(),
+      description: description.trim() || null,
+      notes: existing?.notes ?? null,
+      itemGroupId: existing?.itemGroupId ?? null,
+      minQuantity: existing?.minQuantity ?? null,
+      maxQuantity: existing?.maxQuantity ?? null,
+      costPrice: existing?.costPrice ?? null,
+      rowVersion: existing?.rowVersion,
+    };
     void submit(() => (existing ? updateInputItem(existing.id, body) : createInputItem(body)));
   };
 
@@ -160,7 +173,7 @@ function ItemForm({
   return (
     <div className="sheet-form form">
       {locked && <p className="form__hint">Vật tư đã có trong phiếu nhập nên không đổi được mã, nhóm và đơn vị.</p>}
-      <Input label="Mã (bắt buộc)" value={code} onChange={(e) => setCode(e.target.value)} maxLength={50} disabled={busy || locked} />
+      <Input label="Mã" helperText={existing ? undefined : "Để trống thì hệ thống tự đặt mã."} value={code} onChange={(e) => setCode(e.target.value)} maxLength={30} disabled={busy || locked} />
       <Input label="Tên (bắt buộc)" value={name} onChange={(e) => setName(e.target.value)} maxLength={200} disabled={busy} />
       <Select label="Nhóm" value={group} onChange={(v) => setGroup(v as InputItemGroup)} closeOnSelect disabled={busy || locked}>
         {(Object.keys(INPUT_GROUP) as InputItemGroup[]).map((k) => (
@@ -168,7 +181,7 @@ function ItemForm({
         ))}
       </Select>
       <Input label="Đơn vị (bắt buộc)" helperText="Ví dụ: cái, cuộn, kg…" value={unit} onChange={(e) => setUnit(e.target.value)} maxLength={50} disabled={busy || locked} />
-      <Input.TextArea label="Mô tả" value={description} onChange={(e) => setDescription(e.target.value)} maxLength={500} showCount disabled={busy} />
+      <Input.TextArea label="Mô tả" value={description} onChange={(e) => setDescription(e.target.value)} maxLength={2000} showCount disabled={busy} />
       <FormError text={error} />
       <Button fullWidth size="large" loading={busy} disabled={busy} onClick={save}>
         Lưu

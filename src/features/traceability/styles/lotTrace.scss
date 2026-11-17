@@ -1,0 +1,14 @@
+/* Màn truy vết lô hàu. Màu lấy từ token trong app.scss. */
+
+/* Khung "còn thiếu thông tin nguồn gốc": viền và nền vàng nhạt, chữ màu chính để đọc rõ ngoài nắng. */
+.trace-gaps {
+  padding: 12px 16px;
+  border: 2px solid var(--warn);
+  border-radius: var(--radius);
+  background: var(--warn-soft);
+  color: var(--ink);
+}
+
+.trace-gaps .plain-list {
+  margin: 0;
+}

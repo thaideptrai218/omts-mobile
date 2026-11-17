@@ -1,4 +1,4 @@
-import type { Lane, RaftView } from "@/features/farming/models/Raft";
+import type { RaftView } from "@/features/farming/models/Raft";
 import type { RaftFormSuggestion } from "@/features/farming/models/RaftForm";
 import type { Coordinates } from "@/models/Coordinates";
 import { useEffect, useState } from "react";
@@ -16,14 +16,14 @@ import { createRaft, getRaft, getZone, updateRaft } from "@/features/farming/ser
 import { parseNumber } from "@/utils/format";
 import { readCoordinates } from "@/utils/coordinates";
 
-const MAX_LANES = 50;
+/** Số hàng tối đa backend nhận (RaftLaneChange.MaxLaneCount). */
+const MAX_LANES = 200;
 
 const text = (n: number | null | undefined) => (n === null || n === undefined ? "" : String(n).replace(".", ","));
 
 /**
- * Thêm bè vào một vùng (`/manage/zones/:id/rafts/new`) hoặc sửa thông tin bè (`/manage/rafts/:id/edit`).
- * Bè mới nhập số hàng và chiều dài mỗi hàng; khi sửa, các hàng giữ nguyên (đổi bố trí hàng làm trên bản web
- * vì cần vẽ sơ đồ).
+ * Thêm bè vào một vùng (`/manage/zones/:id/rafts/new`) hoặc sửa thông tin bè (`/manage/rafts/:id/edit`), FARM-04. Bè chỉ
+ * lưu số hàng: sửa số hàng thì backend gỡ các hàng cuối (giữ dữ liệu cũ) hoặc dùng lại hàng đã gỡ. Tọa độ không bắt buộc.
  */
 function RaftFormPage() {
   const { id: zoneId, raftId } = useParams();
@@ -34,7 +34,6 @@ function RaftFormPage() {
   const [location, setLocation] = useState("");
   const [notes, setNotes] = useState("");
   const [laneCount, setLaneCount] = useState("10");
-  const [laneLength, setLaneLength] = useState("");
   const [lat, setLat] = useState("");
   const [lng, setLng] = useState("");
   const [zoneCenter, setZoneCenter] = useState<Coordinates | null>(null);
@@ -49,10 +48,7 @@ function RaftFormPage() {
     if (fields.location.trim()) setLocation(fields.location.trim());
     if (fields.notes.trim()) setNotes(fields.notes.trim());
     if (fields.latitude && fields.longitude) { setLat(fields.latitude); setLng(fields.longitude); }
-    if (!editing) {
-      if (fields.laneCount) setLaneCount(fields.laneCount);
-      if (fields.laneLength) setLaneLength(fields.laneLength);
-    }
+    if (!editing && fields.laneCount) setLaneCount(fields.laneCount);
     setError("");
   };
 
@@ -67,6 +63,7 @@ function RaftFormPage() {
         setNotes(r.conditionNotes ?? "");
         setLat(text(r.latitude));
         setLng(text(r.longitude));
+        setLaneCount(String(r.laneCount));
       })
       .catch((err) => setError(errorText(err)));
   }, [raftId]);
@@ -83,42 +80,38 @@ function RaftFormPage() {
 
   const save = async () => {
     if (busy || importing || (editing && !raft)) return;
-    const position = readCoordinates(lat, lng);
-    const latitude = position?.latitude ?? null;
-    const longitude = position?.longitude ?? null;
-    const missing = !code.trim() ? "Mã bè" : !size.trim() ? "Kích thước" : latitude === null || longitude === null ? "Tọa độ" : "";
-    if (missing) {
-      setError(MESSAGES.MSG01(missing));
+    // Tọa độ không bắt buộc, nhưng đã nhập thì phải đủ cả vĩ độ và kinh độ.
+    const hasCoordinates = Boolean(lat.trim() || lng.trim());
+    const position = hasCoordinates ? readCoordinates(lat, lng) : null;
+    const count = parseNumber(laneCount);
+    const missing = !code.trim()
+      ? "Mã bè"
+      : !size.trim()
+        ? "Kích thước"
+        : hasCoordinates && !position
+          ? "Tọa độ"
+          : count === null || !Number.isInteger(count) || count < 1 || count > MAX_LANES
+            ? "Số hàng"
+            : "";
+    if (missing || count === null) {
+      setError(MESSAGES.MSG01(missing || "Số hàng"));
       return;
-    }
-    let lanes: Lane[];
-    if (raft) {
-      lanes = raft.lanes.map(({ laneNumber, length, markerA, markerB }) => ({ laneNumber, length, markerA, markerB }));
-    } else {
-      const count = parseNumber(laneCount);
-      if (count === null || !Number.isInteger(count) || count < 1 || count > MAX_LANES) {
-        setError(MESSAGES.MSG01("Số hàng"));
-        return;
-      }
-      const length = parseNumber(laneLength);
-      lanes = Array.from({ length: count }, (_, i) => ({ laneNumber: i + 1, length, markerA: null, markerB: null }));
     }
     const body = {
       code: code.trim(),
       size: size.trim(),
       location: location.trim() || null,
       conditionNotes: notes.trim() || null,
-      latitude,
-      longitude,
-      lanes,
-      layoutDrawing: raft?.layoutDrawing ?? null,
+      latitude: position?.latitude ?? null,
+      longitude: position?.longitude ?? null,
+      laneCount: count,
       rowVersion: raft?.rowVersion ?? null,
     };
     setBusy(true);
     setError("");
     try {
       const saved = raft ? await updateRaft(raft.id, body) : await createRaft(zoneId ?? "", body);
-      navigate(`/manage/rafts/${saved.id}`, { replace: true });
+      navigate(`/manage/rafts/${saved.raft.id}`, { replace: true });
     } catch (err) {
       setError(errorText(err));
     } finally {
@@ -165,24 +158,23 @@ function RaftFormPage() {
               </Section>
               <Section step={3} title="Vị trí của bè">
                 <div className="form">
-                  <LocationInput latitude={lat} longitude={lng} onChange={(latitude, longitude) => { setLat(latitude); setLng(longitude); }} mapCenter={zoneCenter} disabled={busy || importing} required />
+                  <LocationInput latitude={lat} longitude={lng} onChange={(latitude, longitude) => { setLat(latitude); setLng(longitude); }} mapCenter={zoneCenter} disabled={busy || importing} />
                   <Input label="Vị trí" value={location} onChange={(e) => setLocation(e.target.value)} maxLength={500} disabled={busy} />
                 </div>
               </Section>
               <Section step={4} title="Các hàng treo hàu">
                 <div className="form">
-                  {!editing && (
-                    <>
-                      <NumberInput label="Số hàng (bắt buộc)" value={laneCount} onChange={setLaneCount} disabled={busy} helperText={`Từ 1 đến ${MAX_LANES} hàng`} />
-                      <NumberInput decimal label="Dài mỗi hàng (m)" value={laneLength} onChange={setLaneLength} disabled={busy} />
-                    </>
+                  <NumberInput label="Số hàng (bắt buộc)" value={laneCount} onChange={setLaneCount} disabled={busy} helperText={`Từ 1 đến ${MAX_LANES} hàng`} />
+                  {editing && raft && (
+                    <p className="form__hint">
+                      Bè đang dùng {raft.laneCount} hàng. Giảm số hàng thì các hàng cuối chuyển sang Đã gỡ, dữ liệu cũ vẫn giữ; tăng thì dùng lại hàng đã gỡ trước.
+                    </p>
                   )}
-                  {editing && raft && <p className="form__hint">Bè có {raft.lanes.length} hàng. Đổi bố trí hàng làm trên bản web.</p>}
                 </div>
               </Section>
               <Section step={5} title="Ghi chú">
                 <div className="form">
-                  <Input.TextArea label="Ghi chú tình trạng" value={notes} onChange={(e) => setNotes(e.target.value)} maxLength={1000} showCount disabled={busy} />
+                  <Input.TextArea label="Ghi chú tình trạng" value={notes} onChange={(e) => setNotes(e.target.value)} maxLength={2000} showCount disabled={busy} />
                   {/* Bấm Lưu lại mà vẫn cùng một lỗi thì key đổi để FormError cuộn tới lần nữa. */}
                   <FormError key={saveTries} text={error} />
                 </div>

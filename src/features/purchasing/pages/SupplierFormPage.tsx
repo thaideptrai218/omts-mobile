@@ -12,6 +12,7 @@ import { SUPPLIER_TYPE } from "@/utils/labels";
 import { createSupplier, getSupplier, updateSupplier } from "@/features/purchasing/services/purchasingService";
 
 const PHONE = /^0\d{9}$/;
+const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 /** Thêm hoặc sửa nhà cung cấp (`/manage/suppliers/new`, `/manage/suppliers/:id/edit`). */
 function SupplierFormPage() {
@@ -37,7 +38,9 @@ function SupplierForm({ title, supplier }: { title: string; supplier: SupplierVi
   const [name, setName] = useState("");
   const [type, setType] = useState<SupplierType>("Seed");
   const [phone, setPhone] = useState("");
-  const [contacts, setContacts] = useState("");
+  const [address, setAddress] = useState("");
+  const [email, setEmail] = useState("");
+  const [note, setNote] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -46,7 +49,9 @@ function SupplierForm({ title, supplier }: { title: string; supplier: SupplierVi
     setName(supplier.name ?? "");
     setType(supplier.supplierType);
     setPhone(supplier.phoneNumber ?? "");
-    setContacts(supplier.otherContacts ?? "");
+    setAddress(supplier.address ?? "");
+    setEmail(supplier.email ?? "");
+    setNote(supplier.note ?? "");
   }, [supplier]);
 
   const save = async () => {
@@ -54,8 +59,12 @@ function SupplierForm({ title, supplier }: { title: string; supplier: SupplierVi
       setError(MESSAGES.MSG01("Tên nhà cung cấp"));
       return;
     }
-    if (phone.trim() && !PHONE.test(phone.trim())) {
+    if (!PHONE.test(phone.trim())) {
       setError(MESSAGES.MSG01("Số điện thoại"));
+      return;
+    }
+    if (email.trim() && !EMAIL.test(email.trim())) {
+      setError(MESSAGES.MSG01("Email"));
       return;
     }
     setError("");
@@ -63,8 +72,11 @@ function SupplierForm({ title, supplier }: { title: string; supplier: SupplierVi
     const body = {
       name: name.trim(),
       supplierType: type,
-      phoneNumber: phone.trim() || null,
-      otherContacts: contacts.trim() || null,
+      phoneNumber: phone.trim(),
+      // Địa chỉ và email gửi gì backend lưu nấy, nên luôn gửi giá trị đang có trên form.
+      address: address.trim() || null,
+      email: email.trim() || null,
+      note: note.trim() || null,
       rowVersion: supplier?.rowVersion,
     };
     try {
@@ -93,8 +105,10 @@ function SupplierForm({ title, supplier }: { title: string; supplier: SupplierVi
             <Select.Option key={k} value={k} title={SUPPLIER_TYPE[k]} />
           ))}
         </Select>
-        <Input label="Số điện thoại" value={phone} inputMode="tel" onChange={(e) => setPhone(e.target.value)} maxLength={10} disabled={busy} />
-        <Input.TextArea label="Liên hệ khác (địa chỉ, người liên hệ…)" value={contacts} onChange={(e) => setContacts(e.target.value)} maxLength={500} showCount disabled={busy} />
+        <Input label="Số điện thoại (bắt buộc)" value={phone} inputMode="tel" onChange={(e) => setPhone(e.target.value)} maxLength={10} disabled={busy} />
+        <Input.TextArea label="Địa chỉ" value={address} onChange={(e) => setAddress(e.target.value)} maxLength={500} showCount disabled={busy} />
+        <Input label="Email" value={email} inputMode="email" onChange={(e) => setEmail(e.target.value)} maxLength={200} disabled={busy} />
+        <Input.TextArea label="Ghi chú (người liên hệ, giờ nhận hàng…)" value={note} onChange={(e) => setNote(e.target.value)} maxLength={2000} showCount disabled={busy} />
         <FormError text={error} />
       </div>
     </ManagePage>

@@ -1,19 +1,37 @@
 import type { ZoneRef } from "@/features/organization/models/OrganizationZone";
 
+/** Loại nhân viên (BR-LABOR-01): lao động thời vụ hoặc nhân viên. */
+export type EmployeeType = "SeasonalWorker" | "Staff";
+
+export type JobTypeRef = {
+  id: string;
+  name: string;
+  status: string;
+};
+
+export type EmployeeTypePeriod = {
+  type: EmployeeType;
+  effectiveFrom: string;
+};
+
+/** Tài khoản nhân viên gắn với hồ sơ; chỉ Chủ HTX đọc được. */
 export type LinkedAccount = {
   id: string;
-  username: string | null;
-  displayName: string | null;
-  status: string | null;
+  username: string;
+  displayName: string;
+  status: string;
 };
 
 export type EmployeeListItem = {
   id: string;
-  fullName: string | null;
+  code: string | null;
+  fullName: string;
   phoneNumber: string | null;
+  employeeType: EmployeeType | null;
+  jobTypes: JobTypeRef[];
   workingZones: ZoneRef[];
   account: LinkedAccount | null;
-  status: string | null;
+  status: string;
 };
 
 export type BankAccount = {
@@ -22,24 +40,37 @@ export type BankAccount = {
   accountHolderName: string | null;
 };
 
+/** Hồ sơ nhân viên. Các trường cá nhân (ngày sinh, địa chỉ, ngân hàng…) chỉ có khi `canMaintain`. */
 export type EmployeeView = {
   id: string;
-  fullName: string | null;
+  code: string | null;
+  fullName: string;
   phoneNumber: string | null;
+  employeeType: EmployeeType | null;
+  typeHistory: EmployeeTypePeriod[];
+  jobTypes: JobTypeRef[];
+  workingZones: ZoneRef[];
+  status: string;
+  /** Ngày làm việc cuối cùng; từ ngày hôm sau nhân viên là Đã nghỉ. */
+  lastWorkingDay: string | null;
+  canMaintain: boolean;
+  hasStaffAccount: boolean;
   birthday: string | null;
+  startDate: string | null;
   address: string | null;
   area: string | null;
   ward: string | null;
   otherInformation: string | null;
   notes: string | null;
-  workingZones: ZoneRef[];
   bankAccount: BankAccount | null;
   account: LinkedAccount | null;
-  status: string | null;
-  employmentEndDate: string | null;
-  rowVersion: string | null;
+  rowVersion: string;
 };
 
+/**
+ * Thêm hoặc sửa nhân viên. Thêm thì bắt buộc loại nhân viên và ít nhất một vùng. Sửa thì `jobTypeIds` thay cả danh sách
+ * loại việc, nên phải gửi lại loại việc đang có. `ownerApproved` là câu trả lời của Quản lý vùng cho MSG-LABOR-01 khi thêm.
+ */
 export type SaveEmployee = {
   fullName: string;
   phoneNumber: string | null;
@@ -51,7 +82,9 @@ export type SaveEmployee = {
   notes: string | null;
   workingZoneIds: string[];
   bankAccount: BankAccount | null;
-  accountId: string | null;
+  employeeType: EmployeeType | null;
+  jobTypeIds: string[];
+  ownerApproved: boolean;
   rowVersion: string | null;
 };
 
@@ -60,17 +93,13 @@ export type EmployeeSaved = {
   message: string | null;
 };
 
-/** Việc nên làm tiếp sau khi cho nghỉ hoặc nhận lại: "review-lock" (xem có khóa tài khoản), "review-access". */
 export type EmploymentChanged = {
   employee: EmployeeView;
-  followUp: {
-    action: string;
-    accountId: string;
-  } | null;
 };
 
 export type EmployeeForm = {
   fullName: string;
+  employeeType: EmployeeType | null;
   phoneNumber: string;
   birthday: string | null;
   address: string;

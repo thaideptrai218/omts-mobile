@@ -1,8 +1,10 @@
+import { useAtomValue } from "jotai";
 import { useState } from "react";
 import { Button, useNavigate, useParams, useSnackbar } from "zmp-ui";
 
 import { Actions } from "@/components/Actions/Actions";
 import { Badge } from "@/components/Badge/Badge";
+import { ConfirmSheet } from "@/components/ConfirmSheet/ConfirmSheet";
 import { Facts } from "@/components/Facts/Facts";
 import { Loadable } from "@/components/Loadable/Loadable";
 import { ManagePage } from "@/components/ManagePage/ManagePage";
@@ -10,26 +12,35 @@ import { ReasonSheet } from "@/components/ReasonSheet/ReasonSheet";
 import { Row } from "@/components/Row/Row";
 import { Rows } from "@/components/Rows/Rows";
 import { Section } from "@/components/Section/Section";
+import { permissionsAtom } from "@/features/auth/state/authAtoms";
 import { useAction } from "@/hooks/useAction";
 import { useLoad } from "@/hooks/useLoad";
-import { getRaft, setRaftInUse, uploadRaftPhoto, USAGE } from "@/features/farming/services/farmService";
 import { absoluteUrl } from "@/services/httpClient";
 import { choosePhoto } from "@/services/zaloService";
-import { date, money, num } from "@/utils/format";
+import { money } from "@/utils/format";
 import { statusLabel } from "@/utils/labels";
+import { addRaftPhoto, getRaft, removeRaftPhoto, setRaftInUse, USAGE } from "@/features/farming/services/farmService";
 
-/** Chi tiết một bè: thông tin, các hàng treo hàu, lịch sử bố trí hàng và chi phí vật tư đã nhập cho bè. */
+const MAX_PHOTOS = 3;
+const LANE_REMOVED = 2002;
+
+/**
+ * Chi tiết một bè (FARM-04): thông tin, tối đa ba ảnh, các hàng đang dùng và đã gỡ, tiền vật tư đã dùng sửa bè. Thêm, xóa
+ * ảnh và sửa bè chỉ Chủ HTX làm được (backend `[RequireCooperativeOwner]`).
+ */
 function RaftDetailPage() {
   const { raftId: id = "" } = useParams();
   const navigate = useNavigate();
+  const isOwner = useAtomValue(permissionsAtom)?.isCooperativeOwner ?? false;
   const { data, error, reload, setData } = useLoad(() => getRaft(id), [id]);
   const { busy, run } = useAction();
   const [statusOpen, setStatusOpen] = useState(false);
+  const [removingPhoto, setRemovingPhoto] = useState<string | null>(null);
   const { openSnackbar } = useSnackbar();
   const inUse = data?.statusId === USAGE.inUse;
 
   // Không bọc `choosePhoto` trong `run`: người dùng đóng bộ chọn ảnh thì SDK không báo, nút sẽ bị khóa mãi.
-  const changePhoto = async () => {
+  const addPhoto = async () => {
     let photo: Blob | null;
     try {
       photo = await choosePhoto();
@@ -38,8 +49,15 @@ function RaftDetailPage() {
       return;
     }
     if (!photo) return;
-    const saved = await run(() => uploadRaftPhoto(id, photo), "Đã lưu ảnh bè.");
-    if (saved) setData(saved);
+    const saved = await run(() => addRaftPhoto(id, photo), "Đã thêm ảnh bè.");
+    if (saved) setData(saved.raft);
+  };
+
+  const removePhoto = async () => {
+    if (!removingPhoto) return;
+    const saved = await run(() => removeRaftPhoto(id, removingPhoto), "Đã xóa ảnh bè.");
+    setRemovingPhoto(null);
+    if (saved) setData(saved.raft);
   };
 
   return (
@@ -47,52 +65,57 @@ function RaftDetailPage() {
       <Loadable data={data} error={error} reload={() => void reload()}>
         {(r) => {
           const s = statusLabel(r.status);
+          const removed = r.lanes.filter((l) => l.statusId === LANE_REMOVED);
           return (
             <>
-              {r.photoUrl && <img className="record-photo" src={absoluteUrl(r.photoUrl) ?? undefined} alt={`Ảnh bè ${r.code}`} />}
+              {r.photos.map((p) => (
+                <div key={p.id}>
+                  <img className="record-photo" src={absoluteUrl(p.url) ?? undefined} alt={`Ảnh ${p.sortOrder} của bè ${r.code}`} />
+                  {isOwner && (
+                    <Button variant="tertiary" type="danger" size="large" disabled={busy} onClick={() => setRemovingPhoto(p.id)}>
+                      Xóa ảnh này
+                    </Button>
+                  )}
+                </div>
+              ))}
               <Facts
                 items={[
                   ["Vùng nuôi", r.zone.name],
                   ["Trạng thái", <Badge key="s" text={s.text} tone={s.tone} />],
+                  ["Số hàng đang dùng", `${r.laneCount} hàng`],
                   ["Kích thước", r.size],
                   ["Vị trí", r.location],
                   ["Tọa độ", r.latitude !== null && r.longitude !== null ? `${r.latitude}, ${r.longitude}` : null],
                   ["Tình trạng", r.conditionNotes],
-                  ["Chi phí vật tư đã nhập", r.materialCost !== null ? money(r.materialCost) : null],
+                  ["Tiền vật tư đã dùng sửa bè", r.materialCost !== null ? money(r.materialCost) : null],
                 ]}
               />
               <Actions>
-                {inUse && (
-                  <Button variant="secondary" size="large" disabled={busy} loading={busy} onClick={() => void changePhoto()}>
-                    {r.photoUrl ? "Đổi ảnh bè" : "Thêm ảnh bè"}
+                <Button variant="secondary" size="large" onClick={() => navigate(`/manage/rafts/${r.id}/material-usages`)}>
+                  Vật tư đã dùng sửa bè
+                </Button>
+                {isOwner && inUse && r.photos.length < MAX_PHOTOS && (
+                  <Button variant="secondary" size="large" disabled={busy} loading={busy} onClick={() => void addPhoto()}>
+                    Thêm ảnh bè ({r.photos.length}/{MAX_PHOTOS})
                   </Button>
                 )}
-                <Button variant="secondary" size="large" onClick={() => navigate(`/manage/rafts/${r.id}/edit`)}>
-                  Sửa thông tin bè
-                </Button>
-                <Button variant="secondary" size="large" type={inUse ? "danger" : "highlight"} onClick={() => setStatusOpen(true)}>
-                  {inUse ? "Ngừng dùng bè" : "Dùng lại bè"}
-                </Button>
+                {isOwner && (
+                  <Button variant="secondary" size="large" onClick={() => navigate(`/manage/rafts/${r.id}/edit`)}>
+                    Sửa thông tin bè
+                  </Button>
+                )}
+                {isOwner && (
+                  <Button variant="secondary" size="large" type={inUse ? "danger" : "highlight"} onClick={() => setStatusOpen(true)}>
+                    {inUse ? "Ngừng dùng bè" : "Dùng lại bè"}
+                  </Button>
+                )}
               </Actions>
 
-              <Section title={`Các hàng (bố trí lần ${r.layoutVersion})`}>
-                <Rows>
-                  {r.lanes.map((l) => (
-                    <Row
-                      key={l.id ?? l.laneNumber}
-                      title={`Hàng ${l.laneNumber}`}
-                      meta={[l.markerA && `Mốc đầu: ${l.markerA}`, l.markerB && `Mốc cuối: ${l.markerB}`].filter(Boolean).join(" · ") || undefined}
-                      value={l.length !== null ? num(l.length, "m") : undefined}
-                    />
-                  ))}
-                </Rows>
-              </Section>
-
-              {r.layoutVersions.length > 1 && (
-                <Section title="Lịch sử bố trí hàng">
+              {removed.length > 0 && (
+                <Section title="Hàng đã gỡ">
                   <Rows>
-                    {r.layoutVersions.map((v) => (
-                      <Row key={v.versionNumber} title={`Lần ${v.versionNumber}: ${v.laneCount} hàng`} meta={`Từ ${date(v.validFrom)}${v.validTo ? ` đến ${date(v.validTo)}` : " đến nay"}`} />
+                    {removed.map((l) => (
+                      <Row key={l.id} title={`Hàng ${l.laneNumber}`} meta="Đã gỡ khỏi bè; dữ liệu cũ của hàng vẫn giữ." badge={<Badge text="Đã gỡ" tone="neutral" />} />
                     ))}
                   </Rows>
                 </Section>
@@ -101,6 +124,17 @@ function RaftDetailPage() {
           );
         }}
       </Loadable>
+
+      <ConfirmSheet
+        visible={removingPhoto !== null}
+        title="Xóa ảnh bè?"
+        message="Ảnh này sẽ bị xóa khỏi bè."
+        confirmText="Xóa ảnh"
+        danger
+        busy={busy}
+        onClose={() => setRemovingPhoto(null)}
+        onConfirm={() => void removePhoto()}
+      />
 
       <ReasonSheet
         visible={statusOpen}

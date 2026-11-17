@@ -58,12 +58,16 @@ function SupplierDetailPage() {
             <>
               <Facts
                 items={[
+                  ["Mã", s.code],
                   ["Tên", s.name],
                   ["Trạng thái", <Badge key="st" text={st.text} tone={st.tone} />],
-                  ["Còn phải trả", <span key="debt" className={s.debt > 0 ? "text-danger" : undefined}>{money(s.debt)}</span>],
                   ["Loại", SUPPLIER_TYPE[s.supplierType] ?? s.supplierType],
                   ["Số điện thoại", s.phoneNumber],
-                  ["Liên hệ khác", s.otherContacts],
+                  ["Địa chỉ", [s.address, s.ward, s.province].filter(Boolean).join(", ") || null],
+                  ["Email", s.email],
+                  ["Tên công ty", s.companyName],
+                  ["Mã số thuế", s.taxCode],
+                  ["Ghi chú", s.note],
                 ]}
               />
               <Actions>
@@ -94,16 +98,11 @@ function SupplierDetailPage() {
                             <MetaLines
                               items={[
                                 ["Ngày nhập", date(r.receiptDate)],
-                                ["Phải trả", money(r.payable)],
+                                ["Tổng tiền", money(r.total)],
                               ]}
                             />
                           }
-                          badge={
-                            <>
-                              <Badge text={rs.text} tone={rs.tone} />
-                              {r.outstanding > 0 && <Badge text={`Còn nợ ${money(r.outstanding)}`} tone="danger" />}
-                            </>
-                          }
+                          badge={<Badge text={rs.text} tone={rs.tone} />}
                           onClick={() => navigate(`/manage/purchases/${r.id}`)}
                         />
                       );

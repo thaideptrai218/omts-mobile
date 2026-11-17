@@ -15,6 +15,7 @@ import { date, money } from "@/utils/format";
 import { statusLabel } from "@/utils/labels";
 import { MetaLines } from "@/features/purchasing/components/MetaLines/MetaLines";
 import { RECEIPT_CANCELLED, RECEIPT_COMPLETED, RECEIPT_DRAFT, searchReceipts } from "@/features/purchasing/services/purchasingService";
+import { receiptRemaining } from "@/features/purchasing/utils/receiptMoney";
 
 const STATUS_OF: Record<Filter, number | null> = {
   all: null,
@@ -25,7 +26,10 @@ const STATUS_OF: Record<Filter, number | null> = {
 
 const PAGE_SIZE = 20;
 
-/** Phiếu nhập giống, vật tư trong năm nay: tổng tiền, đã trả, còn nợ; lọc theo trạng thái, tải thêm từng trang. */
+/**
+ * Phiếu nhập giống, vật tư trong kỳ backend chọn sẵn: tổng nhập của phiếu hoàn tất, trả hàng trong kỳ và số còn lại; lọc
+ * theo trạng thái, tải thêm từng trang. Phiếu hoàn tất còn phải trả thì có nhãn số tiền còn nợ.
+ */
 function PurchasesPage() {
   const navigate = useNavigate();
   const [filter, setFilter] = useState<Filter>("all");
@@ -75,20 +79,16 @@ function PurchasesPage() {
               </p>
               <div className="summary">
                 <div className="summary__cell">
-                  <span className="summary__label">Phải trả</span>
-                  <span className="summary__value">{money(result.totals.payable)}</span>
-                </div>
-                <div className="summary__cell tone-success">
-                  <span className="summary__label">Đã trả</span>
-                  <span className="summary__value">{money(result.totals.paid)}</span>
-                </div>
-                <div className="summary__cell tone-danger">
-                  <span className="summary__label">Còn nợ</span>
-                  <span className="summary__value">{money(result.totals.outstanding)}</span>
+                  <span className="summary__label">Tiền hàng đã nhập</span>
+                  <span className="summary__value">{money(result.totals.receiptsTotal)}</span>
                 </div>
                 <div className="summary__cell">
                   <span className="summary__label">Trả hàng</span>
-                  <span className="summary__value">{money(result.totals.returned)}</span>
+                  <span className="summary__value">{money(result.totals.returnsTotal)}</span>
+                </div>
+                <div className="summary__cell">
+                  <span className="summary__label">Còn lại</span>
+                  <span className="summary__value">{money(result.totals.netTotal)}</span>
                 </div>
               </div>
               {rows.length === 0 ? (
@@ -97,6 +97,7 @@ function PurchasesPage() {
                 <Rows>
                   {rows.map((r) => {
                     const st = statusLabel(r.status);
+                    const remaining = r.statusId === RECEIPT_COMPLETED ? receiptRemaining(r) : 0;
                     return (
                       <Row
                         key={r.id}
@@ -106,16 +107,17 @@ function PurchasesPage() {
                             items={[
                               ["Ngày nhập", date(r.receiptDate)],
                               ["Nhà cung cấp", r.supplier.name],
-                              ["Vùng nuôi", r.zone.code ?? r.zone.name],
-                              ["Bè", r.raft?.code],
+                              ["Vùng nuôi", r.zone ? (r.zone.code ?? r.zone.name) : null],
+                              ["Số dòng hàng", String(r.itemCount)],
                               ["Phải trả", money(r.payable)],
+                              ["Trả hàng", r.returnCodes.length > 0 ? r.returnCodes.join(", ") : null],
                             ]}
                           />
                         }
                         badge={
                           <>
                             <Badge text={st.text} tone={st.tone} />
-                            {r.outstanding > 0 && r.statusId === RECEIPT_COMPLETED && <Badge text={`Còn nợ ${money(r.outstanding)}`} tone="danger" />}
+                            {remaining > 0 && <Badge text={`Còn nợ ${money(remaining)}`} tone="danger" />}
                           </>
                         }
                         onClick={() => navigate(`/manage/purchases/${r.id}`)}

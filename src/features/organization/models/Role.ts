@@ -1,16 +1,15 @@
 export type RolePermission = {
   functionCode: string | null;
   actions: string[];
-  dataScope: string;
 };
 
+/** Vai trò cố định (ZONE_MANAGER, ACCOUNTANT), chỉ xem; phạm vi quyền theo vùng được cấp, trừ chức năng toàn HTX. */
 export type RoleView = {
   id: string;
+  code: string;
   name: string | null;
   description: string | null;
-  status: string | null;
   permissions: RolePermission[];
-  rowVersion: string | null;
 };
 
 export type FunctionCatalogItem = {

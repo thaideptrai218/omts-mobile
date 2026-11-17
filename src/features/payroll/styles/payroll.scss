@@ -1,0 +1,109 @@
+/* Các thẻ đứng liền nhau trong một cột: cách đều 12px. */
+.payroll-stack {
+  display: grid;
+  gap: 12px;
+}
+
+/* Một lựa chọn trong danh sách (nhân viên, phiếu lương cần trả): cả khung bấm được, ô chọn lớn, cách nhau 12px. */
+.payroll-choices {
+  display: grid;
+  gap: 12px;
+}
+
+.payroll-choice {
+  display: grid;
+  gap: 12px;
+  padding: 12px;
+  border: 2px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+}
+
+/* Dòng chọn dạng nút (chọn một người): chữ canh trái, cao tối thiểu 56px. */
+.payroll-choice--button {
+  width: 100%;
+  min-height: 3.5rem;
+  color: var(--ink);
+  font: inherit;
+  font-size: 1.125rem;
+  line-height: 1.5rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.payroll-choice--button:active {
+  background: var(--brand-soft);
+}
+
+.payroll-choice.is-selected {
+  border-color: var(--brand);
+  background: var(--brand-soft);
+}
+
+.payroll-choice__head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 2.5rem;
+  font-size: 1.125rem;
+  line-height: 1.5rem;
+}
+
+.payroll-choice__head input {
+  flex: none;
+  width: 1.75rem;
+  height: 1.75rem;
+  margin: 0;
+  accent-color: var(--brand);
+}
+
+.payroll-choice__text {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.payroll-choice__name {
+  font-weight: 700;
+}
+
+.payroll-choice__meta {
+  font-size: 1rem;
+  line-height: 1.5rem;
+  color: var(--ink-2);
+}
+
+/* Kết quả thành công, đặt ngay dưới nút vừa bấm. */
+.payroll-note {
+  padding: 12px;
+  border: 2px solid var(--ok);
+  border-radius: var(--radius);
+  background: var(--ok-soft);
+  color: var(--ok);
+  font-size: 1rem;
+  line-height: 1.5rem;
+  font-weight: 700;
+}
+
+/* Câu hỏi lại trước khi lưu (MSG-GEN-04, MSG-LABOR-27, MSG-LABOR-36). */
+.payroll-question {
+  padding: 12px;
+  border: 2px solid var(--warn);
+  border-radius: var(--radius);
+  background: var(--warn-soft);
+  color: var(--ink);
+  font-size: 1.125rem;
+  line-height: 1.625rem;
+}
+
+/* Bảng lương đang có trong chi tiết: số tổng lớn, dễ đọc ngoài nắng. */
+.payroll-total {
+  font-size: 1.25rem;
+  line-height: 1.75rem;
+  font-weight: 700;
+}
+
+body[zaui-theme="dark"] .payroll-choice__head input {
+  color-scheme: dark;
+}

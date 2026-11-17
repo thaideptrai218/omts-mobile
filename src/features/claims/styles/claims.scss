@@ -1,0 +1,126 @@
+/* Khiếu nại chất lượng: ảnh xếp lưới hai cột cho dễ bấm, chữ mô tả giữ xuống dòng như người gửi gõ. */
+.claim-text {
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.claim-card {
+  display: grid;
+  gap: 12px;
+}
+
+.claim-card__title {
+  margin: 0;
+  font-size: 1.125rem;
+  line-height: 1.625rem;
+  font-weight: 700;
+}
+
+.claim-card__meta {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.5rem;
+  color: var(--ink-2);
+}
+
+.claim-photos {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.claim-photos:empty {
+  display: none;
+}
+
+.claim-photo-button {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: 12px;
+  background: none;
+  overflow: hidden;
+}
+
+.claim-photo-tile {
+  display: grid;
+  gap: 8px;
+}
+
+.claim-photo {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius: 12px;
+  background: var(--line-soft);
+}
+
+/* Một dòng hàng của hóa đơn: tên hàng và lô, rồi kg và tiền xuống dòng. */
+.claim-line + .claim-line {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1.5px solid var(--line-soft);
+}
+
+.claim-line__title {
+  margin: 0;
+  font-size: 1.0625rem;
+  line-height: 1.5rem;
+  font-weight: 700;
+}
+
+.claim-line__meta {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.5rem;
+  color: var(--ink-2);
+}
+
+/* Chọn cách xử lý khi chấp nhận: hai ô lớn, ô đã chọn có dấu chọn và chữ đậm, không chỉ đổi màu. */
+.claim-offers {
+  display: grid;
+  gap: 12px;
+}
+
+.claim-offers__label {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.5rem;
+  font-weight: 700;
+}
+
+.claim-offer {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 3.5rem;
+  padding: 12px 16px;
+  border: 2px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 1.0625rem;
+  line-height: 1.5rem;
+  font-weight: 500;
+  text-align: left;
+}
+
+.claim-offer.is-active {
+  border-color: var(--brand);
+  background: var(--brand-soft);
+  color: var(--brand-text);
+  font-weight: 700;
+}
+
+.claim-offer:disabled {
+  opacity: 0.6;
+}
+
+/* Câu hướng dẫn ở đầu màn danh sách: tách khỏi danh sách bên dưới. */
+.claim-intro {
+  margin: 0 0 12px;
+}

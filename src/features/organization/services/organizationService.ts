@@ -45,12 +45,14 @@ export function updateEmployee(id: string, body: SaveEmployee) {
   return api<EmployeeSaved>(`/api/employees/${id}`, { method: "PUT", body });
 }
 
-export function endEmployment(id: string, endDate: string, rowVersion: string | null) {
-  return api<EmploymentChanged>(`/api/employees/${id}/end-employment`, { method: "POST", body: { endDate, rowVersion } });
+/** LABOR-01.3: nhân viên thành Đã nghỉ từ ngày sau `lastWorkingDay` (ngày làm việc cuối cùng). */
+export function endEmployment(id: string, lastWorkingDay: string, rowVersion: string | null) {
+  return api<EmploymentChanged>(`/api/employees/${id}/end-employment`, { method: "POST", body: { lastWorkingDay, rowVersion } });
 }
 
+/** LABOR-01.4: nhân viên đã nghỉ đi làm lại từ hôm nay; số điện thoại của hồ sơ giữ nguyên. */
 export function reinstateEmployee(id: string, rowVersion: string | null) {
-  return api<EmploymentChanged>(`/api/employees/${id}/reinstate`, { method: "POST", body: { rowVersion } });
+  return api<EmploymentChanged>(`/api/employees/${id}/resume`, { method: "POST", body: { rowVersion } });
 }
 
 // Tài khoản và phân quyền

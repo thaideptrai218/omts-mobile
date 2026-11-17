@@ -1,7 +1,7 @@
 import type { ManageRoute } from "@/models/Navigation";
 import { lazyPage } from "@/routes/lazyPage";
 
-/** Tổ chức của HTX: nhân viên, tài khoản và phân quyền, vai trò, hồ sơ HTX. */
+/** Tổ chức của HTX: nhân viên, tài khoản và phân quyền, vai trò, hồ sơ HTX, báo cáo, lịch sử thao tác. */
 export const ROUTES: ManageRoute[] = [
   { path: "/manage/employees", element: lazyPage(() => import("@/features/organization/pages/EmployeesPage")) },
   { path: "/manage/employees/new", element: lazyPage(() => import("@/features/organization/pages/EmployeeFormPage")) },
@@ -12,4 +12,7 @@ export const ROUTES: ManageRoute[] = [
   { path: "/manage/roles", element: lazyPage(() => import("@/features/organization/pages/RolesPage")) },
   { path: "/manage/roles/:id", element: lazyPage(() => import("@/features/organization/pages/RoleDetailPage")) },
   { path: "/manage/cooperative", element: lazyPage(() => import("@/features/organization/pages/CooperativePage")) },
+  { path: "/manage/reports", element: lazyPage(() => import("@/features/reports/pages/ReportsPage")) },
+  { path: "/manage/audit-log", element: lazyPage(() => import("@/features/audit/pages/AuditLogPage")) },
+  { path: "/manage/audit-log/:id", element: lazyPage(() => import("@/features/audit/pages/AuditEventPage")) },
 ];

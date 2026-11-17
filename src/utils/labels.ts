@@ -31,9 +31,7 @@ export function statusLabel(status: string | null | undefined): Label {
 
 /** Mã trạng thái phép đo nước (`statusCode`). */
 const WATER_STATUS: Record<string, Label> = {
-  DRAFT: { text: "Nháp", tone: "warning" },
-  CONFIRMED: { text: "Đã xác nhận", tone: "success" },
-  SUPERSEDED: { text: "Đã sửa", tone: "neutral" },
+  ACTIVE: { text: "Đang hiệu lực", tone: "success" },
   VOIDED: { text: "Đã hủy", tone: "neutral" },
 };
 
@@ -46,8 +44,7 @@ export const LICENSE_STATE: Record<string, Label> = {
   ExpiringSoon: { text: "Sắp hết hạn", tone: "warning" },
   Expired: { text: "Đã hết hạn", tone: "danger" },
   NotYetEffective: { text: "Chưa hiệu lực", tone: "neutral" },
-  Superseded: { text: "Đã thay thế", tone: "neutral" },
-  Missing: { text: "Thiếu giấy tờ", tone: "danger" },
+  Replaced: { text: "Đã thay thế", tone: "neutral" },
 };
 
 /** Loại giấy tờ pháp lý của vùng nuôi (`documentType`). */
@@ -66,7 +63,7 @@ export const SUPPLIER_TYPE: Record<string, string> = {
 
 export const INPUT_GROUP: Record<string, string> = {
   Seed: "Con giống",
-  RaftMaterial: "Vật tư bè",
+  Material: "Vật tư",
   Other: "Khác",
 };
 
@@ -79,13 +76,7 @@ export const PAYMENT_METHOD: Record<string, string> = {
 export const WATER_ALERT: Record<string, Label> = {
   None: { text: "Trong ngưỡng", tone: "success" },
   Active: { text: "Vượt ngưỡng", tone: "danger" },
-  Corrected: { text: "Đã sửa số đo", tone: "neutral" },
   Voided: { text: "Đã hủy", tone: "neutral" },
-};
-
-export const INPUT_SOURCE: Record<string, string> = {
-  Ocr: "Đọc từ ảnh",
-  Manual: "Nhập tay",
 };
 
 /** Thao tác trong vai trò (`PermissionAction`). */
@@ -137,5 +128,6 @@ export function violatedText(value: string | null | undefined) {
   if (!value) return "";
   return value
     .replace(/Salinity/g, "Độ mặn")
+    .replace(/Temperature/g, "Nhiệt độ")
     .replace(/\d+\.\d+/g, (n) => String(Number(n)).replace(".", ","));
 }

@@ -3,8 +3,8 @@ import type { AreaKey, FeatureKey } from "@/models/Navigation";
 /** Khu vực của từng chức năng: quyết định màu ô biểu tượng và màu đầu trang của màn đó. */
 export const FEATURE_AREA: Record<FeatureKey, AreaKey> = {
   zones: "farm", cycles: "farm", seeding: "farm", cultivationLog: "farm", water: "farm", harvest: "farm",
-  raftMaterials: "farm", materialUsage: "farm", harvestSettings: "farm", trace: "farm",
-  suppliers: "buy", purchases: "buy", supplierPayments: "buy", inputItems: "buy", costs: "buy",
+  raftMaterials: "farm", materialUsage: "farm", harvestSettings: "farm", trace: "farm", lotTrace: "farm",
+  suppliers: "buy", purchases: "buy", supplierPayments: "buy", inputItems: "buy", inputUses: "buy", costs: "buy",
   salesOrders: "sell", salesProducts: "sell", receivables: "sell", receipts: "sell", reconcile: "sell", refunds: "sell",
   orders: "sell", payment: "sell", weighSlips: "sell", myInvoices: "sell", pickup: "sell", claims: "sell", portWeighing: "sell",
   customers: "sell", bankAccount: "sell",
@@ -16,14 +16,19 @@ export const FEATURE_AREA: Record<FeatureKey, AreaKey> = {
 
 const PATH_AREAS: [string, AreaKey][] = [
   ["/manage/zones", "farm"], ["/manage/water", "farm"], ["/manage/rafts", "farm"], ["/manage/licenses", "farm"],
-  ["/manage/raft-costs", "farm"], ["/manage/harvest", "farm"], ["/manage/cycles", "farm"], ["/trace", "farm"],
-  ["/manage/purchases", "buy"], ["/manage/supplier", "buy"], ["/manage/input-items", "buy"],
+  ["/manage/raft-costs", "farm"], ["/manage/harvest", "farm"], ["/manage/cycles", "farm"], ["/trace", "farm"], ["/manage/lot-trace", "farm"],
+  ["/manage/material-usages", "farm"], ["/manage/harvest-settings", "farm"],
+  ["/manage/purchases", "buy"], ["/manage/supplier", "buy"], ["/manage/input-items", "buy"], ["/manage/input-uses", "buy"],
   ["/manage/purchase-requests", "sell"], ["/manage/sales-products", "sell"], ["/account/purchases", "sell"],
   ["/manage/weighings", "sell"], ["/manage/invoices", "sell"], ["/account/weighings", "sell"], ["/account/invoices", "sell"],
+  ["/manage/customers", "sell"], ["/manage/customer-debts", "sell"], ["/manage/customer-payments", "sell"], ["/manage/bank-account", "sell"],
+  ["/manage/quality-claims", "sell"], ["/account/claims", "sell"],
   ["/manage/work-plans", "people"], ["/manage/workforce", "people"], ["/manage/leave-requests", "people"],
   ["/manage/attendance-settings", "people"], ["/account/work", "people"],
+  ["/manage/payrolls", "people"], ["/manage/payroll-payments", "people"], ["/manage/payroll-slips", "people"],
+  ["/manage/payroll-employees", "people"], ["/manage/payroll-settings", "people"], ["/manage/pay-rates", "people"],
   ["/manage/employees", "org"], ["/manage/accounts", "org"], ["/manage/roles", "org"], ["/manage/cooperative", "org"],
-  ["/account/trader-requests", "org"],
+  ["/account/trader-requests", "org"], ["/manage/reports", "org"], ["/manage/audit-log", "org"],
 ];
 
 /** Khu vực của một đường dẫn. Màn không thuộc khu vực nào (hồ sơ, thông báo...) trả về undefined và dùng màu biển. */

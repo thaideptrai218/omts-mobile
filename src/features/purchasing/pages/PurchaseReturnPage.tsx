@@ -1,13 +1,12 @@
-import type { ReceiptView } from "@/features/purchasing/models/PurchaseReceipt";
-import type { PaymentMethod } from "@/features/purchasing/models/SupplierPayment";
-import { useEffect, useState } from "react";
-import { Button, Input, Select, useNavigate, useParams, useSnackbar } from "zmp-ui";
+import type { ReceiptLine, ReceiptView } from "@/features/purchasing/models/PurchaseReceipt";
+import { useState } from "react";
+import { Button, Input, useNavigate, useParams, useSnackbar } from "zmp-ui";
 
 import { ConfirmSheet } from "@/components/ConfirmSheet/ConfirmSheet";
 import DateField from "@/components/DateField/DateField";
-import FormError from "@/components/FormError/FormError";
 import { Empty } from "@/components/Empty/Empty";
 import { Facts } from "@/components/Facts/Facts";
+import FormError from "@/components/FormError/FormError";
 import { Loadable } from "@/components/Loadable/Loadable";
 import { ManagePage } from "@/components/ManagePage/ManagePage";
 import { NumberInput } from "@/components/NumberInput/NumberInput";
@@ -15,25 +14,19 @@ import { Section } from "@/components/Section/Section";
 import { MESSAGES } from "@/constants/messages";
 import { createPurchaseReturn, getReceipt } from "@/features/purchasing/services/purchasingService";
 import { useLoad } from "@/hooks/useLoad";
+import { ApiError } from "@/services/errors";
 import { errorText } from "@/utils/errorText";
 import { money, num, parseNumber, todayIso } from "@/utils/format";
-import { PAYMENT_METHOD } from "@/utils/labels";
 
 const TITLE = "Trả hàng nhà cung cấp";
 
-/** Giá trị hàng trả như server tính: số lượng × đơn giá × (phải trả ÷ tổng tiền hàng), làm tròn đến nghìn đồng. */
-function estimateValue(receipt: ReceiptView, quantities: Record<string, string>) {
-  if (receipt.subtotal === 0) return 0;
-  const total = receipt.lines.reduce((sum, line) => {
-    const quantity = parseNumber(quantities[line.id] ?? "") ?? 0;
-    return sum + Math.round((quantity * line.unitPrice * receipt.payable) / receipt.subtotal / 1000) * 1000;
-  }, 0);
-  return Math.min(total, receipt.payable - receipt.returned);
-}
+/** Số lượng còn trả được theo đơn vị của dòng: backend trả theo đơn vị gốc, `unitFactor` là số đơn vị gốc trong một đơn vị dòng. */
+const returnableInLineUnit = (l: ReceiptLine) => (l.unitFactor > 0 ? l.returnable / l.unitFactor : l.returnable);
 
 /**
- * Trả hàng nhà cung cấp (`/manage/purchases/:id/return`). Giá trị trả phải bằng tiền trừ công nợ cộng tiền nhận lại.
- * App điền sẵn phần trừ công nợ trước; server tính lại giá trị và báo số đúng nếu khác do làm tròn.
+ * Trả hàng nhà cung cấp từ một phiếu hoàn tất (PURCHASE-02, `/manage/purchases/:id/return`): chọn số lượng từng dòng, lý do
+ * và ngày trả. Giá trả mặc định là giá đã trả của dòng (`netUnitPrice`); trả hàng làm giảm công nợ với nhà cung cấp. Tiền nhà
+ * cung cấp hoàn lại (nếu có) ghi riêng. Quản lý vùng trả hàng thì backend hỏi Chủ HTX đã đồng ý chưa (MSG-PURCHASE-02).
  */
 function PurchaseReturnPage() {
   const { id = "" } = useParams();
@@ -57,63 +50,66 @@ function ReturnForm({ receipt }: { receipt: ReceiptView }) {
   const [quantities, setQuantities] = useState<Record<string, string>>({});
   const [returnDate, setReturnDate] = useState<string | null>(todayIso());
   const [reason, setReason] = useState("");
-  const [debt, setDebt] = useState("");
-  const [refund, setRefund] = useState("");
-  const [method, setMethod] = useState<PaymentMethod>("BankTransfer");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [confirming, setConfirming] = useState(false);
+  const [ownerQuestion, setOwnerQuestion] = useState("");
 
   const lines = receipt.lines.filter((l) => l.returnable > 0);
-  const value = estimateValue(receipt, quantities);
+  const value = lines.reduce((sum, l) => sum + Math.round((parseNumber(quantities[l.id] ?? "") ?? 0) * (l.netUnitPrice ?? 0)), 0);
 
-  // Đổi số lượng thì chia lại tiền: trừ công nợ trước, phần vượt công nợ là tiền nhà cung cấp hoàn lại.
-  useEffect(() => {
-    const reduced = Math.min(value, receipt.outstanding);
-    setDebt(reduced ? String(reduced) : "");
-    setRefund(value > reduced ? String(value - reduced) : "");
-  }, [value, receipt.outstanding]);
-
-  const save = async () => {
-    if (busy) return;
-    const chosen = lines.flatMap((l) => {
+  const chosen = () =>
+    lines.flatMap((l) => {
       const quantity = parseNumber(quantities[l.id] ?? "");
       return quantity ? [{ receiptLineId: l.id, quantity }] : [];
     });
-    if (chosen.length === 0) {
-      setError(MESSAGES.MSG01("Số lượng trả"));
+
+  const check = () => {
+    if (chosen().length === 0) return MESSAGES.MSG01("Số lượng trả");
+    const over = lines.find((l) => (parseNumber(quantities[l.id] ?? "") ?? 0) > returnableInLineUnit(l));
+    if (over) return MESSAGES.MSG01(`Số lượng trả của ${over.itemName ?? "vật tư"}`);
+    if (!returnDate || returnDate > todayIso()) return MESSAGES.MSG01("Ngày trả hàng");
+    if (!reason.trim()) return MESSAGES.MSG01("Lý do trả hàng");
+    return "";
+  };
+
+  const save = async (ownerApproved: boolean) => {
+    if (busy) return;
+    const invalid = check();
+    if (invalid) {
+      setError(invalid);
       return;
     }
-    if (!returnDate || !reason.trim()) {
-      setError(MESSAGES.MSG01(!returnDate ? "Ngày trả hàng" : "Lý do trả hàng"));
-      return;
-    }
-    const refundAmount = parseNumber(refund) ?? 0;
     setBusy(true);
     setError("");
     try {
       await createPurchaseReturn(receipt.id, {
-        returnDate,
         reason: reason.trim(),
-        refundAmount,
-        refundMethod: refundAmount > 0 ? method : null,
-        debtReductionAmount: parseNumber(debt) ?? 0,
-        lines: chosen,
+        lines: chosen(),
+        ownerApproved,
+        // Hôm nay thì để backend lấy giờ hiện tại; ngày trước đó thì tính từ đầu ngày theo giờ Việt Nam.
+        returnedAt: returnDate && returnDate !== todayIso() ? `${returnDate}T00:00:00+07:00` : null,
       });
       openSnackbar({ text: "Đã ghi trả hàng.", type: "success", duration: 4000 });
       navigate(`/manage/purchases/${receipt.id}`, { replace: true });
     } catch (err) {
-      setError(errorText(err));
+      if (err instanceof ApiError && err.status === 409 && err.details.confirmFlag === "ownerApproved") {
+        setOwnerQuestion(
+          `Chủ HTX đã trực tiếp đồng ý trả hàng trị giá ${money(Number(err.details.returnAmount ?? value))} cho ${String(err.details.supplierName ?? receipt.supplier.name ?? "nhà cung cấp")} chưa?`,
+        );
+      } else {
+        setError(errorText(err));
+      }
     } finally {
       setBusy(false);
     }
   };
 
-  // Còn thiếu thì để save báo lỗi như cũ (chưa gửi gì lên server); đủ rồi mới hỏi lại trước khi ghi.
+  // Còn thiếu thì báo lỗi ngay (chưa gửi gì lên server); đủ rồi mới hỏi lại trước khi ghi.
   const askSave = () => {
-    const hasQuantity = lines.some((l) => parseNumber(quantities[l.id] ?? ""));
-    if (!hasQuantity || !returnDate || !reason.trim()) {
-      void save();
+    const invalid = check();
+    if (invalid) {
+      setError(invalid);
       return;
     }
     setConfirming(true);
@@ -126,8 +122,6 @@ function ReturnForm({ receipt }: { receipt: ReceiptView }) {
       </ManagePage>
     );
   }
-
-  const refundValue = parseNumber(refund) ?? 0;
 
   return (
     <ManagePage
@@ -143,7 +137,6 @@ function ReturnForm({ receipt }: { receipt: ReceiptView }) {
           items={[
             ["Phiếu nhập", receipt.code],
             ["Nhà cung cấp", receipt.supplier.name],
-            ["Còn nợ", money(receipt.outstanding)],
           ]}
         />
         <Section step={1} title="Hàng trả">
@@ -154,9 +147,12 @@ function ReturnForm({ receipt }: { receipt: ReceiptView }) {
                 key={l.id}
                 decimal
                 label={l.itemName ?? l.itemCode ?? "Vật tư"}
-                helperText={`Trả được tối đa ${num(l.returnable, l.unit ?? undefined)}, đơn giá ${money(l.unitPrice)}`}
+                helperText={`Trả được tối đa ${num(returnableInLineUnit(l), l.unit)}${l.netUnitPrice !== null ? `, giá trả ${money(l.netUnitPrice)} mỗi ${l.unit}` : ""}`}
                 value={quantities[l.id] ?? ""}
-                onChange={(v) => { setError(""); setQuantities((current) => ({ ...current, [l.id]: v })); }}
+                onChange={(v) => {
+                  setError("");
+                  setQuantities((current) => ({ ...current, [l.id]: v }));
+                }}
                 disabled={busy}
               />
             ))}
@@ -166,20 +162,9 @@ function ReturnForm({ receipt }: { receipt: ReceiptView }) {
           <div className="form card">
             <DateField label="Ngày trả hàng (bắt buộc)" value={returnDate} onChange={setReturnDate} disabled={busy} />
             <Input.TextArea label="Lý do trả hàng (bắt buộc)" value={reason} onChange={(e) => setReason(e.target.value)} maxLength={1000} showCount disabled={busy} />
-          </div>
-        </Section>
-        <Section step={3} title="Trừ nợ và hoàn tiền">
-          <div className="form card">
-            <p className="form__intro">Giá trị hàng trả ước tính: <strong>{money(value)}</strong></p>
-            <NumberInput label="Trừ vào công nợ (đồng)" value={debt} onChange={setDebt} disabled={busy} />
-            <NumberInput label="Nhà cung cấp hoàn lại (đồng)" value={refund} onChange={setRefund} disabled={busy} />
-            {refundValue > 0 && (
-              <Select label="Hình thức hoàn tiền" value={method} onChange={(v) => setMethod(v as PaymentMethod)} closeOnSelect disabled={busy}>
-                {Object.keys(PAYMENT_METHOD).map((k) => (
-                  <Select.Option key={k} value={k} title={PAYMENT_METHOD[k]} />
-                ))}
-              </Select>
-            )}
+            <p className="form__intro">
+              Giá trị hàng trả ước tính: <strong>{money(value)}</strong>. Số này trừ vào công nợ với nhà cung cấp.
+            </p>
           </div>
         </Section>
         <FormError text={error} />
@@ -194,11 +179,9 @@ function ReturnForm({ receipt }: { receipt: ReceiptView }) {
               items={[
                 ["Nhà cung cấp", receipt.supplier.name],
                 ["Giá trị hàng trả ước tính", money(value)],
-                ["Trừ vào công nợ", money(parseNumber(debt) ?? 0)],
-                ["Nhà cung cấp hoàn lại", refundValue > 0 ? money(refundValue) : null],
               ]}
             />
-            <p>Ghi xong không sửa hay hủy được trên ứng dụng.</p>
+            <p>Trả hàng được ghi ngay và trừ vào công nợ. Muốn hủy, Chủ HTX hủy trên bản web.</p>
           </div>
         }
         confirmText="Ghi trả hàng"
@@ -206,7 +189,24 @@ function ReturnForm({ receipt }: { receipt: ReceiptView }) {
         onConfirm={() => {
           // Đóng sheet trước để lỗi từ server hiện ở FormError của form.
           setConfirming(false);
-          void save();
+          void save(false);
+        }}
+      />
+
+      <ConfirmSheet
+        visible={ownerQuestion !== ""}
+        title="Chủ HTX đã đồng ý chưa?"
+        message={ownerQuestion}
+        confirmText="Có, Chủ HTX đã đồng ý"
+        cancelText="Chưa, quay lại"
+        busy={busy}
+        onClose={() => {
+          setOwnerQuestion("");
+          setError("Cần Chủ HTX đồng ý trước khi trả hàng.");
+        }}
+        onConfirm={() => {
+          setOwnerQuestion("");
+          void save(true);
         }}
       />
     </ManagePage>

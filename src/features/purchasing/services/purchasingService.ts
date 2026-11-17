@@ -1,10 +1,21 @@
 import type { InputItem, InputItemSearchParams, SaveInputItem } from "@/features/purchasing/models/InputItem";
-import type { CancelReceiptRequest, PurchaseReceiptSearchParams, ReceiptSearch, ReceiptView, SavePurchaseReturn, SaveReceipt } from "@/features/purchasing/models/PurchaseReceipt";
-import type { RaftMaterialCost } from "@/features/purchasing/models/RaftMaterialCost";
+import type {
+  CancelPreview,
+  CancelReceiptRequest,
+  PurchaseReceiptSearchParams,
+  ReceiptPayment,
+  ReceiptSearch,
+  ReceiptView,
+  SavePurchaseReturn,
+  SaveReceipt,
+} from "@/features/purchasing/models/PurchaseReceipt";
+import type { RaftMaterialCostResult } from "@/features/purchasing/models/RaftMaterialCost";
 import type { RaftLookup, ZoneLookup } from "@/features/purchasing/models/Reference";
-import type { SaveSupplier, SupplierDebtDetail, SupplierDebtRow, SupplierListItem, SupplierSearchParams, SupplierView } from "@/features/purchasing/models/Supplier";
+import type { SaveSupplier, SupplierListItem, SupplierSearchParams, SupplierView } from "@/features/purchasing/models/Supplier";
+import type { SupplierDebtDetail, SupplierDebtList, SupplierDebtSearchParams, SupplierDebtStatement } from "@/features/purchasing/models/SupplierDebt";
 import type { SaveSupplierPayment, SupplierPayment, SupplierPaymentSearch, SupplierPaymentSearchParams } from "@/features/purchasing/models/SupplierPayment";
 import type { Paged } from "@/models/Pagination";
+import type { StatementPeriod } from "@/models/Period";
 
 import { api } from "@/services/httpClient";
 import { appendPhoto } from "@/utils/imageFile";
@@ -45,12 +56,19 @@ export function setSupplierInUse(id: string, inUse: boolean) {
   return api<SupplierView>(`/api/suppliers/${id}/${inUse ? "reactivate" : "discontinue"}`, { method: "POST" });
 }
 
-export function listSupplierDebts() {
-  return api<SupplierDebtRow[]>("/api/suppliers/debts");
+/** Nhà cung cấp có công nợ khác 0, nợ lâu nhất trước (PURCHASE-04 bước 1). */
+export function listSupplierDebts(filter: SupplierDebtSearchParams = {}) {
+  return api<SupplierDebtList>(`/api/supplier-debts${query({ search: filter.search, page: filter.page ?? 1, pageSize: filter.pageSize ?? 20 })}`);
 }
 
-export function getSupplierDebt(id: string) {
-  return api<SupplierDebtDetail>(`/api/suppliers/${id}/debt`);
+/** Nợ hôm nay và các phiếu nhập còn phải trả của một nhà cung cấp, cũ nhất trước. */
+export function getSupplierDebt(supplierId: string) {
+  return api<SupplierDebtDetail>(`/api/supplier-debts/${supplierId}`);
+}
+
+/** Sao kê theo kỳ; bỏ trống kỳ là tháng hiện tại. */
+export function getSupplierStatement(supplierId: string, period: StatementPeriod = {}) {
+  return api<SupplierDebtStatement>(`/api/supplier-debts/${supplierId}/statement${query({ from: period.from, to: period.to })}`);
 }
 
 export function addSupplierCertificate(id: string, photo: Blob) {
@@ -89,6 +107,16 @@ export function getReceipt(id: string) {
   return api<ReceiptView>(`/api/purchase-receipts/${id}`);
 }
 
+/** Các lần trả tiền sổ công nợ tính vào phiếu này, cũ nhất trước. */
+export function getReceiptPayments(id: string) {
+  return api<ReceiptPayment[]>(`/api/purchase-receipts/${id}/payments`);
+}
+
+/** Công nợ trước và sau khi hủy, hoặc lý do không hủy được (PURCHASE-06 bước 2). Không thay đổi gì. */
+export function previewCancelReceipt(id: string) {
+  return api<CancelPreview>(`/api/purchase-receipts/${id}/cancel-preview`);
+}
+
 export function createReceipt(body: SaveReceipt) {
   return api<ReceiptView>("/api/purchase-receipts", { method: "POST", body });
 }
@@ -101,6 +129,11 @@ export function completeReceipt(id: string, rowVersion: string | null) {
   return api<ReceiptView>(`/api/purchase-receipts/${id}/complete`, { method: "POST", body: { rowVersion } });
 }
 
+/** Xóa phiếu nháp (PURCHASE-06.1); phiếu hoàn tất thì hủy kèm lý do. */
+export function removeDraftReceipt(id: string) {
+  return api<void>(`/api/purchase-receipts/${id}`, { method: "DELETE" });
+}
+
 export function cancelReceipt(id: string, body: CancelReceiptRequest) {
   return api<ReceiptView>(`/api/purchase-receipts/${id}/cancel`, { method: "POST", body });
 }
@@ -109,13 +142,14 @@ export function createPurchaseReturn(id: string, body: SavePurchaseReturn) {
   return api<ReceiptView>(`/api/purchase-receipts/${id}/returns`, { method: "POST", body });
 }
 
-export function listRaftMaterialCosts() {
-  return api<RaftMaterialCost[]>("/api/purchase-receipts/raft-material-costs");
+/** Chi phí vật tư theo bè trong kỳ, tính từ vật tư đã dùng; bỏ trống kỳ thì backend lấy kỳ mặc định. */
+export function listRaftMaterialCosts(period: StatementPeriod = {}) {
+  return api<RaftMaterialCostResult>(`/api/purchase-receipts/raft-material-costs${query({ From: period.from, To: period.to })}`);
 }
 
 export function listSupplierPayments(filter: SupplierPaymentSearchParams) {
   return api<SupplierPaymentSearch>(
-    `/api/supplier-payments${query({ supplierId: filter.supplierId, page: filter.page ?? 1, pageSize: filter.pageSize ?? 20 })}`,
+    `/api/supplier-payments${query({ supplierId: filter.supplierId, kind: filter.kind, page: filter.page ?? 1, pageSize: filter.pageSize ?? 20 })}`,
   );
 }
 
@@ -132,6 +166,7 @@ export function lookupZones() {
   return api<ZoneLookup[]>("/api/zones/lookup");
 }
 
-export function lookupRafts(zoneId: string) {
-  return api<RaftLookup[]>(`/api/zones/${zoneId}/rafts${query({ statusId: STATUS_IN_USE })}`);
+/** Bè gắn được vào dòng hàng của phiếu nhập (`raft-lookup`): bè đang dùng mà người dùng được chọn. */
+export function lookupRafts() {
+  return api<RaftLookup[]>("/api/purchase-receipts/raft-lookup");
 }

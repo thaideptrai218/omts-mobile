@@ -11,24 +11,22 @@ export const ROLES: Record<RoleKey, Role> = {
     label: "Chủ HTX",
     actions: ["zones", "cycles", "harvest", "salesOrders", "workPlans", "receivables", "staff", "trace", "reports"],
     actionGroups: [
-      { title: "Vùng nuôi", hint: "Bè, chu kỳ nuôi, nước biển", area: "farm", actions: ["zones", "cycles", "seeding", "cultivationLog", "harvest", "water", "raftMaterials", "trace"] },
-      { title: "Mua hàng", hint: "Phiếu nhập, vật tư", area: "buy", actions: ["purchases", "suppliers", "supplierPayments", "inputItems"] },
-      { title: "Bán hàng", hint: "Thương lái đặt mua", area: "sell", actions: ["salesOrders", "portWeighing", "salesProducts"] },
+      { title: "Vùng nuôi", hint: "Bè, chu kỳ nuôi, nước biển", area: "farm", actions: ["zones", "cycles", "seeding", "cultivationLog", "harvest", "water", "raftMaterials", "materialUsage", "harvestSettings", "lotTrace", "trace"] },
+      { title: "Mua hàng", hint: "Phiếu nhập, vật tư", area: "buy", actions: ["purchases", "suppliers", "supplierPayments", "inputItems", "inputUses"] },
+      { title: "Bán hàng", hint: "Thương lái đặt mua", area: "sell", actions: ["salesOrders", "portWeighing", "salesProducts", "customers", "claims"] },
+      { title: "Thu tiền", hint: "Công nợ, phiếu thu", area: "sell", actions: ["receivables", "receipts", "reconcile", "refunds", "bankAccount"] },
       { title: "Nhân công", hint: "Chấm công, nghỉ phép", area: "people", actions: ["workPlans", "assignments", "attendance", "leaveRequests", "attendanceSettings", "myWork"] },
-      { title: "Tổ chức", hint: "Nhân sự, tài khoản", area: "org", actions: ["staff", "accounts", "permissions", "traderRequests", "cooperative"] },
+      { title: "Lương", hint: "Bảng lương, giá công", area: "people", actions: ["payroll", "payRates", "payrollSettings"] },
+      { title: "Tổ chức", hint: "Nhân sự, tài khoản, báo cáo", area: "org", actions: ["staff", "accounts", "permissions", "traderRequests", "cooperative", "reports", "auditLog"] },
       ...(import.meta.env.DEV
-        ? [
-            { title: "Nuôi và thu hoạch", hint: "Dữ liệu mẫu", actions: devOnly(["materialUsage", "harvestSettings"]) },
-            { title: "Bán hàng và tiền", hint: "Dữ liệu mẫu", actions: devOnly(["customers", "claims", "receivables", "receipts", "reconcile", "refunds", "bankAccount"]) },
-            { title: "Lương, báo cáo", hint: "Dữ liệu mẫu", actions: devOnly(["payroll", "payRates", "payrollSettings", "reports", "auditLog", "broadcast"]) },
-          ]
-        : [{ title: "Sắp có", hint: "Các chức năng đang làm", area: "stone" as const, actions: ["receivables", "payroll", "reports", "auditLog", "broadcast"] as FeatureKey[] }]),
+        ? [{ title: "Chưa có trên hệ thống", hint: "Dữ liệu mẫu", actions: devOnly(["broadcast"]) }]
+        : [{ title: "Sắp có", hint: "Các chức năng đang làm", area: "stone" as const, actions: ["broadcast"] as FeatureKey[] }]),
     ],
   },
   zoneManager: {
     key: "zoneManager",
     label: "Quản lý vùng",
-    actions: ["water", "purchases", "suppliers", "workPlans", "assignments", "attendance", "myWork", "cycles", "seeding", "cultivationLog", "harvest", "portWeighing", "trace", ...devOnly(["materialUsage", "customers", "claims"])],
+    actions: ["water", "purchases", "suppliers", "workPlans", "assignments", "attendance", "myWork", "cycles", "seeding", "cultivationLog", "harvest", "portWeighing", "materialUsage", "inputUses", "customers", "claims", "lotTrace", "trace"],
   },
   staff: {
     key: "staff",
@@ -38,7 +36,8 @@ export const ROLES: Record<RoleKey, Role> = {
   accountant: {
     key: "accountant",
     label: "Kế toán",
-    actions: ["supplierPayments", "purchases", "receipts", "receivables", "reconcile", "refunds", "payroll", "costs", "reports", ...devOnly(["payRates", "payslips"])],
+    // Bảng lương chỉ Chủ HTX dùng được (backend), nên Kế toán không có mục "Lương nhân công".
+    actions: ["supplierPayments", "purchases", "receipts", "receivables", "reconcile", "refunds", "customers", "payRates", "costs", "inputUses", "reports", "lotTrace", ...devOnly(["payslips"])],
   },
   trader: {
     key: "trader",

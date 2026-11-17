@@ -334,6 +334,33 @@ export const KINDS: Record<string, Kind> = {
     body: (n) => (has(n) ? customerPayment(n) : `Có giao dịch tiền của khách hàng ${n.relatedRecordCode ?? ""}.`),
     icon: "zi-note",
     tone: "neutral",
+    // Một phiếu thu có mã phiếu; xác nhận nhiều khoản cùng lúc thì không có mã, hiện nội dung đầy đủ.
+    to: recordPage("/manage/customer-payments", null),
+  },
+  // MSG-CLAIM-01: thương lái gửi khiếu nại, báo Chủ HTX.
+  QUALITY_CLAIM_NEW: {
+    title: "Khiếu nại mới",
+    body: (n) => has(n)
+      ? `${customer(text(n, "customer_name"))} báo hàng của hóa đơn ${text(n, "invoice_code")} có vấn đề: ${text(n, "description_start")}. Nhờ Quản lý vùng kiểm tra rồi trả lời.`
+      : `Có khiếu nại mới ${n.relatedRecordCode ?? ""}.`,
+    icon: "zi-warning-circle",
+    tone: "warning",
+    to: recordPage("/manage/quality-claims", "/manage/quality-claims"),
+  },
+  // MSG-CLAIM-02: HTX trả lời khiếu nại, báo thương lái (BR-CLAIM-02).
+  QUALITY_CLAIM_RESPONSE: {
+    title: "HTX trả lời khiếu nại",
+    body: (n) => {
+      if (!has(n)) return "HTX đã trả lời khiếu nại của bạn. Bấm để xem.";
+      const head = `${text(n, "cooperative_short_name")}: khiếu nại về hóa đơn ${text(n, "invoice_code")}`;
+      const call = ` Vui lòng gọi ${text(n, "cooperative_phone") || "HTX"}.`;
+      return text(n, "result") === "Accepted"
+        ? `${head} được chấp nhận, HTX đề xuất ${text(n, "offer") === "ReturnAllGoods" ? "trả lại toàn bộ hàng" : "giảm giá cả hóa đơn"}.${tail("Lời nhắn", text(n, "note"))}${call}`
+        : `${head} không được chấp nhận.${tail("Lý do", text(n, "note"))}${call}`;
+    },
+    icon: "zi-warning-circle",
+    tone: "neutral",
+    to: recordPage("/account/claims", "/account/claims"),
   },
   PROVENANCE_WITHDRAWN: {
     title: "Thu hồi thông tin nguồn gốc",

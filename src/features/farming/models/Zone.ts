@@ -15,14 +15,21 @@ export type ZoneListItem = {
   statusId: number;
   status: string | null;
   inUseRaftCount: number;
-  licenseState: LicenseState;
+  /** Expired hoặc ExpiringSoon của giấy tờ mới nhất; null khi giấy tờ ổn, vùng chưa có giấy tờ, hoặc người xem là nhân viên. */
+  licenseState: LicenseState | null;
 };
 
 export type ZoneView = ZoneListItem & {
   latitude: number | null;
   longitude: number | null;
-  waterMeasurementPoint: string | null;
   rowVersion: string | null;
+};
+
+/** Kết quả thêm hoặc sửa vùng (FARM-02.0 bước 6). */
+export type ZoneSaved = {
+  zone: ZoneView;
+  message: string;
+  messageCode: string;
 };
 
 export type ZoneLookupItem = {
@@ -33,14 +40,14 @@ export type ZoneLookupItem = {
   status: string | null;
 };
 
+/** Thêm hoặc sửa vùng: mã, tên, vị trí, tọa độ và diện tích (lớn hơn 0) đều bắt buộc. */
 export type SaveZone = {
   code: string;
   name: string;
-  location: string | null;
-  latitude: number | null;
-  longitude: number | null;
-  area: number | null;
-  waterMeasurementPoint: string | null;
+  location: string;
+  latitude: number;
+  longitude: number;
+  area: number;
   rowVersion?: string | null;
 };
 

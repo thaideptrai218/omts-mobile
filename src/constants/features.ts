@@ -77,9 +77,9 @@ export const FEATURES = {
     description: "Lập phiếu thu và phân bổ tiền thu vào các đơn bán.",
   },
   reconcile: {
-    title: "Khớp tiền chuyển khoản",
+    title: "Tiền chờ xác nhận",
     icon: "zi-retry",
-    description: "Khớp các khoản chuyển khoản ngân hàng với đơn và công nợ.",
+    description: "Xác nhận các khoản tiền thương lái đã trả (tiền mặt ở cảng hoặc chuyển khoản) đang chờ kiểm tra.",
   },
   refunds: {
     title: "Hoàn tiền",
@@ -102,9 +102,9 @@ export const FEATURES = {
     description: "Quản lý nhân viên, nhân công thời vụ và nhà thầu.",
   },
   reports: {
-    title: "Báo cáo",
+    title: "Báo cáo sản lượng",
     icon: "zi-more-grid",
-    description: "Báo cáo sản lượng, doanh thu, chi phí theo tháng và theo vùng.",
+    description: "Sản lượng thu hoạch theo vùng, bè, chu kỳ và lô hàu.",
   },
   orders: {
     title: "Mua hàng của tôi",
@@ -134,7 +134,7 @@ export const FEATURES = {
   claims: {
     title: "Khiếu nại",
     icon: "zi-warning-circle",
-    description: "Gửi và theo dõi khiếu nại chất lượng hoặc trả hàng.",
+    description: "Gửi và theo dõi khiếu nại chất lượng của hàng đã mua.",
   },
   accounts: {
     title: "Tài khoản",
@@ -181,6 +181,11 @@ export const FEATURES = {
     icon: "zi-list-2",
     description: "Danh mục con giống, vật tư bè và vật tư khác dùng khi nhập hàng.",
   },
+  inputUses: {
+    title: "Xuất dùng vật tư",
+    icon: "zi-inbox",
+    description: "Phiếu lấy giống, vật tư trong kho ra dùng cho một bè: kho trừ số lượng khi phiếu hoàn thành.",
+  },
   traderRequests: {
     title: "Duyệt thương lái",
     icon: "zi-user-check",
@@ -198,6 +203,11 @@ export const FEATURES = {
   payslips: { title: "Phiếu lương", icon: "zi-file", description: "Phiếu lương hằng tháng của bạn." },
   payrollSettings: { title: "Cài đặt lương", icon: "zi-setting", description: "Ngày bắt đầu kỳ lương và tự tạo bảng lương." },
   bankAccount: { title: "Tài khoản nhận tiền", icon: "zi-check-circle", description: "Tài khoản ngân hàng nhận tiền chuyển khoản của hóa đơn." },
+  lotTrace: {
+    title: "Truy vết lô hàu",
+    icon: "zi-search",
+    description: "Tìm một lô hàu, xem thả giống từ đâu và đã bán cho ai; công bố hoặc thu hồi thông tin nguồn gốc của lô.",
+  },
   trace: {
     title: "Truy xuất",
     icon: "zi-qrline",
@@ -226,12 +236,12 @@ export const FEATURE_HINTS: Record<keyof typeof FEATURES, string> = {
   salesProducts: "Hàng đang bán",
   receivables: "Thương lái còn nợ",
   receipts: "Tiền đã thu",
-  reconcile: "Đối chiếu tiền chuyển khoản",
+  reconcile: "Tiền đã trả, chờ kiểm tra",
   refunds: "Trả lại tiền cho thương lái",
   payroll: "Tính lương theo giờ công",
   costs: "Giống, vật tư, nhân công",
   staff: "Nhân viên, thời vụ",
-  reports: "Sản lượng, doanh thu, chi phí",
+  reports: "Sản lượng thu hoạch",
   orders: "Đặt số lồng, xem phản hồi",
   payment: "Trả công nợ",
   weighSlips: "Đồng ý số cân ở cảng",
@@ -247,6 +257,7 @@ export const FEATURE_HINTS: Record<keyof typeof FEATURES, string> = {
   purchases: "Giống, vật tư đã nhập",
   supplierPayments: "Các lần đã trả tiền",
   inputItems: "Con giống, phao, dây",
+  inputUses: "Lấy vật tư trong kho cho bè",
   traderRequests: "Yêu cầu tài khoản mới",
   cooperative: "Tên, địa chỉ, mã số",
   customers: "Hồ sơ khách hàng",
@@ -256,15 +267,12 @@ export const FEATURE_HINTS: Record<keyof typeof FEATURES, string> = {
   payslips: "Lương hằng tháng",
   payrollSettings: "Kỳ lương",
   bankAccount: "Tài khoản ngân hàng của HTX",
+  lotTrace: "Giống từ đâu, bán cho ai",
   trace: "Xem nguồn gốc lô hàu",
 };
 
 /** Chức năng backend chưa có API: bản dev mở màn dữ liệu mẫu `/mock/<key>`, bản production mở trang "chưa có". */
-export const MOCK_FEATURES: FeatureKey[] = [
-  "materialUsage", "harvestSettings", "customers", "claims",
-  "receivables", "receipts", "reconcile", "refunds", "bankAccount", "payroll", "payRates", "payslips", "payrollSettings",
-  "reports", "auditLog", "broadcast", "payment", "pickup",
-];
+export const MOCK_FEATURES: FeatureKey[] = ["payslips", "broadcast", "payment", "pickup"];
 
 /**
  * Chức năng đã có màn thật (nối API). Chức năng không có ở đây mở trang "chưa có" giải thích lý do
@@ -296,11 +304,27 @@ export const FEATURE_ROUTES: Partial<Record<FeatureKey, string>> = {
   costs: "/manage/purchases",
   supplierPayments: "/manage/supplier-payments",
   inputItems: "/manage/input-items",
+  inputUses: "/manage/input-uses",
   staff: "/manage/employees",
   accounts: "/manage/accounts",
   permissions: "/manage/roles",
   cooperative: "/manage/cooperative",
   settings: "/manage/cooperative",
   traderRequests: "/account/trader-requests",
+  lotTrace: "/manage/lot-trace",
   trace: "/trace",
+  materialUsage: "/manage/material-usages",
+  harvestSettings: "/manage/harvest-settings",
+  customers: "/manage/customers",
+  receivables: "/manage/customer-debts",
+  receipts: "/manage/customer-payments/new",
+  reconcile: "/manage/customer-payments/awaiting",
+  refunds: "/manage/customer-payments/pay-back",
+  bankAccount: "/manage/bank-account",
+  claims: "/account/claims",
+  payroll: "/manage/payrolls",
+  payRates: "/manage/pay-rates",
+  payrollSettings: "/manage/payroll-settings",
+  reports: "/manage/reports",
+  auditLog: "/manage/audit-log",
 };

@@ -1,7 +1,7 @@
 import type { HarvestDraft, HarvestLane, HarvestOrderOption, HarvestScreen, LaneState } from "@/features/farming/models/Harvest";
 import type { Tone } from "@/models/UI";
 import { useState } from "react";
-import { Button, Checkbox, useParams } from "zmp-ui";
+import { Button, Checkbox, useNavigate, useParams } from "zmp-ui";
 
 import { Badge } from "@/components/Badge/Badge";
 import { Empty } from "@/components/Empty/Empty";
@@ -15,6 +15,7 @@ import { Rows } from "@/components/Rows/Rows";
 import { Section } from "@/components/Section/Section";
 import { harvestDraftError, harvestScreen, recordHarvest } from "@/features/farming/services/harvestService";
 import { useAction } from "@/hooks/useAction";
+import { useBusinessPermission } from "@/hooks/useBusinessPermission";
 import { useLoad } from "@/hooks/useLoad";
 import { date, num, parseNumber } from "@/utils/format";
 import "@/features/farming/pages/RaftHarvestPage.scss";
@@ -44,6 +45,10 @@ function suggestedOrder(screen: HarvestScreen): string {
  */
 export default function RaftHarvestPage() {
   const { raftId = "" } = useParams();
+  const navigate = useNavigate();
+  const allowed = useBusinessPermission();
+  // Truy vết lô (TRACE-02) cần quyền LOT_TRACING; backend vẫn kiểm tra vùng của lô.
+  const canTrace = allowed("LOT_TRACING", "View");
   const screen = useLoad(() => harvestScreen(raftId), [raftId]);
   const [form, setForm] = useState(false);
   const [draft, setDraft] = useState(emptyDraft);
@@ -139,7 +144,8 @@ export default function RaftHarvestPage() {
                       return (
                         <Row key={lot.id} title={lot.lotCode}
                           meta={`${date(lot.harvestDate)} · ${num(lot.cageCount, "lồng")} · khoảng ${num(lot.estimatedKg, "kg")} · đã bán ${num(lot.invoicedKg, "kg")}${lot.purchaseRequestCode ? ` · đơn ${lot.purchaseRequestCode}` : ""}`}
-                          badge={<Badge text={open ? "Đang bán" : "Đã đóng"} tone={open ? "success" : "neutral"} />} />
+                          badge={<Badge text={open ? "Đang bán" : "Đã đóng"} tone={open ? "success" : "neutral"} />}
+                          onClick={canTrace ? () => navigate(`/manage/lot-trace/${lot.id}`) : undefined} />
                       );
                     })}
                   </Rows>

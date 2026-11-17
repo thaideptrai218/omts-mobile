@@ -25,11 +25,14 @@ export const FEATURE_ACCESS: Record<FeatureKey, Access> = {
   receivables: { functions: ["CUSTOMER_DEBTS"] },
   receipts: { functions: ["CUSTOMER_PAYMENTS"] },
   reconcile: { functions: ["CUSTOMER_PAYMENTS"] },
-  refunds: { functions: ["QUALITY_CLAIMS", "CUSTOMER_PAYMENTS"] },
-  payroll: { functions: ["PAYROLL"] },
+  // Trả lại tiền (`customer-payments/pay-back`) cần quyền tạo phiếu thu, không cần quyền khiếu nại.
+  refunds: { functions: ["CUSTOMER_PAYMENTS"] },
+  // Backend chỉ cho Chủ HTX dùng bảng lương (`PayrollsController` có `[RequireCooperativeOwner]`), dù vai trò Kế toán có PAYROLL.
+  payroll: { owner: true },
   costs: { functions: ["PURCHASE_RECEIPTS", "SUPPLIER_PAYMENTS"] },
   staff: { functions: ["LABOR_WORKERS"] },
-  reports: { functions: ["SALES_REPORTS"] },
+  // Báo cáo sản lượng (`api/harvest-yield`) cần quyền xem lô thu hoạch; SALES_REPORTS chưa có API nào dùng.
+  reports: { functions: ["HARVEST_LOTS"] },
   orders: { trader: true },
   payment: { trader: true },
   weighSlips: { trader: true },
@@ -54,6 +57,10 @@ export const FEATURE_ACCESS: Record<FeatureKey, Access> = {
   payslips: { employee: true },
   payrollSettings: { owner: true },
   bankAccount: { owner: true },
+  // Truy vết (TRACE-02): Quản lý vùng, Kế toán và Chủ HTX; backend lọc theo vùng của lô.
+  lotTrace: { owner: true, functions: ["LOT_TRACING"] },
+  // Xuất dùng (INPUT_ISSUES): Quản lý vùng lập phiếu ở vùng mình, Kế toán chỉ xem; xuất hủy và thẻ kho để bản web.
+  inputUses: { owner: true, functions: ["INPUT_ISSUES"] },
   trace: { everyone: true },
 };
 
