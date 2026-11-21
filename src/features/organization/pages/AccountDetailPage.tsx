@@ -16,16 +16,16 @@ import { Section } from "@/components/Section/Section";
 import { useAction } from "@/hooks/useAction";
 import { useLoad } from "@/hooks/useLoad";
 import { MESSAGES } from "@/constants/messages";
-import { date, todayIso } from "@/utils/format";
+import { date } from "@/utils/format";
 import { roleName, statusLabel } from "@/utils/labels";
 import { addGrant, getAccount, GRANT_STATE, listGrants, listRoles, lockAccount, lookupZones, revokeGrant, STATUS_ID, unlockAccount } from "@/features/organization/services/organizationService";
 
-import DateField from "@/components/DateField/DateField";
 
 const ALL_ZONES = "all";
 
 function grantPeriod(g: GrantRow) {
-  return g.effectiveTo ? `${date(g.effectiveFrom)} – ${date(g.effectiveTo)}` : `Từ ${date(g.effectiveFrom)}`;
+  const granted = `Cấp ${date(g.grantedAt)}${g.grantedByName ? ` bởi ${g.grantedByName}` : ""}`;
+  return g.revokedAt ? `${granted} · Thu hồi ${date(g.revokedAt)}${g.revokedByName ? ` bởi ${g.revokedByName}` : ""}` : granted;
 }
 
 function grantMeta(g: GrantRow) {
@@ -97,8 +97,8 @@ function AccountDetailPage() {
         {({ account: a, grants }) => {
           const status = statusLabel(a.status);
           const locked = a.status === "Locked";
-          const current = grants.filter((g) => g.state !== "Revoked" && g.state !== "Expired");
-          const past = grants.filter((g) => g.state === "Revoked" || g.state === "Expired");
+          const current = grants.filter((g) => g.state !== "Revoked");
+          const past = grants.filter((g) => g.state === "Revoked");
           return (
             <>
               <div className="card">
@@ -227,8 +227,6 @@ function GrantSheet({ visible, accountId, onClose, onGranted }: { visible: boole
   }, [visible]);
   const [roleId, setRoleId] = useState("");
   const [zoneId, setZoneId] = useState(ALL_ZONES);
-  const [from, setFrom] = useState(todayIso());
-  const [to, setTo] = useState<string | null>(null);
   const [error, setError] = useState("");
   const { busy, run } = useAction();
 
@@ -239,13 +237,12 @@ function GrantSheet({ visible, accountId, onClose, onGranted }: { visible: boole
     }
     setError("");
     const result = await run(
-      () => addGrant(accountId, { roleId, zoneId: zoneId === ALL_ZONES ? null : zoneId, effectiveFrom: from, effectiveTo: to }),
+      () => addGrant(accountId, { roleId, zoneId: zoneId === ALL_ZONES ? null : zoneId }),
       "Đã cấp vai trò.",
     );
     if (result) {
       setRoleId("");
       setZoneId(ALL_ZONES);
-      setTo(null);
       onGranted(result);
     }
   };
@@ -265,13 +262,7 @@ function GrantSheet({ visible, accountId, onClose, onGranted }: { visible: boole
             <Select.Option key={z.id} value={z.id} title={z.name ?? z.code ?? ""} />
           ))}
         </Select>
-        <DateField label="Hiệu lực từ" value={from} onChange={setFrom} disabled={busy} />
-        <DateField label="Đến (không bắt buộc)" value={to} onChange={setTo} disabled={busy} />
-        {to && (
-          <button type="button" className="link-button" onClick={() => setTo(null)}>
-            Bỏ ngày kết thúc
-          </button>
-        )}
+        <p className="form__hint">Vai trò có hiệu lực ngay khi cấp, tới khi bị thu hồi.</p>
         <FormError text={error} />
         <div className="sheet-actions">
           <Button fullWidth size="large" loading={busy} disabled={busy} onClick={() => void submit()}>

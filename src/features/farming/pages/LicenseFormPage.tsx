@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Button, Checkbox, Input, Select, useLocation, useNavigate, useParams } from "zmp-ui";
+import { Button, Input, Select, useLocation, useNavigate, useParams } from "zmp-ui";
 
 import DateField from "@/components/DateField/DateField";
 import FormError from "@/components/FormError/FormError";
@@ -33,7 +33,7 @@ function LicenseFormPage() {
   const [issuingAuthority, setIssuingAuthority] = useState("");
   const [holder, setHolder] = useState("");
   const [legalScope, setLegalScope] = useState("");
-  const [zoneIds, setZoneIds] = useState<string[]>(search.get("zone") ? [search.get("zone")!] : []);
+  const [zoneId, setZoneId] = useState<string>(search.get("zone") ?? "");
   const [file, setFile] = useState<Blob | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   // `error` là lỗi tải giấy tờ (thay cả form); `formError` là lỗi nhập, chọn ảnh, lưu (form vẫn còn để sửa).
@@ -51,7 +51,7 @@ function LicenseFormPage() {
         setIssuingAuthority(l.issuingAuthority ?? "");
         setHolder(l.holder ?? "");
         setLegalScope(l.legalScope ?? "");
-        setZoneIds(l.zones.map((z) => z.id));
+        setZoneId(l.zones[0]?.id ?? "");
         // Thay giấy tờ là một giấy tờ mới: số và ngày hiệu lực phải nhập lại.
         if (!replacing) {
           setDocumentNumber(l.documentNumber ?? "");
@@ -78,14 +78,14 @@ function LicenseFormPage() {
     }
   };
 
-  const toggleZone = (zoneId: string, on: boolean) => setZoneIds((list) => (on ? [...list, zoneId] : list.filter((z) => z !== zoneId)));
 
   const save = async () => {
     if (busy || !loaded) return;
     const missing = !documentType ? "Loại giấy tờ"
       : !documentNumber.trim() ? "Số giấy tờ"
       : !effectiveDate ? "Ngày hiệu lực"
-      : zoneIds.length === 0 ? "Vùng áp dụng"
+      : !expiryDate || expiryDate <= effectiveDate ? "Ngày hết hạn"
+      : !zoneId ? "Vùng áp dụng"
       : !file && (!id || replacing) ? "Ảnh giấy tờ"
       : "";
     if (missing) {
@@ -100,7 +100,7 @@ function LicenseFormPage() {
       issuingAuthority: issuingAuthority.trim() || null,
       holder: holder.trim() || null,
       legalScope: legalScope.trim() || null,
-      zoneIds,
+      zoneId,
     };
     setBusy(true);
     setFormError("");
@@ -154,7 +154,7 @@ function LicenseFormPage() {
           <Section step={2} title="Thời hạn">
             <div className="form">
               <DateField label="Ngày hiệu lực (bắt buộc)" value={effectiveDate} onChange={setEffectiveDate} disabled={busy} />
-              <DateField label="Ngày hết hạn (bỏ trống nếu không thời hạn)" value={expiryDate} onChange={setExpiryDate} disabled={busy} />
+              <DateField label="Ngày hết hạn (bắt buộc, sau ngày hiệu lực)" value={expiryDate} onChange={setExpiryDate} disabled={busy} />
             </div>
           </Section>
 
@@ -169,12 +169,15 @@ function LicenseFormPage() {
           <Section step={4} title="Vùng áp dụng (bắt buộc)">
             <Loadable data={zones.data} error={zones.error} reload={() => void zones.reload()}>
               {(list) => (
-                <fieldset className="form__group" disabled={busy}>
-                  <legend className="form__legend">Chọn ít nhất một vùng</legend>
-                  {list.map((z) => (
-                    <Checkbox key={z.id} value={z.id} label={z.name ?? z.code ?? ""} checked={zoneIds.includes(z.id)} onChange={(e) => toggleZone(z.id, e.target.checked)} />
-                  ))}
-                </fieldset>
+                <div className="form">
+                  {/* Sửa hoặc thay giấy tờ thì giữ vùng cũ: backend không cho chuyển giấy tờ sang vùng khác. */}
+                  <Select label="Vùng nuôi" placeholder="Chọn vùng" value={zoneId || undefined} onChange={(v) => setZoneId(String(v))} closeOnSelect disabled={busy || Boolean(id)}>
+                    {list.map((z) => (
+                      <Select.Option key={z.id} value={z.id} title={z.name ?? z.code ?? ""} />
+                    ))}
+                  </Select>
+                  {id && <p className="form__hint">Giấy tờ gắn với một vùng và không chuyển sang vùng khác được.</p>}
+                </div>
               )}
             </Loadable>
           </Section>

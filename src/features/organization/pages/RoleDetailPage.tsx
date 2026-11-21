@@ -7,7 +7,7 @@ import { Row } from "@/components/Row/Row";
 import { Rows } from "@/components/Rows/Rows";
 import { Section } from "@/components/Section/Section";
 import { useLoad } from "@/hooks/useLoad";
-import { DATA_SCOPE, PERMISSION_ACTION, roleName } from "@/utils/labels";
+import { PERMISSION_ACTION, roleName } from "@/utils/labels";
 import { FUNCTION_NAME, getRole, listPermissionFunctions } from "@/features/organization/services/organizationService";
 
 /** Một vai trò cố định (BR-FARM-07), chỉ xem: quyền trên từng chức năng. Mô tả của backend là tiếng Anh nên không hiện. */
@@ -35,7 +35,7 @@ function RoleDetailPage() {
                   <Rows>
                     {role.permissions.map((p) => {
                       const code = p.functionCode ?? "";
-                      const scope = known.get(code)?.cooperativeWide ? "Toàn HTX" : (DATA_SCOPE[p.dataScope] ?? p.dataScope);
+                      const scope = known.get(code)?.cooperativeWide ? "Toàn HTX" : "Theo vùng được cấp";
                       return <Row key={code} title={FUNCTION_NAME[code] ?? code} meta={`${p.actions.map((a) => PERMISSION_ACTION[a] ?? a).join(", ")} · ${scope}`} />;
                     })}
                   </Rows>

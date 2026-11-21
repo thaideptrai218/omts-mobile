@@ -1,7 +1,7 @@
 import type { ManageRoute } from "@/models/Navigation";
 import { lazyPage } from "@/routes/lazyPage";
 
-/** Mua hàng: nhà cung cấp, công nợ, phiếu nhập, trả tiền, danh mục vật tư, chi phí vật tư bè. */
+/** Mua hàng: nhà cung cấp, công nợ, phiếu nhập, trả tiền, danh mục vật tư, xuất dùng vật tư, chi phí vật tư bè. */
 export const ROUTES: ManageRoute[] = [
   { path: "/manage/suppliers", element: lazyPage(() => import("@/features/purchasing/pages/SuppliersPage")) },
   { path: "/manage/suppliers/new", element: lazyPage(() => import("@/features/purchasing/pages/SupplierFormPage")) },
@@ -16,5 +16,8 @@ export const ROUTES: ManageRoute[] = [
   { path: "/manage/purchases/:id/edit", element: lazyPage(() => import("@/features/purchasing/pages/PurchaseFormPage")) },
   { path: "/manage/supplier-payments", element: lazyPage(() => import("@/features/purchasing/pages/SupplierPaymentsPage")) },
   { path: "/manage/input-items", element: lazyPage(() => import("@/features/purchasing/pages/InputItemsPage")) },
+  { path: "/manage/input-uses", element: lazyPage(() => import("@/features/purchasing/pages/InputUsesPage")) },
+  { path: "/manage/input-uses/new", element: lazyPage(() => import("@/features/purchasing/pages/InputUseFormPage")) },
+  { path: "/manage/input-uses/:id", element: lazyPage(() => import("@/features/purchasing/pages/InputUseDetailPage")) },
   { path: "/manage/raft-costs", element: lazyPage(() => import("@/features/purchasing/pages/RaftCostsPage")) },
 ];

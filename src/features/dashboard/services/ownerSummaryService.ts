@@ -1,13 +1,14 @@
 import type { Stat, Task } from "@/features/dashboard/models/Dashboard";
-import type { DebtRow, OwnerSummary, ReceiptSearch, WaterAlert } from "@/features/dashboard/models/OwnerSummary";
+import type { OwnerSummary, ReceiptSearch } from "@/features/dashboard/models/OwnerSummary";
 import type { Settled } from "@/models/AsyncResult";
 
 import { listTraderRequests } from "@/features/organization/services/traderRequestsService";
 import { api } from "@/services/httpClient";
-import { listWater, listZones, USAGE } from "@/features/farming/services/farmService";
+import { listZones, USAGE, waterOverview } from "@/features/farming/services/farmService";
+import { outsideText } from "@/features/farming/utils/waterText";
 import { num, shortMoney } from "@/utils/format";
-import { violatedText } from "@/utils/labels";
 import { listPurchaseRequests } from "@/features/sales/services/salesService";
+import { listSupplierDebts } from "@/features/purchasing/services/purchasingService";
 
 const DRAFT_RECEIPT = 1701;
 
@@ -22,7 +23,7 @@ function settle<T>(promise: Promise<T>): Promise<Settled<T>> {
 export async function loadOwnerSummary(): Promise<OwnerSummary> {
   const [zones, debts, drafts, requests, purchases] = await Promise.all([
     settle(listZones({ statusId: USAGE.inUse, pageSize: 100 })),
-    settle(api<DebtRow[]>("/api/suppliers/debts")),
+    settle(listSupplierDebts({ pageSize: 1 })),
     settle(api<ReceiptSearch>(`/api/purchase-receipts?StatusId=${DRAFT_RECEIPT}&PageSize=1`)),
     settle(listTraderRequests()),
     settle(listPurchaseRequests("awaitingResponse")),
@@ -53,12 +54,13 @@ export async function loadOwnerSummary(): Promise<OwnerSummary> {
     const rafts = items.reduce((sum, z) => sum + z.inUseRaftCount, 0);
     stats.push({ label: "Bè đang dùng", value: num(rafts), unit: "bè", note: `${items.length} vùng nuôi` });
 
-    const badLicense = items.filter((z) => z.licenseState === "Expired" || z.licenseState === "Missing");
+    // Backend chỉ báo Expired hoặc ExpiringSoon theo giấy tờ mới nhất; vùng chưa có giấy tờ không có trạng thái riêng.
+    const badLicense = items.filter((z) => z.licenseState === "Expired");
     const expiring = items.filter((z) => z.licenseState === "ExpiringSoon");
     if (badLicense.length > 0) {
       tasks.push({
         id: "license-bad",
-        title: `Giấy tờ của ${badLicense.length} vùng đã hết hạn hoặc còn thiếu`,
+        title: `Giấy tờ của ${badLicense.length} vùng đã hết hạn`,
         detail: badLicense.map((z) => z.name).join(", "),
         tone: "danger",
         feature: "zones",
@@ -74,17 +76,14 @@ export async function loadOwnerSummary(): Promise<OwnerSummary> {
       });
     }
 
-    // Số đo mới nhất của từng vùng vượt ngưỡng thì cần xử lý ngay.
-    const latest = await Promise.all(items.map((z) => settle(listWater(z.id, "Confirmed", 1).then((p) => ({ zone: z, last: p.items[0] })))));
-    const alerts: WaterAlert[] = [];
-    latest.forEach((r) => {
-      if (r.status === "fulfilled" && r.value.last?.alertState === "Active") alerts.push(r.value);
-    });
+    // Lần đo mới nhất của vùng đang dùng vượt ngưỡng thì cần xử lý ngay (tổng quan nước, BR-WATER-04).
+    const overview = await settle(waterOverview(true));
+    const alerts = overview.status === "fulfilled" ? overview.value.filter((z) => z.hasWaterAlert) : [];
     if (alerts.length > 0) {
       tasks.unshift({
         id: "water-alert",
         title: `Chỉ số nước vượt ngưỡng ở ${alerts.length} vùng`,
-        detail: alerts.map((a) => `${a.zone.name}: ${violatedText(a.last.violatedValues) || "pH, độ mặn"}`).join("; "),
+        detail: alerts.map((a) => `${a.zoneName}: ${a.valuesOutside.map(outsideText).join(", ") || "vượt ngưỡng"}`).join("; "),
         tone: "danger",
         feature: "water",
       });
@@ -92,9 +91,10 @@ export async function loadOwnerSummary(): Promise<OwnerSummary> {
   }
 
   if (debts.status === "fulfilled") {
-    const owing = debts.value.filter((d) => d.outstanding > 0);
-    const total = owing.reduce((sum, d) => sum + d.outstanding, 0);
-    stats.push({ label: "Nợ nhà cung cấp", value: shortMoney(total), note: `${owing.length} nhà cung cấp còn nợ`, tone: total > 0 ? "warning" : "success" });
+    // Tổng của backend tính trên mọi nhà cung cấp; số nhà là số nhà có công nợ khác 0 (kể cả nhà HTX đã trả trước).
+    const total = debts.value.totalOwed;
+    const count = debts.value.page.total;
+    stats.push({ label: "Nợ nhà cung cấp", value: shortMoney(total), note: count > 0 ? `${count} nhà cung cấp có công nợ` : "Không còn nợ", tone: total > 0 ? "warning" : "success" });
   }
 
   if (drafts.status === "fulfilled") {

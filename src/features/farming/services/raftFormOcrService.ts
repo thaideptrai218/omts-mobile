@@ -6,7 +6,7 @@ import { parseCoordinate } from "@/utils/coordinates";
 
 const labels: Record<string, keyof RaftFormSuggestion> = {
   "ma be": "code", "ma so be": "code", "raft code": "code",
-  "kich thuoc": "size", "so hang": "laneCount", "so hang be": "laneCount", "chieu dai moi hang": "laneLength", "dai moi hang": "laneLength",
+  "kich thuoc": "size", "so hang": "laneCount", "so hang be": "laneCount",
   "vi tri": "location", "ghi chu": "notes", "tinh trang": "notes", "ghi chu tinh trang": "notes",
   "vi do": "latitude", "latitude": "latitude", "kinh do": "longitude", "longitude": "longitude",
 };
@@ -14,7 +14,7 @@ const normalize = (value: string) => value.toLowerCase().normalize("NFD").replac
 
 /** Chỉ nhận trường có nhãn rõ ràng, không đoán mã/tọa độ từ các số rời trong giấy. */
 export function extractRaftForm(text: string): RaftFormSuggestion {
-  const result: RaftFormSuggestion = { code: "", size: "", laneCount: "", laneLength: "", location: "", notes: "", latitude: "", longitude: "" };
+  const result: RaftFormSuggestion = { code: "", size: "", laneCount: "", location: "", notes: "", latitude: "", longitude: "" };
   for (const line of text.split(/\r?\n/)) {
     const match = line.match(/^\s*([^:：=]+)\s*[:：=]\s*(.+?)\s*$/);
     if (!match) continue;
@@ -26,9 +26,6 @@ export function extractRaftForm(text: string): RaftFormSuggestion {
       if (number !== null) result[field] = String(number);
     } else if (field === "laneCount") {
       if (/^\d+\s*(?:hang)?$/i.test(normalize(value))) result[field] = value.match(/^\d+/)![0];
-    } else if (field === "laneLength") {
-      const number = value.replace(/\s*m\s*$/i, "").replace(",", ".");
-      if (/^\d+(?:\.\d+)?$/.test(number)) result[field] = number;
     } else result[field] = value;
   }
   return result;

@@ -1,0 +1,12 @@
+// Vật tư sử dụng của bè: mỗi lần sửa bè có dòng tiêu đề (ngày, lý do) rồi các vật tư đã dùng.
+.usage-repair {
+  margin-bottom: 16px;
+}
+
+.usage-repair__head {
+  margin-bottom: 8px;
+  font-size: 1rem;
+  line-height: 1.5rem;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}

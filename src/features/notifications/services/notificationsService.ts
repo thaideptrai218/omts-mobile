@@ -1,14 +1,14 @@
-import type { CategoryPreferenceView, NotificationPreferenceChange, NotificationPreferencesSaved } from "@/features/notifications/models/NotificationPreferences";
+import type { NotificationPreferences, NotificationPreferencesSaved, NotificationPushChange } from "@/features/notifications/models/NotificationPreferences";
 import type { RegisterPushDeviceRequest } from "@/features/notifications/models/PushDevice";
 import { api } from "@/services/httpClient";
 
-/** ACS-07: các nhóm thông báo áp dụng cho loại tài khoản, kèm trạng thái từng kênh. */
+/** ACS-07: các loại thông báo áp dụng cho vai trò của tài khoản, mỗi loại có bật đẩy về điện thoại hay không. */
 export function getNotificationPreferences() {
-  return api<CategoryPreferenceView[]>("/api/me/notification-preferences");
+  return api<NotificationPreferences>("/api/me/notification-preferences");
 }
 
-/** Lưu lựa chọn; `notice` là MSG22 khi bật Push mà máy chưa cho phép nhận thông báo. */
-export function saveNotificationPreferences(items: NotificationPreferenceChange[]) {
+/** Lưu lựa chọn; `notice` có khi bật đẩy thông báo mà chưa máy nào cho phép nhận. */
+export function saveNotificationPreferences(items: NotificationPushChange[]) {
   return api<NotificationPreferencesSaved>("/api/me/notification-preferences", { method: "PUT", body: { items } });
 }
 

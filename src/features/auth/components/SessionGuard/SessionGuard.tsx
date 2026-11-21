@@ -1,3 +1,4 @@
+import type { LinkRouteState } from "@/features/auth/models/LinkAccount";
 import { useAtom, useAtomValue } from "jotai";
 import { useEffect } from "react";
 import { useLocation, useNavigate, useSnackbar } from "zmp-ui";
@@ -9,6 +10,9 @@ import { flashMessageAtom, permissionsAtom, sessionAtom, sessionExpiredAtom } fr
 
 /** Đường dẫn chỉ mở được khi đã liên kết tài khoản. */
 const PROTECTED_PREFIXES = ["/account/", "/manage/"];
+
+/** Đánh dấu lần chuyển sang `/link` do guard tự đẩy, để nút "Quay lại" ở đó không lùi về màn bảo vệ (xem `useLinkBack`). */
+const REDIRECTED: LinkRouteState = { redirected: true };
 
 /**
  * Điều hướng theo trạng thái phiên, đặt ngay trong ZMPRouter nên có `useNavigate`:
@@ -33,7 +37,7 @@ function SessionGuard() {
 
   useEffect(() => {
     if (!session && PROTECTED_PREFIXES.some((p) => path.startsWith(p))) {
-      navigate("/link", { replace: true, animate: false });
+      navigate("/link", { replace: true, animate: false, state: REDIRECTED });
       return;
     }
     if (session && path === "/link") {
@@ -44,7 +48,7 @@ function SessionGuard() {
   useEffect(() => {
     if (!expired) return;
     setExpired(false);
-    navigate("/link", { replace: true });
+    navigate("/link", { replace: true, state: REDIRECTED });
     openSnackbar({ text: MESSAGES.MSG19, type: "warning", duration: 6000 });
   }, [expired, setExpired, navigate, openSnackbar]);
 

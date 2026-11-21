@@ -10,6 +10,13 @@ export function money(value: number | null | undefined) {
   return value === null || value === undefined ? "—" : `${moneyFormat.format(value)} đ`;
 }
 
+/** 1250000 → "+1.250.000 đ", -40000 → "-40.000 đ": số tiền làm tăng hoặc giảm công nợ. */
+export function signedMoney(value: number) {
+  if (value > 0) return `+${money(value)}`;
+  if (value < 0) return `-${money(-value)}`;
+  return money(0);
+}
+
 /** Số tiền gọn cho ô thống kê: 1250000 → "1,25 triệu", 1240000000 → "1,24 tỷ". */
 export function shortMoney(value: number) {
   const abs = Math.abs(value);

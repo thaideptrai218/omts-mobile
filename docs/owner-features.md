@@ -21,6 +21,11 @@ không lớn thêm theo số màn. Bản build 28/10: cả app 1,2 MB, file lớ
 | | Chi tiết bè: các hàng, lịch sử bố trí, chi phí vật tư; ngừng dùng/dùng lại | `/manage/rafts/:raftId` | `GET api/rafts/{id}`, `…/discontinue`, `…/reactivate` |
 | | Thêm bè (số hàng, chiều dài), sửa thông tin bè | `/manage/zones/:id/rafts/new`, `/manage/rafts/:raftId/edit` | `POST api/zones/{id}/rafts`, `PUT api/rafts/{id}` |
 | | Xem giấy tờ pháp lý | `/manage/licenses/:id` | `GET api/zone-licenses/{id}` |
+| Chu kỳ nuôi | Chọn vùng rồi bè; vào từ Thả giống hoặc Nhật ký nuôi thì bè đang nuôi mở thẳng màn đó (11/11/2026) | `/manage/cycles`, `?for=seeding`, `?for=logs` | `GET api/zones/{id}/cultivation-cycles` |
+| | Các chu kỳ của bè, bắt đầu chu kỳ mới với ước tính kế hoạch | `/manage/cycles/raft/:raftId` | `GET/POST api/rafts/{id}/cultivation-cycles` |
+| | Chi tiết và tổng kết chu kỳ; sửa ngày bắt đầu và kế hoạch; hủy chu kỳ bắt đầu nhầm; đóng chu kỳ có đánh giá, đóng sớm thì Quản lý vùng xác nhận Chủ HTX đã đồng ý | `/manage/cycles/:cycleId` | `GET/PUT api/cultivation-cycles/{id}`, `…/summary`, `…/cancel`, `…/close/preview`, `…/close` |
+| | Thả giống: các luống, tổng theo lô giống, ghi phiên, sửa hoặc xóa phiên có lý do, đánh dấu thả giống xong | `/manage/cycles/:cycleId/seeding` | `api/cultivation-cycles/{id}/seeding-records`, `…/seeding-complete`, `GET api/rafts/{id}/seed-lots`, `PUT api/seeding-records/{id}`, `…/remove` |
+| | Nhật ký nuôi: ngày đi bè, ghi chú, 1 đến 10 ảnh; sửa hoặc xóa có lý do | `/manage/cycles/:cycleId/logs` | `api/cultivation-cycles/{id}/cultivation-logs`, `PUT api/cultivation-logs/{id}`, `…/remove` |
 | Chỉ số nước | Số đo theo vùng, lọc trạng thái, cảnh báo vượt ngưỡng; nhập tay (nháp hoặc xác nhận ngay) | `/manage/water?zone=` | `GET/POST api/zones/{id}/water-measurements` |
 | | Chi tiết số đo: xác nhận bản nháp, sửa số đo (có lý do, báo người khác đang sửa), hủy, các phiên bản | `/manage/water/:id` | `GET api/water-measurements/{id}`, `…/confirm`, `…/corrections`, `…/void`, `…/editing` |
 | Mua hàng | Nhà cung cấp: danh sách, chi tiết, thêm/sửa, ngừng dùng/dùng lại | `/manage/suppliers…` | `api/suppliers` |
@@ -61,23 +66,64 @@ Backend mới có OCR giả (`Ocr:Provider = Fake`): bản Development trả s�
 | Tạo tài khoản nhân viên, đặt lại mật khẩu, xem trước quyền (`POST api/accounts`, `…/reset-password`, `…/permission-preview`), gỡ tài khoản khỏi hồ sơ nhân viên | Mobile không có mật khẩu; tạo tài khoản cần cấp mật khẩu tạm cho bản web. |
 | Tạo, sửa, sao chép vai trò | Bảng quyền nhiều cột, cần màn rộng. |
 
-## 3. Chưa có trên hệ thống (backend chưa có API)
+## 3. Bổ sung 11/11/2026: thay màn dữ liệu mẫu bằng màn nối API
 
-Domain đã có bảng nhưng OMTS.Api chưa có controller, nên mobile chỉ hiện trang giải thích:
+Đối chiếu với backend `develop` (gồm OMTS-132) và nhánh harvest. Đã qua lint, typecheck và build production; **chưa chạy
+với backend thật, chưa thử trong Zalo**.
 
-| Chức năng (FeatureKey) | Ghi chú |
+| Nhóm | Màn | Đường dẫn | API |
+|---|---|---|---|
+| Vùng nuôi | Vật tư sửa bè: chọn vùng rồi bè, ghi lần sửa (nhiều vật tư), sửa có lý do | `/manage/material-usages`, `/manage/rafts/:raftId/material-usages`, `/manage/material-usages/:id` | `api/rafts/{id}/material-usages`, `api/material-usages/{id}` |
+| | Cài đặt lô hàu: kg trung bình mỗi lồng, số ngày tự đóng lô, xem trước số lô bị đóng | `/manage/harvest-settings` | `api/harvest-settings`, `…/auto-close-preview` |
+| Bán hàng | Khách hàng: danh sách, chi tiết, thêm/sửa, ngừng/dùng lại, ảnh, gộp hồ sơ trùng | `/manage/customers…` | `api/customers`, `api/customer-settings`, `api/banks` |
+| | Công nợ thương lái: danh sách, sao kê theo kỳ, điều chỉnh công nợ | `/manage/customer-debts…` | `api/customer-debts` |
+| | Phiếu thu, trả lại tiền, tiền chờ xác nhận | `/manage/customer-payments/new`, `…/pay-back`, `…/awaiting`, `…/:id` | `api/customer-payments` |
+| | Tài khoản nhận tiền của HTX | `/manage/bank-account` | `api/cooperative/receiving-bank-account`, `api/banks` |
+| | Khiếu nại: thương lái gửi từ hóa đơn (kèm ảnh) và theo dõi; Chủ HTX chấp nhận hoặc từ chối | `/account/claims…`, `/manage/quality-claims…` | `api/me/quality-claims`, `api/me/sales-invoices/{id}/quality-claims`, `api/quality-claims` |
+| Lương | Bảng lương: tạo, tính lại, chốt, hủy, trả lương và tạm ứng, phiếu lương từng người | `/manage/payrolls…`, `/manage/payroll-slips/:id`, `/manage/payroll-employees/:id`, `/manage/payroll-payments` | `api/payrolls`, `api/payroll-payments`, `api/payroll-slips/{id}`, `api/employees/{id}/payslips` |
+| | Bảng giá công: lịch sử giá, đổi giá từ ngày áp dụng, thêm, đổi tên, ngừng/dùng lại loại việc | `/manage/pay-rates…` | `api/job-types` |
+| | Cài đặt lương | `/manage/payroll-settings` | `api/payroll-settings` |
+| Tổ chức | Báo cáo sản lượng thu hoạch | `/manage/reports` | `api/harvest-yield` |
+| | Lịch sử thao tác: lọc, xem trước/sau | `/manage/audit-log…` | `api/audit-events` |
+
+Quyền hiện mục trên menu chỉnh theo backend: `payroll` chỉ Chủ HTX (`PayrollsController` có `[RequireCooperativeOwner]`),
+`reports` theo `HARVEST_LOTS` (báo cáo sản lượng), `refunds` theo `CUSTOMER_PAYMENTS`.
+
+### Còn để trang "chưa có" (bản dev mở dữ liệu mẫu)
+
+| Chức năng | Lý do |
 |---|---|
-| Chu kỳ nuôi, thả giống, nhật ký nuôi (`cycles`, `seeding`, `cultivationLog`) | Entity `CultivationCycle`, `SeedingEvent`, `CultivationLogEntry` |
-| Thu hoạch, lô truy xuất (`harvest`, tra cứu `trace` vẫn dùng dữ liệu mẫu) | `HarvestEvent`, `TracePublication` |
-| Hóa đơn, cân tại cảng, công nợ thương lái, phiếu thu, đối soát, hoàn tiền (`portWeighing`, `receivables`, `receipts`, `reconcile`, `refunds`) | Yêu cầu mua theo lồng đã có; chưa nối sang `SalesOrder`, hóa đơn hay cân thực nhận |
-| Khiếu nại chất lượng, trả hàng của thương lái (`claims`) | `QualityClaim`, `PhysicalReturn` |
-| Lương nhân công (`payroll`) | Phân công, chấm công và nghỉ phép cơ bản đã có API; chưa có đủ luồng tính/chốt lương |
-| Báo cáo sản lượng, doanh thu (`reports`) | |
-| Nhật ký hệ thống (`auditLog`) | Backend ghi audit nhưng chưa có API đọc |
-| Gửi thông báo cho nhân viên, thương lái (`broadcast`) | |
+| Thanh toán của thương lái (`payment`) | Phải đi qua Checkout SDK của Zalo (CLAUDE.md mục 10). Không làm `customer-payments/pending-transfer` và `…/{id}/qr` (hiện VietQR ngoài Checkout SDK) cho tới khi chủ dự án quyết định. |
+| Phiếu lương của nhân viên (`payslips`) | Backend chỉ cho Chủ HTX đọc phiếu lương; chưa có `api/me/payslips`. |
+| Lịch nhận hàng (`pickup`), gửi thông báo (`broadcast`) | Backend chưa có API. |
+| Báo cáo doanh thu | Quyền `SALES_REPORTS` có trong danh mục nhưng chưa có API nào dùng. |
+| Trả hàng, giảm giá sau khiếu nại | Backend chỉ ghi đề xuất; phiếu trả hàng (CLAIM-03) và giảm giá (SALE-07) chưa có API. |
 
-Vì vậy Tổng quan của Chủ HTX chưa có sản lượng, doanh thu, công nợ thương lái; khi các API trên có, thêm vào
-`features/dashboard/services/ownerSummaryService.ts`.
+Tổng quan của Chủ HTX vẫn chưa có doanh thu, công nợ thương lái: thêm vào `features/dashboard/services/ownerSummaryService.ts`
+khi cần (`api/customer-debts` đã có).
+
+## 3b. Bổ sung 12/11/2026: theo luồng của bản web, chỉ lấy phần nhẹ
+
+Nguyên tắc: mobile chỉ làm việc xem và thao tác nhanh ngoài hiện trường; việc nặng (sửa nhiều dòng, sổ sách, kế toán,
+xuất tệp, cấu hình danh mục) để bản web. Luồng đọc ở `omts-web` (develop, 11/11/2026). Đã qua lint, typecheck và build;
+**chưa chạy với backend thật, chưa thử trong Zalo**.
+
+| Nhóm | Màn | Đường dẫn | API |
+|---|---|---|---|
+| Vùng nuôi | Truy vết lô hàu: tìm lô, thả giống từ đâu, bán cho ai; công bố, thu hồi | `/manage/lot-trace…` | `GET api/harvest-lots/trace-search`, `…/{id}/trace`, `…/publish-check`, `POST …/publish`, `…/withdraw-preview`, `POST …/withdraw` |
+| Mua hàng | Xuất dùng vật tư: danh sách theo kỳ và trạng thái, tổng giá trị phiếu hoàn thành | `/manage/input-uses` | `GET api/input-issues?kind=Use` |
+| | Lập phiếu xuất dùng: vùng, bè, loại xuất, người nhận, vật tư (đơn vị, lô giống); lưu là hoàn thành | `/manage/input-uses/new` | `POST api/input-issues` (`complete: true`), `api/input-issue-types`, `api/input-issues/receivers`, `api/farming-input-items/{id}/seed-lots` |
+| | Chi tiết phiếu: hoàn thành hoặc xóa phiếu tạm, hủy phiếu có lý do (cộng lại kho) | `/manage/input-uses/:id` | `GET api/input-issues/{id}`, `…/complete`, `…/cancel`, `DELETE …/{id}` |
+
+Để bản web (backend đã có API):
+
+| Chức năng | Lý do |
+|---|---|
+| Xuất hủy vật tư (`kind=Disposal`) | Chỉ Chủ HTX ghi, việc kiểm kho làm tại bàn. |
+| Lưu phiếu tạm, sửa phiếu xuất đã hoàn thành, sao chép phiếu, đặt mã hoặc giờ xuất riêng, ghi chú từng dòng | Sửa nhiều dòng và tính lại kho; mobile chỉ lập phiếu mới và hoàn thành ngay. |
+| Thẻ kho của vật tư (`api/farming-input-items/{id}/movements`), xóa vật tư, xóa lô giống | Sổ nhiều cột, xem tại bàn. |
+| Thêm, sửa loại xuất (`POST/PUT api/input-issue-types`) | Cấu hình danh mục. |
+| Xuất tệp phiếu xuất (`api/input-issues/export`) | Backend sinh tệp, xem trên web. |
 
 ## 4. Dữ liệu demo bổ sung (28/10/2026)
 

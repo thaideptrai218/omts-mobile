@@ -424,6 +424,25 @@ button:focus-visible {
   padding: 12px;
 }
 
+/*
+ * ZaUI cho bảng chọn của Select cao tới 100vh nên danh sách dài phủ kín màn hình, che cả menu Zalo. Giới hạn còn nửa
+ * màn hình (sheet của ZaUI vốn cao tối thiểu 50%), phần lựa chọn còn lại cuộn bên trong dưới tiêu đề.
+ */
+.zaui-select-panel {
+  max-height: 50vh;
+}
+
+/* Tiêu đề dài xuống hai dòng: không cho co lại, nếu không danh sách sẽ đè lên dòng thứ hai. */
+.zaui-select-header {
+  flex-shrink: 0;
+}
+
+.zaui-select-options {
+  flex: 1 1 auto;
+  min-height: 0;
+  overscroll-behavior: contain;
+}
+
 .zaui-select-option {
   padding: 16px 40px 16px 16px;
   font-size: 1.125rem;

@@ -12,26 +12,28 @@ export type StaffAccount = {
   rowVersion: string | null;
 };
 
-/** `state`: Effective, NotYetEffective, Expired, Revoked (tính theo ngày hôm nay ở server). */
+/** Một cặp vùng–vai trò (FARM-05): có hiệu lực từ lúc cấp tới khi bị thu hồi; `state` là Effective hoặc Revoked. */
 export type GrantRow = {
   id: string;
   zoneId: string | null;
   zoneName: string | null;
   allZones: boolean;
   roleId: string;
+  /** Mã vai trò: ZONE_MANAGER hoặc ACCOUNTANT. */
+  role: string;
   roleName: string | null;
-  effectiveFrom: string;
-  effectiveTo: string | null;
   state: string | null;
+  grantedAt: string;
+  grantedByName: string | null;
   revokedAt: string | null;
+  revokedByName: string | null;
   revokeReason: string | null;
 };
 
+/** Cấp một cặp vùng–vai trò; `zoneId` null là toàn HTX. Không có ngày hiệu lực: có hiệu lực ngay tới khi thu hồi. */
 export type GrantDraft = {
   zoneId: string | null;
   roleId: string;
-  effectiveFrom: string | null;
-  effectiveTo: string | null;
 };
 
 export type AccountStatusFilter = "active" | "locked" | "all";

@@ -1,0 +1,15 @@
+// Chi tiết một thao tác: mỗi trường có dòng "Trước" và "Sau".
+.audit-change__line {
+  display: block;
+  font-size: 1rem;
+  line-height: 1.5rem;
+}
+
+.audit-change__line + .audit-change__line {
+  margin-top: 4px;
+}
+
+.audit-change__tag {
+  color: var(--ink-2);
+  font-weight: 400;
+}

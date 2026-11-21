@@ -1,46 +1,65 @@
 import type { PurchaseFormChoices as Choices, PurchaseFormLine as Line } from "@/features/purchasing/models/PurchaseForm";
 import type { SaveReceipt } from "@/features/purchasing/models/PurchaseReceipt";
-import type { RaftLookup } from "@/features/purchasing/models/Reference";
-import type { PaymentMethod } from "@/features/purchasing/models/SupplierPayment";
 import { useEffect, useState } from "react";
 import { Button, Icon, Input, Select, useNavigate, useParams } from "zmp-ui";
 
 import { Actions } from "@/components/Actions/Actions";
 import { ConfirmSheet } from "@/components/ConfirmSheet/ConfirmSheet";
+import DateField from "@/components/DateField/DateField";
 import { Facts } from "@/components/Facts/Facts";
 import FormError from "@/components/FormError/FormError";
 import { Loadable } from "@/components/Loadable/Loadable";
 import { ManagePage } from "@/components/ManagePage/ManagePage";
 import { NumberInput } from "@/components/NumberInput/NumberInput";
 import { Section } from "@/components/Section/Section";
-import { useLoad } from "@/hooks/useLoad";
-import { useBusinessPermission } from "@/hooks/useBusinessPermission";
-import { errorText } from "@/utils/errorText";
 import { MESSAGES } from "@/constants/messages";
+import { useLoad } from "@/hooks/useLoad";
+import { errorText } from "@/utils/errorText";
 import { money, parseNumber, todayIso } from "@/utils/format";
-import { INPUT_GROUP, PAYMENT_METHOD } from "@/utils/labels";
-import { createReceipt, getReceipt, listInputItems, listSuppliers, lookupRafts, lookupZones, RECEIPT_DRAFT, STATUS_IN_USE, updateReceipt } from "@/features/purchasing/services/purchasingService";
-
-import DateField from "@/components/DateField/DateField";
+import { INPUT_GROUP } from "@/utils/labels";
+import {
+  createReceipt,
+  getReceipt,
+  listInputItems,
+  listSuppliers,
+  lookupRafts,
+  lookupZones,
+  RECEIPT_DRAFT,
+  STATUS_IN_USE,
+  updateReceipt,
+} from "@/features/purchasing/services/purchasingService";
 
 let lineKey = 0;
-const emptyLine = (): Line => ({ key: ++lineKey, itemId: "", quantity: "", unitPrice: "" });
+const emptyLine = (raftId: string | null = null): Line => ({
+  key: ++lineKey,
+  itemId: "",
+  quantity: "",
+  unitPrice: "",
+  raftId,
+  discount: 0,
+  itemUnitId: null,
+  supplierLotCode: null,
+});
+
+/** Giá trị của "Bè nhận hàng" khi các dòng nháp đang gắn những bè khác nhau. */
+const MIXED = "__mixed__";
 
 /**
- * Lập phiếu nhập mới hoặc sửa phiếu nháp (`/manage/purchases/new`, `/manage/purchases/:id/edit`). Lưu nháp thì
- * kiểm tra nhẹ; "Lưu và hoàn tất" thì backend kiểm tra đủ (nhà cung cấp, vùng còn dùng, có dòng hàng, ngày không
- * sau hôm nay) và phiếu được tính vào công nợ.
+ * Lập phiếu nhập mới hoặc sửa phiếu nháp (`/manage/purchases/new`, `/manage/purchases/:id/edit`). Lưu nháp chỉ cần nhà
+ * cung cấp; "Lưu và hoàn tất" thì backend kiểm tra đủ (mỗi dòng có vật tư, số lượng, đơn giá; ngày không sau hôm nay) và phiếu
+ * được tính vào công nợ, tồn kho. Vùng nuôi không bắt buộc; bè gắn theo từng dòng giống hoặc vật tư.
  */
 function PurchaseFormPage() {
   const { id } = useParams();
   const { data, error, reload } = useLoad<Choices>(async () => {
-    const [suppliers, zones, items, receipt] = await Promise.all([
+    const [suppliers, zones, items, rafts, receipt] = await Promise.all([
       listSuppliers({ statusId: STATUS_IN_USE, pageSize: 100 }),
       lookupZones(),
       listInputItems({ statusId: STATUS_IN_USE }),
+      lookupRafts(),
       id ? getReceipt(id) : Promise.resolve(null),
     ]);
-    return { suppliers: suppliers.items, zones: zones.filter((z) => z.statusId === STATUS_IN_USE), items, receipt };
+    return { suppliers: suppliers.items, zones: zones.filter((z) => z.statusId === STATUS_IN_USE), items, rafts, receipt };
   }, [id]);
 
   const title = id ? "Sửa phiếu nhập" : "Lập phiếu nhập";
@@ -51,26 +70,22 @@ function PurchaseFormPage() {
   return (
     <ManagePage title={title}>
       <Loadable data={data} error={error} reload={() => void reload()}>
-        {() => <p className="form__intro">Chỉ sửa được phiếu nháp.</p>}
+        {() => <p className="form__intro">Chỉ sửa được phiếu nháp trên điện thoại. Phiếu đã hoàn tất sửa trên bản web.</p>}
       </Loadable>
     </ManagePage>
   );
 }
 
 function ReceiptForm({ title, choices }: { title: string; choices: Choices }) {
-  const allowed = useBusinessPermission();
-  const canPay = allowed("SUPPLIER_PAYMENTS", "Create");
   const navigate = useNavigate();
   const receipt = choices.receipt;
   const [supplierId, setSupplierId] = useState("");
   const [zoneId, setZoneId] = useState("");
+  // Bè chung cho mọi dòng giống, vật tư; MIXED khi dòng nháp đã gắn nhiều bè khác nhau (giữ nguyên tới khi chọn bè khác).
   const [raftId, setRaftId] = useState("");
-  const [rafts, setRafts] = useState<RaftLookup[]>([]);
   const [receiptDate, setReceiptDate] = useState(todayIso());
   const [lines, setLines] = useState<Line[]>([emptyLine()]);
   const [discount, setDiscount] = useState("");
-  const [paidNow, setPaidNow] = useState("");
-  const [method, setMethod] = useState<PaymentMethod>("Cash");
   const [notes, setNotes] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -79,64 +94,76 @@ function ReceiptForm({ title, choices }: { title: string; choices: Choices }) {
   useEffect(() => {
     if (!receipt) return;
     setSupplierId(receipt.supplier.id);
-    setZoneId(receipt.zone.id);
-    setRaftId(receipt.raft?.id ?? "");
+    setZoneId(receipt.zone?.id ?? "");
+    const lineRafts = Array.from(new Set(receipt.lines.map((l) => l.raft?.id ?? null)));
+    setRaftId(lineRafts.length === 1 ? (lineRafts[0] ?? "") : MIXED);
     setReceiptDate(receipt.receiptDate ?? todayIso());
     setLines(
       receipt.lines.length > 0
-        ? receipt.lines.map((l) => ({ key: ++lineKey, itemId: l.itemId, quantity: String(l.quantity), unitPrice: String(l.unitPrice) }))
+        ? receipt.lines.map((l) => ({
+            key: ++lineKey,
+            itemId: l.itemId ?? "",
+            quantity: l.quantity !== null ? String(l.quantity) : "",
+            unitPrice: l.unitPrice !== null ? String(l.unitPrice) : "",
+            raftId: l.raft?.id ?? null,
+            discount: l.discount,
+            itemUnitId: l.itemUnitId,
+            supplierLotCode: l.supplierLotCode,
+          }))
         : [emptyLine()],
     );
-    setDiscount(receipt.discountAmount ? String(receipt.discountAmount) : "");
-    setPaidNow(receipt.amountPaidNow ? String(receipt.amountPaidNow) : "");
-    setMethod(receipt.paidNowMethod ?? "Cash");
+    setDiscount(receipt.discount ? String(receipt.discount) : "");
     setNotes(receipt.notes ?? "");
   }, [receipt]);
 
-  // Bè thuộc vùng đã chọn; đổi vùng thì bỏ bè cũ nếu không còn trong vùng mới.
-  useEffect(() => {
-    if (!zoneId) {
-      setRafts([]);
-      return;
-    }
-    let live = true;
-    lookupRafts(zoneId)
-      .then((list) => {
-        if (!live) return;
-        setRafts(list);
-        setRaftId((current) => (list.some((r) => r.id === current) ? current : ""));
-      })
-      .catch(() => live && setRafts([]));
-    return () => {
-      live = false;
-    };
-  }, [zoneId]);
-
   const updateLine = (key: number, patch: Partial<Line>) => setLines((ls) => ls.map((l) => (l.key === key ? { ...l, ...patch } : l)));
 
-  const subtotal = lines.reduce((t, l) => t + (parseNumber(l.quantity) ?? 0) * (parseNumber(l.unitPrice) ?? 0), 0);
-  const payable = subtotal - (parseNumber(discount) ?? 0);
+  const chooseRaft = (value: string) => {
+    setRaftId(value);
+    if (value !== MIXED) setLines((ls) => ls.map((l) => ({ ...l, raftId: value || null })));
+  };
+
+  const itemOf = (l: Line) => choices.items.find((x) => x.id === l.itemId);
+  const unitOf = (l: Line) => {
+    const item = itemOf(l);
+    return (l.itemUnitId && item?.units.find((u) => u.id === l.itemUnitId)?.name) || item?.unit || "";
+  };
+  const lineAmount = (l: Line) => (parseNumber(l.quantity) ?? 0) * Math.max(0, (parseNumber(l.unitPrice) ?? 0) - l.discount);
+  const total = lines.reduce((t, l) => t + lineAmount(l), 0);
+  const discountValue = parseNumber(discount) ?? 0;
+  const payable = total - discountValue;
 
   const save = async (complete: boolean) => {
     if (!supplierId) return setError(MESSAGES.MSG01("Nhà cung cấp"));
-    if (!zoneId) return setError(MESSAGES.MSG01("Vùng nuôi"));
     const filled = lines.filter((l) => l.itemId || l.quantity || l.unitPrice);
     if (complete && filled.length === 0) return setError(MESSAGES.MSG01("Dòng hàng"));
     for (const [i, l] of filled.entries()) {
       if (!l.itemId) return setError(MESSAGES.MSG01(`Vật tư ở dòng ${i + 1}`));
+      if (complete && !(parseNumber(l.quantity) && parseNumber(l.quantity)! > 0)) return setError(MESSAGES.MSG01(`Số lượng ở dòng ${i + 1}`));
+      if (complete && parseNumber(l.unitPrice) === null) return setError(MESSAGES.MSG01(`Đơn giá ở dòng ${i + 1}`));
     }
+    if (!Number.isInteger(discountValue) || discountValue < 0) return setError(MESSAGES.MSG01("Giảm giá"));
     setError("");
     setBusy(true);
     const body: SaveReceipt = {
       supplierId,
-      zoneId,
-      raftId: raftId || null,
+      zoneId: zoneId || null,
       receiptDate: receiptDate || null,
-      discountAmount: parseNumber(discount),
-      amountPaidNow: parseNumber(paidNow),
-      paidNowMethod: parseNumber(paidNow) ? method : null,
+      discount: discountValue,
       notes: notes.trim() || null,
-      lines: filled.map((l) => ({ itemId: l.itemId, quantity: parseNumber(l.quantity), unitPrice: parseNumber(l.unitPrice) })),
+      lines: filled.map((l) => {
+        // Bè chỉ có nghĩa với dòng giống hoặc vật tư; dòng "Khác" không gửi bè.
+        const group = itemOf(l)?.group;
+        return {
+          itemId: l.itemId,
+          quantity: parseNumber(l.quantity),
+          unitPrice: parseNumber(l.unitPrice),
+          raftId: group === "Seed" || group === "Material" ? l.raftId : null,
+          discount: l.discount,
+          itemUnitId: l.itemUnitId,
+          supplierLotCode: group === "Seed" ? l.supplierLotCode : null,
+        };
+      }),
       complete,
       rowVersion: receipt?.rowVersion,
     };
@@ -153,7 +180,7 @@ function ReceiptForm({ title, choices }: { title: string; choices: Choices }) {
   // Phiếu còn thiếu thì để save báo lỗi như cũ (chưa gửi gì lên server); đủ rồi mới hỏi lại trước khi hoàn tất.
   const askComplete = () => {
     const filled = lines.filter((l) => l.itemId || l.quantity || l.unitPrice);
-    if (!supplierId || !zoneId || filled.length === 0 || filled.some((l) => !l.itemId)) {
+    if (!supplierId || filled.length === 0 || filled.some((l) => !l.itemId || !parseNumber(l.quantity) || parseNumber(l.unitPrice) === null)) {
       void save(true);
       return;
     }
@@ -162,7 +189,6 @@ function ReceiptForm({ title, choices }: { title: string; choices: Choices }) {
 
   // Phiếu nháp có thể mang nhà cung cấp đã ngừng dùng, tên đó không còn trong danh sách chọn.
   const supplierName = choices.suppliers.find((s) => s.id === supplierId)?.name ?? receipt?.supplier.name;
-  const paidNowValue = parseNumber(paidNow);
 
   return (
     <ManagePage
@@ -178,19 +204,29 @@ function ReceiptForm({ title, choices }: { title: string; choices: Choices }) {
           <div className="form card">
             <Select label="Nhà cung cấp (bắt buộc)" placeholder="Chọn nhà cung cấp" value={supplierId || undefined} onChange={(v) => setSupplierId(String(v))} closeOnSelect disabled={busy}>
               {choices.suppliers.map((s) => (
-                <Select.Option key={s.id} value={s.id} title={s.name ?? ""} />
+                <Select.Option key={s.id} value={s.id} title={s.name} />
               ))}
             </Select>
-            <Select label="Vùng nuôi (bắt buộc)" placeholder="Chọn vùng nuôi" value={zoneId || undefined} onChange={(v) => setZoneId(String(v))} closeOnSelect disabled={busy}>
+            <Select label="Vùng nuôi (không bắt buộc)" placeholder="Không gắn vùng" value={zoneId || ""} onChange={(v) => setZoneId(String(v ?? ""))} closeOnSelect disabled={busy}>
+              <Select.Option value="" title="Không gắn vùng" />
               {choices.zones.map((z) => (
                 <Select.Option key={z.id} value={z.id} title={`${z.code ?? ""} ${z.name ?? ""}`.trim()} />
               ))}
             </Select>
-            {rafts.length > 0 && (
-              <Select label="Bè (không bắt buộc)" placeholder="Không gắn bè" value={raftId || ""} onChange={(v) => setRaftId(String(v ?? ""))} closeOnSelect disabled={busy}>
+            {choices.rafts.length > 0 && (
+              <Select
+                label="Bè nhận giống, vật tư (không bắt buộc)"
+                placeholder="Không gắn bè"
+                value={raftId}
+                onChange={(v) => chooseRaft(String(v ?? ""))}
+                closeOnSelect
+                disabled={busy}
+                helperText={raftId === MIXED ? "Các dòng đang gắn những bè khác nhau. Chọn một bè ở đây sẽ gắn bè đó cho mọi dòng." : undefined}
+              >
                 <Select.Option value="" title="Không gắn bè" />
-                {rafts.map((r) => (
-                  <Select.Option key={r.id} value={r.id} title={r.code ?? ""} />
+                {raftId === MIXED && <Select.Option value={MIXED} title="Giữ bè riêng của từng dòng" />}
+                {choices.rafts.map((r) => (
+                  <Select.Option key={r.id} value={r.id} title={`${r.code} · vùng ${r.zoneCode}`} />
                 ))}
               </Select>
             )}
@@ -201,20 +237,29 @@ function ReceiptForm({ title, choices }: { title: string; choices: Choices }) {
         <Section step={2} title="Hàng mua">
           <div className="form">
             {lines.map((l, i) => {
-              const item = choices.items.find((x) => x.id === l.itemId);
-              const amount = (parseNumber(l.quantity) ?? 0) * (parseNumber(l.unitPrice) ?? 0);
+              const amount = lineAmount(l);
+              const unit = unitOf(l);
               return (
                 <div key={l.key} className="line-item card">
                   <div className="line-item__head">
                     <span>Dòng {i + 1}</span>
                   </div>
-                  <Select label="Vật tư (bắt buộc)" placeholder="Chọn vật tư" value={l.itemId || undefined} onChange={(v) => updateLine(l.key, { itemId: String(v) })} closeOnSelect disabled={busy}>
+                  <Select
+                    label="Vật tư (bắt buộc)"
+                    placeholder="Chọn vật tư"
+                    value={l.itemId || undefined}
+                    // Đổi vật tư thì đơn vị cũ không còn đúng: về đơn vị gốc của vật tư mới.
+                    onChange={(v) => updateLine(l.key, { itemId: String(v), itemUnitId: null })}
+                    closeOnSelect
+                    disabled={busy}
+                  >
                     {choices.items.map((x) => (
-                      <Select.Option key={x.id} value={x.id} title={`${x.name ?? ""} (${INPUT_GROUP[x.group] ?? x.group})`} />
+                      <Select.Option key={x.id} value={x.id} title={`${x.name} (${INPUT_GROUP[x.group] ?? x.group})`} />
                     ))}
                   </Select>
-                  <NumberInput label={`Số lượng${item?.unit ? ` (${item.unit})` : ""}`} value={l.quantity} onChange={(v) => updateLine(l.key, { quantity: v })} disabled={busy} decimal />
-                  <NumberInput label="Đơn giá (đồng)" value={l.unitPrice} onChange={(v) => updateLine(l.key, { unitPrice: v })} disabled={busy} />
+                  <NumberInput label={`Số lượng${unit ? ` (${unit})` : ""}`} value={l.quantity} onChange={(v) => updateLine(l.key, { quantity: v })} disabled={busy} decimal />
+                  <NumberInput label={`Đơn giá (đồng${unit ? ` mỗi ${unit}` : ""})`} value={l.unitPrice} onChange={(v) => updateLine(l.key, { unitPrice: v })} disabled={busy} />
+                  {l.discount > 0 && <p className="form__hint">Giảm {money(l.discount)} mỗi {unit || "đơn vị"} (đặt trên web).</p>}
                   {amount > 0 && <p className="form__hint">Thành tiền {money(amount)}</p>}
                   {lines.length > 1 && (
                     <Actions>
@@ -226,32 +271,32 @@ function ReceiptForm({ title, choices }: { title: string; choices: Choices }) {
                 </div>
               );
             })}
-            <Button fullWidth variant="secondary" size="large" prefixIcon={<Icon icon="zi-plus" />} disabled={busy} onClick={() => setLines((ls) => [...ls, emptyLine()])}>
+            <Button
+              fullWidth
+              variant="secondary"
+              size="large"
+              prefixIcon={<Icon icon="zi-plus" />}
+              disabled={busy}
+              onClick={() => setLines((ls) => [...ls, emptyLine(raftId && raftId !== MIXED ? raftId : null)])}
+            >
               Thêm dòng hàng
             </Button>
           </div>
         </Section>
 
-        <Section step={3} title="Thanh toán và ghi chú">
+        <Section step={3} title="Tiền và ghi chú">
           <div className="form">
             <Facts
               items={[
-                ["Tiền hàng", money(subtotal)],
+                ["Tiền hàng", money(total)],
                 ["Phải trả", money(payable)],
               ]}
             />
             <div className="form card">
-              <NumberInput label="Chiết khấu (đồng, không bắt buộc)" value={discount} onChange={setDiscount} disabled={busy} />
-              {canPay && <NumberInput label="Trả ngay (đồng, không bắt buộc)" value={paidNow} onChange={setPaidNow} disabled={busy} helperText="Bội số của 1.000 đồng." />}
-              {canPay && Boolean(parseNumber(paidNow)) && (
-                <Select label="Hình thức trả" value={method} onChange={(v) => setMethod(v as PaymentMethod)} closeOnSelect disabled={busy}>
-                  {(Object.keys(PAYMENT_METHOD) as PaymentMethod[]).map((k) => (
-                    <Select.Option key={k} value={k} title={PAYMENT_METHOD[k]} />
-                  ))}
-                </Select>
-              )}
+              <NumberInput label="Giảm giá cả phiếu (đồng, không bắt buộc)" value={discount} onChange={setDiscount} disabled={busy} />
               <Input.TextArea label="Ghi chú (không bắt buộc)" value={notes} onChange={(e) => setNotes(e.target.value)} maxLength={1000} showCount disabled={busy} />
             </div>
+            <p className="form__hint">Trả tiền nhà cung cấp ghi ở màn chi tiết phiếu sau khi hoàn tất, hoặc ở màn công nợ nhà cung cấp.</p>
           </div>
         </Section>
 
@@ -270,10 +315,9 @@ function ReceiptForm({ title, choices }: { title: string; choices: Choices }) {
               items={[
                 ["Nhà cung cấp", supplierName],
                 ["Tổng phải trả", money(payable)],
-                ["Trả ngay", paidNowValue ? money(paidNowValue) : null],
               ]}
             />
-            <p>Phiếu hoàn tất sẽ được tính vào công nợ nhà cung cấp và không sửa được nữa.</p>
+            <p>Phiếu hoàn tất được tính vào công nợ nhà cung cấp và tồn kho.</p>
           </div>
         }
         confirmText="Lưu và hoàn tất"

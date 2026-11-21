@@ -1,0 +1,50 @@
+/* Màn khách hàng và công nợ thương lái. Màu và cỡ chữ lấy từ token trong app.scss. */
+
+.customer-notice {
+  margin-bottom: 12px;
+}
+
+.customer-summary {
+  margin-bottom: 12px;
+}
+
+/* Ô đánh dấu dạng khung lớn: bấm vào chữ hay bất kỳ chỗ nào trong khung đều được. */
+.customer-option.zaui-checkbox-wrapper {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 3.5rem;
+  padding: 12px;
+  border: 2px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  box-sizing: border-box;
+}
+
+/* Một hồ sơ trong màn gộp: tên, mã, số điện thoại, nợ. */
+.customer-party {
+  margin-bottom: 12px;
+  gap: 4px;
+}
+
+.customer-party .badge {
+  align-self: flex-start;
+  margin-top: 8px;
+}
+
+.customer-party__role {
+  font-size: 1rem;
+  line-height: 1.5rem;
+  color: var(--ink-2);
+}
+
+.customer-party__name {
+  font-size: 1.125rem;
+  line-height: 1.625rem;
+  font-weight: 700;
+}
+
+/* Hai ô ngày của kỳ sao kê tự chọn. */
+.statement-range {
+  margin-bottom: 12px;
+}

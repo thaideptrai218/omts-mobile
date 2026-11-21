@@ -1,0 +1,32 @@
+/* Nhãn phía trên hàng chip (hình thức trả, cách trừ vào hóa đơn). */
+.finance-label {
+  margin: 4px 0 8px;
+  font-size: 1rem;
+  line-height: 1.5rem;
+  font-weight: 700;
+}
+
+/* Ô đánh dấu dạng khung lớn: bấm vào chữ hay bất kỳ chỗ nào trong khung đều được. */
+.finance-option.zaui-checkbox-wrapper {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 3.5rem;
+  padding: 12px;
+  border: 2px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  box-sizing: border-box;
+}
+
+/* Thông báo ngắn ở đầu trang hoặc trong form: tách khỏi phần bên dưới. */
+.finance-notice {
+  margin-bottom: 12px;
+}
+
+/* Tổng tiền đã chọn hoặc đã phân bổ, đọc được ngay dưới danh sách. */
+.finance-total {
+  font-size: 1.0625rem;
+  line-height: 1.5rem;
+  font-weight: 700;
+}

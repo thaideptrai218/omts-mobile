@@ -3,12 +3,14 @@ import type { Tone } from "@/models/UI";
 import { Button } from "zmp-ui";
 import { Badge } from "@/components/Badge/Badge";
 import { Facts } from "@/components/Facts/Facts";
+import { PURCHASE_STATUS } from "@/features/sales/services/salesService";
 import { date, dateTime, num } from "@/utils/format";
 
 export const PURCHASE_FILTERS: [PurchaseFilter, string][] = [["all", "Tất cả"], ["awaitingResponse", "Chờ phản hồi"], ["awaitingStaff", "Chờ nhân lực"], ["accepted", "Đã chấp nhận"], ["declined", "Từ chối"], ["cancelled", "Đã hủy"]];
 const STATUS: Record<number, [string, Tone]> = {
-  3201: ["Chờ HTX phản hồi", "warning"], 3202: ["HTX đã chấp nhận", "success"], 3203: ["HTX từ chối", "danger"], 3204: ["Đã hủy", "neutral"],
-  3205: ["Chờ xác nhận nhân lực", "warning"],
+  [PURCHASE_STATUS.awaitingResponse]: ["Chờ HTX phản hồi", "warning"], [PURCHASE_STATUS.accepted]: ["HTX đã chấp nhận", "success"],
+  [PURCHASE_STATUS.declined]: ["HTX từ chối", "danger"], [PURCHASE_STATUS.cancelled]: ["Đã hủy", "neutral"],
+  [PURCHASE_STATUS.awaitingStaff]: ["Chờ xác nhận nhân lực", "warning"],
 };
 export function PurchaseBadge({ statusId, fulfilled = false }: { statusId: number; fulfilled?: boolean }) {
   const [text, tone] = fulfilled ? ["Đã giao đủ", "success" as const] : STATUS[statusId] ?? ["Trạng thái khác", "neutral"]; return <Badge text={text} tone={tone} />;
@@ -23,7 +25,7 @@ export function PurchaseFacts({ row }: { row: PurchaseRequest | TraderPurchaseRe
     ["Ngày làm dự kiến", staffing ? date(staffing.workDate) : null],
     ["Xác nhận nhân lực", staffing ? `${staffing.approvedEmployees}/${staffing.requiredEmployees} người đã đồng ý` : null],
     ["Cho trả sau", row.response?.payLaterAgreed != null ? (row.response.payLaterAgreed ? "Có" : "Không") : null],
-    ["Thu hoạch", row.statusId === 3202 ? (row.harvestCompletedAt ? `Đã thu xong lúc ${dateTime(row.harvestCompletedAt)}` : "Đang thu, chưa xong") : null],
+    ["Thu hoạch", row.statusId === PURCHASE_STATUS.accepted ? (row.harvestCompletedAt ? `Đã thu xong lúc ${dateTime(row.harvestCompletedAt)}` : "Đang thu, chưa xong") : null],
     ["Phản hồi HTX", row.response?.note], ["Phản hồi lúc", row.response ? dateTime(row.response.respondedAt) : null],
     ["Lý do hủy", row.cancelReason], ["Hủy lúc", row.cancelledAt ? dateTime(row.cancelledAt) : null], ["Gửi lúc", dateTime(row.sentAt)],
   ]} />;

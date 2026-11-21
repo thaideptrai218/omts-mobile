@@ -26,7 +26,6 @@ function ZoneFormPage() {
   const [area, setArea] = useState("");
   const [lat, setLat] = useState("");
   const [lng, setLng] = useState("");
-  const [point, setPoint] = useState("");
   const [error, setError] = useState("");
   const [saveTries, setSaveTries] = useState(0);
   const [busy, setBusy] = useState(false);
@@ -42,7 +41,6 @@ function ZoneFormPage() {
         setArea(text(z.area));
         setLat(text(z.latitude));
         setLng(text(z.longitude));
-        setPoint(z.waterMeasurementPoint ?? "");
         setLoaded(true);
       })
       .catch((err) => setError(errorText(err)));
@@ -50,29 +48,29 @@ function ZoneFormPage() {
 
   const save = async () => {
     if (busy || !loaded) return;
-    if (!code.trim() || !name.trim()) {
-      setError(MESSAGES.MSG01(!code.trim() ? "Mã vùng" : "Tên vùng"));
-      return;
-    }
-    if ((lat.trim() && parseCoordinate(lat, "latitude") === null) || (lng.trim() && parseCoordinate(lng, "longitude") === null)) {
-      setError(MESSAGES.MSG01("Tọa độ"));
+    // Backend (FARM-02) bắt buộc mã, tên, vị trí, tọa độ và diện tích lớn hơn 0.
+    const latitude = parseCoordinate(lat, "latitude");
+    const longitude = parseCoordinate(lng, "longitude");
+    const areaValue = parseNumber(area);
+    const missing = !code.trim() ? "Mã vùng" : !name.trim() ? "Tên vùng" : !location.trim() ? "Vị trí" : latitude === null || longitude === null ? "Tọa độ" : areaValue === null || areaValue <= 0 ? "Diện tích" : null;
+    if (missing || latitude === null || longitude === null || areaValue === null) {
+      setError(MESSAGES.MSG01(missing ?? "Tọa độ"));
       return;
     }
     const body = {
       code: code.trim(),
       name: name.trim(),
-      location: location.trim() || null,
-      area: parseNumber(area),
-      latitude: parseCoordinate(lat, "latitude"),
-      longitude: parseCoordinate(lng, "longitude"),
-      waterMeasurementPoint: point.trim() || null,
+      location: location.trim(),
+      area: areaValue,
+      latitude,
+      longitude,
       rowVersion,
     };
     setBusy(true);
     setError("");
     try {
       const saved = id ? await updateZone(id, body) : await createZone(body);
-      navigate(`/manage/zones/${saved.id}`, { replace: true });
+      navigate(`/manage/zones/${saved.zone.id}`, { replace: true });
     } catch (err) {
       setError(errorText(err));
     } finally {
@@ -106,22 +104,17 @@ function ZoneFormPage() {
             <div className="form">
               <Input label="Mã vùng (bắt buộc)" value={code} onChange={(e) => setCode(e.target.value)} maxLength={50} disabled={busy} />
               <Input label="Tên vùng (bắt buộc)" value={name} onChange={(e) => setName(e.target.value)} maxLength={200} disabled={busy} />
-              <NumberInput decimal label="Diện tích (ha)" value={area} onChange={setArea} disabled={busy} />
+              <NumberInput decimal label="Diện tích, ha (bắt buộc)" value={area} onChange={setArea} disabled={busy} />
             </div>
           </Section>
           <Section step={2} title="Vị trí của vùng">
             <div className="form">
-              <Input label="Vị trí" value={location} onChange={(e) => setLocation(e.target.value)} maxLength={500} disabled={busy} />
-              <LocationInput latitude={lat} longitude={lng} onChange={(latitude, longitude) => { setLat(latitude); setLng(longitude); }} disabled={busy || !loaded} />
+              <Input label="Vị trí (bắt buộc)" helperText="Ví dụ: Bắc đảo Cái Bầu, Vân Đồn" value={location} onChange={(e) => setLocation(e.target.value)} maxLength={500} disabled={busy} />
+              <LocationInput required latitude={lat} longitude={lng} onChange={(latitude, longitude) => { setLat(latitude); setLng(longitude); }} disabled={busy || !loaded} />
             </div>
           </Section>
-          <Section step={3} title="Đo nước">
-            <div className="form">
-              <Input label="Điểm đo nước" value={point} onChange={(e) => setPoint(e.target.value)} maxLength={200} disabled={busy} />
-              {/* Bấm Lưu lại mà vẫn cùng một lỗi thì key đổi để FormError cuộn tới lần nữa. */}
-              <FormError key={saveTries} text={error} />
-            </div>
-          </Section>
+          {/* Bấm Lưu lại mà vẫn cùng một lỗi thì key đổi để FormError cuộn tới lần nữa. */}
+          <FormError key={saveTries} text={error} />
         </>
       )}
     </ManagePage>

@@ -58,7 +58,7 @@ export default function RaftFormImport({ editing, disabled, onApply, onBusyChang
         {!Object.values(result.fields).some(Boolean) && <p>Chưa nhận ra thông tin nào trong ảnh. Bạn có thể nhập lại từ phần chữ đọc được bên dưới.</p>}
         <Input label="Mã bè" value={result.fields.code} onChange={(e) => edit("code", e.target.value)} maxLength={50} />
         <Input label="Kích thước" value={result.fields.size} onChange={(e) => edit("size", e.target.value)} maxLength={100} />
-        {!editing && <><NumberInput label="Số hàng" value={result.fields.laneCount} onChange={(value) => edit("laneCount", value)} /><NumberInput decimal label="Dài mỗi hàng (m)" value={result.fields.laneLength} onChange={(value) => edit("laneLength", value)} /></>}
+        {!editing && <NumberInput label="Số hàng" value={result.fields.laneCount} onChange={(value) => edit("laneCount", value)} />}
         {editing && <p className="form__hint">Số hàng và bố trí hàng hiện có được giữ nguyên khi nhập ảnh.</p>}
         <Input label="Vị trí" value={result.fields.location} onChange={(e) => edit("location", e.target.value)} maxLength={500} />
         <Input.TextArea label="Ghi chú tình trạng" value={result.fields.notes} onChange={(e) => edit("notes", e.target.value)} maxLength={1000} />

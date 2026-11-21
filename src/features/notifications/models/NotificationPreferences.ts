@@ -1,27 +1,31 @@
-export type NotificationChannel = "InApp" | "Push" | "Email" | "Sms" | "Zalo";
-
-export type ChannelPreferenceView = {
-  channel: NotificationChannel;
-  enabled: boolean;
-  eligible: boolean;
-  /** EMAIL_NOT_VERIFIED, ZALO_NOT_CONFIGURED, NO_PUSH_DEVICE hoặc null. */
-  ineligibleReason: string | null;
-};
-
-export type CategoryPreferenceView = {
-  category: string;
+/**
+ * Tùy chọn thông báo (ACS-07) theo backend: mỗi loại thông báo luôn có trong app; người dùng chỉ chọn có đẩy về điện thoại
+ * (push) hay không. Loại bắt buộc thì luôn đẩy, không tắt được.
+ */
+export type NotificationTypePreference = {
+  type: string;
+  /** Tên tiếng Anh của backend; app hiện tên tiếng Việt theo `KINDS`. */
+  name: string;
   mandatory: boolean;
-  channels: ChannelPreferenceView[];
+  push: boolean;
 };
 
-export type NotificationPreferenceChange = {
-  category: string;
-  channel: NotificationChannel;
-  enabled: boolean;
+/** `pushAllowedOnDevice`: có ít nhất một máy đang đăng nhập đã cho phép OMTS gửi thông báo. */
+export type NotificationPreferences = {
+  types: NotificationTypePreference[];
+  pushAllowedOnDevice: boolean;
 };
 
-export type NotificationPreferencesSaved = {
-  categories: CategoryPreferenceView[];
+/** Một thay đổi: loại không gửi lên thì giữ lựa chọn cũ. */
+export type NotificationPushChange = {
+  type: string;
+  push: boolean;
+};
+
+/** `notice` là MSG-ACCOUNT-21 khi bật push mà chưa máy nào cho phép nhận thông báo; lựa chọn vẫn được lưu. */
+export type NotificationPreferencesSaved = NotificationPreferences & {
   message: string;
+  messageCode: string;
   notice: string | null;
+  noticeCode: string | null;
 };

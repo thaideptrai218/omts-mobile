@@ -22,6 +22,7 @@ import "@/features/organization/styles/organization.scss";
 function formFrom(p: CooperativeProfile): Form {
   return {
     fullName: p.fullName ?? "",
+    shortName: p.shortName ?? "",
     taxCode: p.taxCode ?? "",
     officeAddress: p.officeAddress ?? "",
     phoneNumber: p.phoneNumber ?? "",
@@ -70,8 +71,20 @@ function CooperativePage() {
 
   const save = async () => {
     if (!data || !form) return;
-    if (!form.fullName.trim()) {
-      setFormError(MESSAGES.MSG01("Tên HTX"));
+    // Backend (FARM-01) bắt buộc tên, tên viết tắt, mã số thuế, địa chỉ trụ sở và số điện thoại.
+    const missing = !form.fullName.trim()
+      ? "Tên HTX"
+      : !form.shortName.trim() || form.shortName.trim().length > 20
+        ? "Tên viết tắt"
+        : !form.taxCode.trim()
+          ? "Mã số thuế"
+          : !form.officeAddress.trim()
+            ? "Địa chỉ trụ sở"
+            : !form.phoneNumber.trim()
+              ? "Số điện thoại"
+              : "";
+    if (missing) {
+      setFormError(MESSAGES.MSG01(missing));
       return;
     }
     setBusy(true);
@@ -79,12 +92,18 @@ function CooperativePage() {
     try {
       const saved = await updateCooperativeProfile({
         fullName: form.fullName.trim(),
-        taxCode: opt(form.taxCode),
-        officeAddress: opt(form.officeAddress),
-        phoneNumber: opt(form.phoneNumber),
+        shortName: form.shortName.trim(),
+        taxCode: form.taxCode.trim(),
+        officeAddress: form.officeAddress.trim(),
+        phoneNumber: form.phoneNumber.trim(),
         email: opt(form.email),
         website: opt(form.website),
         legalRepresentative: opt(form.legalRepresentative),
+        // Không có ô nhập trên mobile: gửi lại giá trị cũ vì backend thay toàn bộ hồ sơ.
+        yearEstablished: data.yearEstablished,
+        socialLink: data.socialLink,
+        introductionVi: data.introductionVi,
+        introductionEn: data.introductionEn,
         businessLines: form.businessLines.split("\n").map((l) => l.trim()).filter(Boolean),
         rowVersion: data.rowVersion,
       });
@@ -134,15 +153,16 @@ function CooperativePage() {
             <>
               <Section step={1} title="Thông tin chung">
                 <div className="form">
-                  <Input label="Tên HTX (bắt buộc)" value={form.fullName} onChange={text("fullName")} maxLength={300} disabled={busy} />
-                  <Input label="Mã số thuế" value={form.taxCode} onChange={text("taxCode")} inputMode="numeric" maxLength={20} disabled={busy} />
+                  <Input label="Tên HTX (bắt buộc)" value={form.fullName} onChange={text("fullName")} maxLength={255} disabled={busy} />
+                  <Input label="Tên viết tắt (bắt buộc)" helperText="Tối đa 20 ký tự, đứng đầu tin nhắn SMS gửi khách." value={form.shortName} onChange={text("shortName")} maxLength={20} disabled={busy} />
+                  <Input label="Mã số thuế (bắt buộc)" value={form.taxCode} onChange={text("taxCode")} inputMode="numeric" maxLength={20} disabled={busy} />
                   <Input label="Người đại diện pháp luật" value={form.legalRepresentative} onChange={text("legalRepresentative")} maxLength={200} disabled={busy} />
                 </div>
               </Section>
               <Section step={2} title="Liên hệ">
                 <div className="form">
-                  <Input.TextArea label="Địa chỉ trụ sở" value={form.officeAddress} onChange={text("officeAddress")} maxLength={500} disabled={busy} />
-                  <Input label="Số điện thoại" value={form.phoneNumber} onChange={text("phoneNumber")} inputMode="tel" maxLength={20} disabled={busy} />
+                  <Input.TextArea label="Địa chỉ trụ sở (bắt buộc)" value={form.officeAddress} onChange={text("officeAddress")} maxLength={500} disabled={busy} />
+                  <Input label="Số điện thoại (bắt buộc)" value={form.phoneNumber} onChange={text("phoneNumber")} inputMode="tel" maxLength={20} disabled={busy} />
                   <Input label="Email" value={form.email} onChange={text("email")} inputMode="email" maxLength={254} disabled={busy} />
                   <Input label="Website" value={form.website} onChange={text("website")} inputMode="url" maxLength={500} disabled={busy} />
                 </div>
@@ -175,6 +195,8 @@ function CooperativePage() {
                 <Facts
                   items={[
                     ["Tên HTX", p.fullName],
+                    ["Tên viết tắt", p.shortName],
+                    ["Năm thành lập", p.yearEstablished ? String(p.yearEstablished) : null],
                     ["Mã số thuế", p.taxCode],
                     ["Địa chỉ trụ sở", p.officeAddress],
                     ["Số điện thoại", p.phoneNumber],

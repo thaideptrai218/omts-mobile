@@ -7,6 +7,7 @@ import { Empty } from "@/components/Empty/Empty";
 import FormError from "@/components/FormError/FormError";
 import { ManagePage } from "@/components/ManagePage/ManagePage";
 import DemoLogin from "@/features/auth/components/DemoLogin/DemoLogin";
+import { useLinkBack } from "@/features/auth/hooks/useLinkBack";
 import { demoLoginAvailable } from "@/features/auth/services/demoLoginService";
 import { linkZaloAccount, requestTraderAccess } from "@/features/auth/services/linkService";
 import { maskPhone } from "@/utils/masking";
@@ -27,6 +28,7 @@ const MAX_NOTE = 500;
  */
 function ZaloLinkPage() {
   const navigate = useNavigate();
+  const back = useLinkBack();
   const setFlash = useSetAtom(flashMessageAtom);
   const [step, setStep] = useState<Step>({ kind: "link" });
   const [busy, setBusy] = useState(false);
@@ -103,7 +105,7 @@ function ZaloLinkPage() {
     ) : undefined;
 
   return (
-    <ManagePage title={step.kind === "request" ? "Gửi yêu cầu cho HTX" : "Liên kết tài khoản"} footer={footer}>
+    <ManagePage title={step.kind === "request" ? "Gửi yêu cầu cho HTX" : "Liên kết tài khoản"} footer={footer} onBack={back}>
       <div className="form">
         {step.kind === "link" && (
           <>

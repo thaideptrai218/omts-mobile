@@ -68,7 +68,6 @@ function ZoneDetailPage() {
                 ["Vị trí", z.location],
                 ["Diện tích", z.area !== null ? num(z.area, "ha") : null],
                 ["Tọa độ", z.latitude !== null && z.longitude !== null ? `${z.latitude}, ${z.longitude}` : null],
-                ["Điểm đo nước", z.waterMeasurementPoint],
                 ["Bè đang dùng", `${num(z.inUseRaftCount)} bè`],
               ]}
             />

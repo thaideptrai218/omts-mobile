@@ -29,6 +29,14 @@ export type LinkAccountStep = {
   reason: string | null;
 };
 
+/**
+ * `state` của đường dẫn `/link`. `redirected` khi SessionGuard tự đẩy sang (mở màn bảo vệ lúc chưa có phiên, phiên hết hạn):
+ * trang phía sau trong lịch sử khi đó là màn bảo vệ, nên nút "Quay lại" không được lùi về đó.
+ */
+export type LinkRouteState = {
+  redirected: true;
+};
+
 export type TraderAccessRequest = {
   displayName: string;
   note: string;

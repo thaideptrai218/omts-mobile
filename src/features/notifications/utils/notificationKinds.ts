@@ -128,6 +128,21 @@ function purchaseResponse(n: N) {
   return `${coop} chưa nhận yêu cầu mua ${num(requested, "lồng")} ${product}.${tail("Lý do", text(n, "note"))}`;
 }
 
+/**
+ * MSG-LABOR-23: nhân viên gửi yêu cầu (LABOR-10). `request_text` là cụm tiếng Anh server dựng sẵn ("for leave from
+ * 01/10/2026 to 03/10/2026", "for a missed check-in on 01/10/2026 at 07:30") nên đọc ngày giờ trong đó rồi viết lại.
+ */
+function employeeRequest(n: N) {
+  const raw = text(n, "request_text");
+  const range = /from (\S+) to (\S+)/.exec(raw);
+  const on = /on (\S+?)(?: at (\d{1,2}:\d{2}))?$/.exec(raw);
+  const missed = /check-in/.test(raw) ? "giờ vào" : /check-out/.test(raw) ? "giờ ra" : "";
+  const what = missed && on ? `bù ${missed} ngày ${on[1]}${on[2] ? ` lúc ${on[2]}` : ""}`
+    : range ? `nghỉ phép từ ${range[1]} đến ${range[2]}`
+      : on ? `nghỉ phép ngày ${on[1]}` : "mới";
+  return `${text(n, "employee_name")} gửi yêu cầu ${what}.${tail("Lý do", text(n, "reason"))}`;
+}
+
 export const KINDS: Record<string, Kind> = {
   WORK_PLAN_REQUESTED: { title: "Kế hoạch ngày làm cần xác nhận", body: () => "Bạn được giao phụ trách kế hoạch. Bấm để nhận hoặc từ chối trước khi phân công nhân viên.", icon: "zi-calendar", tone: "warning", to: page("/manage/work-plans") },
   WORK_PLAN_RESPONDED: { title: "Quản lý phản hồi kế hoạch", body: () => "Người phụ trách đã nhận hoặc từ chối kế hoạch. Bấm để xem phản hồi.", icon: "zi-user-check", tone: "neutral", to: page("/manage/work-plans") },
@@ -189,6 +204,14 @@ export const KINDS: Record<string, Kind> = {
   PURCHASE_SHIFT_CONFIRMED: { title: "HTX đã nhận đơn", body: (n) => `Chủ HTX đã nhận ${n.relatedRecordCode ?? "đơn hàng"}. Bấm để xem trạng thái ca của bạn.`, icon: "zi-check-circle", tone: "success", to: page("/account/work") },
   EMPLOYEE_LEAVE_REQUESTED: { title: "Yêu cầu nghỉ phép", body: () => "Có nhân viên gửi yêu cầu nghỉ phép. Bấm để xem và phản hồi.", icon: "zi-calendar", tone: "warning", to: page("/manage/leave-requests") },
   EMPLOYEE_LEAVE_REVIEWED: { title: "Phản hồi nghỉ phép", body: () => "Chủ HTX đã phản hồi yêu cầu nghỉ phép của bạn. Bấm để xem kết quả.", icon: "zi-user-check", tone: "neutral", to: page("/account/work") },
+  // OMTS-132: chỉ gửi Chủ HTX, mở màn duyệt yêu cầu (LABOR-05.1).
+  EMPLOYEE_REQUEST_NEW: {
+    title: "Yêu cầu của nhân viên",
+    body: (n) => has(n) ? employeeRequest(n) : "Có nhân viên gửi yêu cầu nghỉ phép hoặc bù giờ chấm công. Bấm để xem và duyệt.",
+    icon: "zi-calendar",
+    tone: "warning",
+    to: page("/manage/leave-requests"),
+  },
   PAYROLL_SENT_BACK: { title: "Bảng lương bị trả lại", body: () => "Bảng lương được gửi lại để chỉnh sửa.", icon: "zi-note", tone: "warning" },
   STAFF_ACCOUNT_LOCK_REMINDER: {
     title: "Nhắc khóa tài khoản nhân viên",
@@ -311,6 +334,33 @@ export const KINDS: Record<string, Kind> = {
     body: (n) => (has(n) ? customerPayment(n) : `Có giao dịch tiền của khách hàng ${n.relatedRecordCode ?? ""}.`),
     icon: "zi-note",
     tone: "neutral",
+    // Một phiếu thu có mã phiếu; xác nhận nhiều khoản cùng lúc thì không có mã, hiện nội dung đầy đủ.
+    to: recordPage("/manage/customer-payments", null),
+  },
+  // MSG-CLAIM-01: thương lái gửi khiếu nại, báo Chủ HTX.
+  QUALITY_CLAIM_NEW: {
+    title: "Khiếu nại mới",
+    body: (n) => has(n)
+      ? `${customer(text(n, "customer_name"))} báo hàng của hóa đơn ${text(n, "invoice_code")} có vấn đề: ${text(n, "description_start")}. Nhờ Quản lý vùng kiểm tra rồi trả lời.`
+      : `Có khiếu nại mới ${n.relatedRecordCode ?? ""}.`,
+    icon: "zi-warning-circle",
+    tone: "warning",
+    to: recordPage("/manage/quality-claims", "/manage/quality-claims"),
+  },
+  // MSG-CLAIM-02: HTX trả lời khiếu nại, báo thương lái (BR-CLAIM-02).
+  QUALITY_CLAIM_RESPONSE: {
+    title: "HTX trả lời khiếu nại",
+    body: (n) => {
+      if (!has(n)) return "HTX đã trả lời khiếu nại của bạn. Bấm để xem.";
+      const head = `${text(n, "cooperative_short_name")}: khiếu nại về hóa đơn ${text(n, "invoice_code")}`;
+      const call = ` Vui lòng gọi ${text(n, "cooperative_phone") || "HTX"}.`;
+      return text(n, "result") === "Accepted"
+        ? `${head} được chấp nhận, HTX đề xuất ${text(n, "offer") === "ReturnAllGoods" ? "trả lại toàn bộ hàng" : "giảm giá cả hóa đơn"}.${tail("Lời nhắn", text(n, "note"))}${call}`
+        : `${head} không được chấp nhận.${tail("Lý do", text(n, "note"))}${call}`;
+    },
+    icon: "zi-warning-circle",
+    tone: "neutral",
+    to: recordPage("/account/claims", "/account/claims"),
   },
   PROVENANCE_WITHDRAWN: {
     title: "Thu hồi thông tin nguồn gốc",

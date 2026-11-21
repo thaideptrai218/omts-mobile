@@ -8,65 +8,76 @@ export type SupplierType = "Seed" | "Material" | "Other";
 /* Nhà cung cấp */
 export type SupplierListItem = {
   id: string;
-  name: string | null;
+  code: string;
+  name: string;
   supplierType: SupplierType;
-  phoneNumber: string | null;
+  phoneNumber: string;
   statusId: number;
-  status: string | null;
+  status: string;
+  email: string | null;
+  address: string | null;
+  province: string | null;
+  ward: string | null;
+  companyName: string | null;
+  taxCode: string | null;
+  note: string | null;
+  createdAt: string;
+  createdBy: string | null;
+  /** Null khi người xem không có quyền xem phiếu nhập. */
+  totalPurchased: number | null;
+  /** Null khi người xem không có quyền xem công nợ nhà cung cấp (BR-FARM-07). */
+  currentDebt: number | null;
 };
 
-export type SupplierView = SupplierListItem & {
-  otherContacts: string | null;
+/** Một phiếu nhập gần đây của nhà cung cấp (mọi trạng thái), với tổng tiền. Công nợ đọc ở `api/supplier-debts`. */
+export type SupplierReceiptRow = {
+  id: string;
+  code: string;
+  receiptDate: string;
+  statusId: number;
+  status: string;
+  total: number;
+};
+
+export type SupplierView = {
+  id: string;
+  code: string;
+  name: string;
+  supplierType: SupplierType;
+  phoneNumber: string;
+  address: string | null;
+  email: string | null;
   certificates: {
     index: number;
     url: string | null;
   }[];
-  debt: number;
-  receipts: {
-    id: string;
-    code: string | null;
-    receiptDate: string | null;
-    zoneId: string;
-    status: string | null;
-    payable: number;
-    outstanding: number;
-  }[];
-  rowVersion: string | null;
+  statusId: number;
+  status: string;
+  receipts: SupplierReceiptRow[];
+  rowVersion: string;
+  province: string | null;
+  ward: string | null;
+  note: string | null;
+  companyName: string | null;
+  taxCode: string | null;
+  /** CCCD: chỉ có ở màn chi tiết. */
+  identityNumber: string | null;
+  createdAt: string;
+  createdBy: string | null;
 };
 
+/**
+ * Thêm hoặc sửa nhà cung cấp. Địa chỉ và email gửi gì lưu nấy (gửi lại giá trị cũ để giữ). Các trường không có trên
+ * mobile (tỉnh, phường, tên công ty, mã số thuế, CCCD, mã) không gửi thì backend giữ nguyên khi sửa.
+ */
 export type SaveSupplier = {
   name: string;
   supplierType: SupplierType;
-  phoneNumber: string | null;
-  otherContacts: string | null;
+  phoneNumber: string;
+  address: string | null;
+  email: string | null;
+  note?: string | null;
   rowVersion?: string | null;
-};
-
-export type SupplierDebtRow = {
-  supplierId: string;
-  supplierName: string | null;
-  payable: number;
-  returned: number;
-  paid: number;
-  refunded: number;
-  unallocated: number;
-  outstanding: number;
-};
-
-export type ReceiptDebtRow = {
-  receiptId: string;
-  code: string | null;
-  receiptDate: string;
-  payable: number;
-  returned: number;
-  paid: number;
-  refunded: number;
-  outstanding: number;
-};
-
-export type SupplierDebtDetail = {
-  totals: SupplierDebtRow;
-  receipts: ReceiptDebtRow[];
 };
 
 export type SupplierTypeFilter = "all" | SupplierType;

@@ -203,6 +203,7 @@ function PeriodList({ periods, thresholds, range }: { periods: WaterChartPeriod[
           .map((p) => {
             const phOut = outside(p.ph, thresholds.phMin, thresholds.phMax);
             const salinityOut = outside(p.salinity, thresholds.salinityMin, thresholds.salinityMax);
+            const temperatureOut = outside(p.temperature, thresholds.temperatureMin ?? null, thresholds.temperatureMax ?? null);
             return (
               <Row
                 key={p.period}
@@ -211,13 +212,15 @@ function PeriodList({ periods, thresholds, range }: { periods: WaterChartPeriod[
                   <>
                     <span className="water-chart__stat">Độ pH: {statsText(p.ph)}</span>
                     <span className="water-chart__stat">Độ mặn: {statsText(p.salinity, "‰")}</span>
+                    <span className="water-chart__stat">Nhiệt độ: {statsText(p.temperature, "°C")}</span>
                   </>
                 }
                 badge={
-                  phOut || salinityOut ? (
+                  phOut || salinityOut || temperatureOut ? (
                     <>
                       {phOut && <Badge text="Độ pH vượt ngưỡng" tone="danger" />}
                       {salinityOut && <Badge text="Độ mặn vượt ngưỡng" tone="danger" />}
+                      {temperatureOut && <Badge text="Nhiệt độ vượt ngưỡng" tone="danger" />}
                     </>
                   ) : undefined
                 }
@@ -230,8 +233,8 @@ function PeriodList({ periods, thresholds, range }: { periods: WaterChartPeriod[
 }
 
 /**
- * Biểu đồ chỉ số nước của một vùng (WATER-03), chỉ tính số đo đã xác nhận. pH và độ mặn khác thang đo nên mỗi chỉ số
- * một biểu đồ. Chạm vào biểu đồ để xem số của kỳ đó trên cả hai; danh sách số nằm ngay dưới biểu đồ.
+ * Biểu đồ chỉ số nước của một vùng (WATER-03), chỉ tính số đo đang hiệu lực. pH, độ mặn và nhiệt độ khác thang đo nên mỗi
+ * chỉ số một biểu đồ. Chạm vào biểu đồ để xem số của kỳ đó; danh sách số nằm ngay dưới biểu đồ.
  */
 export function WaterChart({ zoneId }: { zoneId: string }) {
   const [range, setRange] = useState<WaterRange>("days");
@@ -257,13 +260,14 @@ export function WaterChart({ zoneId }: { zoneId: string }) {
       <Loadable data={data} error={error} reload={() => void reload()}>
         {(chart) =>
           chart.periods.every((p) => p.missing) ? (
-            <Empty icon="zi-poll" title="Chưa có số đo đã xác nhận" text="Biểu đồ chỉ tính các số đo đã xác nhận trong khoảng đã chọn." />
+            <Empty icon="zi-poll" title="Chưa có số đo trong khoảng này" text="Biểu đồ chỉ tính các số đo đang hiệu lực, không tính số đo đã hủy." />
           ) : (
             <>
               <p className="form__hint water-chart__spaced">Chạm vào biểu đồ để xem số của {range === "days" ? "ngày" : "tháng"} đó.</p>
               {/* Vừa đổi khoảng thời gian thì `selected` còn là vị trí của danh sách cũ, nên chặn lại cho khỏi vượt danh sách mới. */}
               <IndicatorChart title="Độ pH" periods={chart.periods} pick={(p) => p.ph} low={chart.thresholds.phMin} high={chart.thresholds.phMax} selected={Math.min(selected, chart.periods.length - 1)} onSelect={setSelected} />
               <IndicatorChart title="Độ mặn" unit="‰" periods={chart.periods} pick={(p) => p.salinity} low={chart.thresholds.salinityMin} high={chart.thresholds.salinityMax} selected={Math.min(selected, chart.periods.length - 1)} onSelect={setSelected} />
+              <IndicatorChart title="Nhiệt độ" unit="°C" periods={chart.periods} pick={(p) => p.temperature} low={chart.thresholds.temperatureMin ?? null} high={chart.thresholds.temperatureMax ?? null} selected={Math.min(selected, chart.periods.length - 1)} onSelect={setSelected} />
               <PeriodList periods={chart.periods} thresholds={chart.thresholds} range={range} />
             </>
           )

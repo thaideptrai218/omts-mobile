@@ -48,7 +48,7 @@ function ZonesPage() {
             <Rows>
               {page.items.map((z) => {
                 const status = statusLabel(z.status);
-                const license = LICENSE_STATE[z.licenseState];
+                const license = z.licenseState ? LICENSE_STATE[z.licenseState] : undefined;
                 return (
                   <Row
                     key={z.id}

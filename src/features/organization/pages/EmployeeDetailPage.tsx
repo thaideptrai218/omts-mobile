@@ -31,23 +31,25 @@ function EmployeeDetailPage() {
   const [ending, setEnding] = useState(false);
   const [endDate, setEndDate] = useState(todayIso());
   const [reinstating, setReinstating] = useState(false);
-  const [followUp, setFollowUp] = useState<EmploymentChanged["followUp"]>(null);
+  // Sau khi cho nghỉ hoặc nhận lại, nhắc Chủ HTX xem lại tài khoản gắn với hồ sơ (backend không tự khóa hay mở).
+  const [followUp, setFollowUp] = useState<{ action: string; accountId: string } | null>(null);
 
-  const applyChange = (result: EmploymentChanged | undefined) => {
+  const applyChange = (result: EmploymentChanged | undefined, action: "review-lock" | "review-access") => {
     if (!result) return false;
     setData(result.employee);
-    setFollowUp(result.followUp);
+    const account = result.employee.account;
+    setFollowUp(account ? { action, accountId: account.id } : null);
     return true;
   };
 
   const end = async () => {
     if (!data) return;
-    if (applyChange(await run(() => endEmployment(id, endDate, data.rowVersion), `Đã cho ${data.fullName} nghỉ việc.`))) setEnding(false);
+    if (applyChange(await run(() => endEmployment(id, endDate, data.rowVersion), `Đã cho ${data.fullName} nghỉ việc.`), "review-lock")) setEnding(false);
   };
 
   const reinstate = async () => {
     if (!data) return;
-    if (applyChange(await run(() => reinstateEmployee(id, data.rowVersion), `Đã nhận lại ${data.fullName}.`))) setReinstating(false);
+    if (applyChange(await run(() => reinstateEmployee(id, data.rowVersion), `Đã nhận lại ${data.fullName}.`), "review-access")) setReinstating(false);
   };
 
   const left = data?.status === "Left";
@@ -56,7 +58,8 @@ function EmployeeDetailPage() {
     <ManagePage
       title="Nhân viên"
       footer={
-        data &&
+        // Chỉ ai được quản lý hồ sơ này (Chủ HTX, quyền mọi vùng hoặc cùng vùng) mới sửa, cho nghỉ hay nhận lại được.
+        data?.canMaintain &&
         (left ? (
           <Button fullWidth size="large" onClick={() => setReinstating(true)}>
             Nhận lại
@@ -91,12 +94,15 @@ function EmployeeDetailPage() {
               <Section title="Thông tin">
                 <Facts
                   items={[
+                    ["Mã nhân viên", e.code],
+                    ["Loại", e.employeeType === "Staff" ? "Nhân viên" : e.employeeType === "SeasonalWorker" ? "Lao động thời vụ" : null],
+                    ["Loại việc", e.jobTypes.map((j) => j.name).join(", ") || null],
                     ["Số điện thoại", e.phoneNumber],
                     ["Ngày sinh", e.birthday ? date(e.birthday) : null],
                     ["Địa chỉ", e.address],
                     ["Khu vực", [e.ward, e.area].filter(Boolean).join(", ")],
                     ["Vùng làm việc", e.workingZones.map((z) => z.name ?? z.code).join(", ") || "Chưa gán vùng"],
-                    ["Ngày nghỉ việc", e.employmentEndDate ? date(e.employmentEndDate) : null],
+                    ["Ngày làm việc cuối cùng", e.lastWorkingDay ? date(e.lastWorkingDay) : null],
                     ["Thông tin khác", e.otherInformation],
                     ["Ghi chú", e.notes],
                   ]}
@@ -144,8 +150,8 @@ function EmployeeDetailPage() {
 
       <Sheet visible={ending} onClose={() => setEnding(false)} autoHeight mask handler swipeToClose title="Cho nghỉ việc">
         <div className="sheet-form form">
-          <p className="form__intro">Nhân viên sẽ chuyển sang “Đã nghỉ”. Tài khoản OMTS (nếu có) không tự khóa; app sẽ nhắc bạn xem lại.</p>
-          <DateField label="Ngày nghỉ việc" value={endDate} onChange={setEndDate} disabled={busy} />
+          <p className="form__intro">Nhân viên chuyển sang “Đã nghỉ” từ ngày sau ngày làm việc cuối cùng. Tài khoản OMTS (nếu có) không tự khóa; app sẽ nhắc bạn xem lại.</p>
+          <DateField label="Ngày làm việc cuối cùng" value={endDate} onChange={setEndDate} disabled={busy} />
           <div className="sheet-actions">
             <Button fullWidth size="large" type="danger" loading={busy} disabled={busy} onClick={() => void end()}>
               Xác nhận nghỉ việc

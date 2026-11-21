@@ -4,6 +4,7 @@ import { Button, useNavigate } from "zmp-ui";
 import FormError from "@/components/FormError/FormError";
 import { ManagePage } from "@/components/ManagePage/ManagePage";
 import { DEMO_ACCOUNTS } from "@/features/auth/data/demoAccounts";
+import { useLinkBack } from "@/features/auth/hooks/useLinkBack";
 import { loginWithDemoAccount } from "@/features/auth/services/demoLoginService";
 import { errorText } from "@/utils/errorText";
 import "@/features/auth/components/DemoLogin/DemoLogin.scss";
@@ -14,6 +15,7 @@ import "@/features/auth/components/DemoLogin/DemoLogin.scss";
  */
 export default function DemoLogin() {
   const navigate = useNavigate();
+  const back = useLinkBack();
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState("");
 
@@ -32,7 +34,7 @@ export default function DemoLogin() {
   };
 
   return (
-    <ManagePage title="Đăng nhập tài khoản demo">
+    <ManagePage title="Đăng nhập tài khoản demo" onBack={back}>
       <p className="form__intro">Bản chạy trên trình duyệt không liên kết được Zalo. Chọn người muốn đóng vai để thử luồng đặt hàng đến truy xuất.</p>
       <FormError text={error} />
       <div className="sheet-actions">
