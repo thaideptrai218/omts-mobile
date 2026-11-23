@@ -1,4 +1,4 @@
-import type { WaterDateRange, WaterDraft, WaterFilter, WaterListItem, WaterPhotoAttempt, WaterView } from "@/features/farming/models/WaterMeasurement";
+import type { WaterCrop, WaterDateRange, WaterDraft, WaterFilter, WaterListItem, WaterPhotoAttempt, WaterView } from "@/features/farming/models/WaterMeasurement";
 import { useEffect, useState } from "react";
 import { Button, Icon, Select, useLocation, useNavigate, useSnackbar } from "zmp-ui";
 
@@ -19,6 +19,7 @@ import { errorText } from "@/utils/errorText";
 import { date, dateTime, num } from "@/utils/format";
 import { violatedText, WATER_ALERT, waterStatusLabel } from "@/utils/labels";
 import { newOperationId } from "@/utils/operationId";
+import { DisplayFrameSheet } from "@/features/farming/components/DisplayFrameSheet/DisplayFrameSheet";
 import { WaterChart } from "@/features/farming/components/WaterChart/WaterChart";
 import { WaterValuesSheet } from "@/features/farming/components/WaterValuesSheet/WaterValuesSheet";
 import { listWater, recognizeWater, recordWater, waterOverview, zoneLookup, zoneThresholds } from "@/features/farming/services/farmService";
@@ -57,6 +58,8 @@ function WaterPage() {
   const [view, setView] = useState<WaterView>("list");
   const [reading, setReading] = useState(false);
   const [attempt, setAttempt] = useState<WaterPhotoAttempt | null>(null);
+  // Ảnh vừa chụp, đang chờ người đo kéo khung vào màn hình số.
+  const [framing, setFraming] = useState<Blob | null>(null);
   const [draft, setDraft] = useState<WaterDraft | null>(null);
   // Một mã cho một lần ghi: gửi lại sau lỗi mạng không ghi trùng.
   const [operationId, setOperationId] = useState(newOperationId);
@@ -78,7 +81,7 @@ function WaterPage() {
     setAttempt(null);
     setReading(true);
     try {
-      const recognition = await recognizeWater(next.zoneId, next.photo);
+      const recognition = await recognizeWater(next.zoneId, next.photo, next.crop);
       setOperationId(newOperationId());
       setDraft({ zoneId: next.zoneId, recognition });
     } catch (err) {
@@ -92,10 +95,16 @@ function WaterPage() {
   const takePhoto = async () => {
     try {
       const photo = await choosePhoto();
-      if (photo) await send({ zoneId, photo });
+      if (photo) setFraming(photo);
     } catch (err) {
       openSnackbar({ text: err instanceof Error ? err.message : errorText(err), type: "error", duration: 6000 });
     }
+  };
+
+  const readFramed = (crop: WaterCrop | null) => {
+    const photo = framing;
+    setFraming(null);
+    if (photo) void send({ zoneId, photo, crop });
   };
 
   const changeZone = (id: string) => {
@@ -232,6 +241,8 @@ function WaterPage() {
           }
         </Loadable>
       )}
+
+      <DisplayFrameSheet photo={framing} onRead={readFramed} onCancel={() => setFraming(null)} />
 
       {draft && ocr && (
         <WaterValuesSheet

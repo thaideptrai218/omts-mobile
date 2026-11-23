@@ -152,10 +152,22 @@ export type WaterRecognition = {
   thresholdWarning: UserMessage | null;
 };
 
-/** Ảnh của một lần gửi đọc ảnh, giữ lại để gửi lại đúng ảnh đó sau lỗi mạng. */
+/**
+ * Phần ảnh có màn hình số của máy đo, người đo kéo khung chọn (tỉ lệ 0…1 theo chiều ngang và dọc của ảnh). Backend chỉ
+ * đọc số trong khung này; ảnh lưu làm bằng chứng vẫn là cả ảnh.
+ */
+export type WaterCrop = {
+  left: number;
+  top: number;
+  right: number;
+  bottom: number;
+};
+
+/** Ảnh (và khung màn hình, nếu có) của một lần gửi đọc ảnh, giữ lại để gửi lại đúng như vậy sau lỗi mạng. */
 export type WaterPhotoAttempt = {
   zoneId: string;
   photo: Blob;
+  crop: WaterCrop | null;
 };
 
 /** Số đo đang ghi, sau khi đã đọc ảnh: người đo kiểm tra và sửa số rồi lưu. */
