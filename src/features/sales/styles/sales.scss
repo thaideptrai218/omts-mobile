@@ -65,3 +65,15 @@
   color: var(--ink-2);
   overflow-wrap: anywhere;
 }
+
+/* Mã QR chuyển khoản: nền trắng ở cả chế độ tối để app ngân hàng quét được, không lớn hơn ảnh vẽ ra. */
+.checkout-qr {
+  display: block;
+  width: 100%;
+  max-width: 320px;
+  aspect-ratio: 1;
+  margin: 0 auto 12px;
+  border: 1.5px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: #fff;
+}

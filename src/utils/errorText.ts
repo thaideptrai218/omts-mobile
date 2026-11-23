@@ -251,10 +251,15 @@ const SERVER_TEXT: Record<string, string | ((details: ProblemDetails) => string)
   MSG01: (d) =>
     d.field === "Period" && d.existingId
       ? "Khoảng ngày này trùng với một bảng lương khác. Hãy mở bảng lương đó hoặc chọn khoảng ngày khác."
-      : MESSAGES.MSG01(fieldName(d)),
+      : d.field === "Cash account" && /payOS/i.test(String(d.hint ?? ""))
+        ? "HTX chưa cài tài khoản nhận tiền cho thanh toán trong app. Vui lòng báo HTX hoặc trả theo cách khác."
+        : MESSAGES.MSG01(fieldName(d)),
   MSG02: MESSAGES.MSG02,
   MSG03: "Bản ghi này đã tồn tại. Hệ thống mở bản ghi có sẵn để bạn kiểm tra, không tạo bản sao.",
-  MSG04: (d) => MESSAGES.MSG04(/Zalo/i.test(String(d.detail ?? "")) ? "Zalo" : "bên ngoài"),
+  MSG04: (d) => {
+    const detail = String(d.detail ?? "");
+    return MESSAGES.MSG04(/Zalo/i.test(detail) ? "Zalo" : /payOS/i.test(detail) ? "thanh toán payOS" : "bên ngoài");
+  },
   MSG05: "Không thực hiện được thao tác với tệp. Dữ liệu gốc không thay đổi; vui lòng thử lại.",
   MSG06: "Dữ liệu vừa được người khác cập nhật. Thay đổi của bạn chưa được lưu; vui lòng xem bản mới rồi lưu lại hoặc hủy.",
   MSG08: "Không có dữ liệu trong phạm vi đã chọn.",
@@ -284,6 +289,7 @@ const SERVER_TEXT: Record<string, string | ((details: ProblemDetails) => string)
     if (/under a quality claim/i.test(detail)) return "Hóa đơn này đang có khiếu nại chờ HTX trả lời.";
     if (/^Sales invoice .* is returned/i.test(detail)) return "Hóa đơn này đã trả hàng nên không gửi khiếu nại được.";
     if (/^Quality claim is/i.test(detail)) return "Khiếu nại này đã được trả lời. Phản hồi không sửa được.";
+    if (/^Sales invoice .* is Paid/i.test(detail)) return "Hóa đơn này đã trả đủ, không cần thanh toán thêm.";
     return "Không đổi được trạng thái: trạng thái hiện tại của bản ghi không cho phép thao tác này.";
   },
   MSG68: "Mật khẩu tạm đã hết hạn. Vui lòng nhờ Chủ HTX cấp lại.",

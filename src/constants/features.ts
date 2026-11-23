@@ -114,7 +114,7 @@ export const FEATURES = {
   payment: {
     title: "Thanh toán",
     icon: "zi-check-circle-solid",
-    description: "Thanh toán công nợ bằng chuyển khoản ngay trong ứng dụng.",
+    description: "Chọn hóa đơn còn nợ rồi chuyển khoản, xác nhận trên trang thanh toán của Zalo.",
   },
   weighSlips: {
     title: "Phiếu cân",
@@ -272,7 +272,7 @@ export const FEATURE_HINTS: Record<keyof typeof FEATURES, string> = {
 };
 
 /** Chức năng backend chưa có API: bản dev mở màn dữ liệu mẫu `/mock/<key>`, bản production mở trang "chưa có". */
-export const MOCK_FEATURES: FeatureKey[] = ["payslips", "broadcast", "payment", "pickup"];
+export const MOCK_FEATURES: FeatureKey[] = ["payslips", "broadcast", "pickup"];
 
 /**
  * Chức năng đã có màn thật (nối API). Chức năng không có ở đây mở trang "chưa có" giải thích lý do
@@ -289,6 +289,8 @@ export const FEATURE_ROUTES: Partial<Record<FeatureKey, string>> = {
   orders: "/account/purchases",
   weighSlips: "/account/weighings",
   myInvoices: "/account/invoices",
+  // Thanh toán từng hóa đơn còn nợ, mở từ "Hóa đơn của tôi".
+  payment: "/account/invoices",
   cycles: "/manage/cycles",
   seeding: "/manage/cycles?for=seeding",
   cultivationLog: "/manage/cycles?for=logs",

@@ -93,7 +93,6 @@ Quyền hiện mục trên menu chỉnh theo backend: `payroll` chỉ Chủ HTX 
 
 | Chức năng | Lý do |
 |---|---|
-| Thanh toán của thương lái (`payment`) | Phải đi qua Checkout SDK của Zalo (CLAUDE.md mục 10). Không làm `customer-payments/pending-transfer` và `…/{id}/qr` (hiện VietQR ngoài Checkout SDK) cho tới khi chủ dự án quyết định. |
 | Phiếu lương của nhân viên (`payslips`) | Backend chỉ cho Chủ HTX đọc phiếu lương; chưa có `api/me/payslips`. |
 | Lịch nhận hàng (`pickup`), gửi thông báo (`broadcast`) | Backend chưa có API. |
 | Báo cáo doanh thu | Quyền `SALES_REPORTS` có trong danh mục nhưng chưa có API nào dùng. |
@@ -124,6 +123,21 @@ xuất tệp, cấu hình danh mục) để bản web. Luồng đọc ở `omts-
 | Thẻ kho của vật tư (`api/farming-input-items/{id}/movements`), xóa vật tư, xóa lô giống | Sổ nhiều cột, xem tại bàn. |
 | Thêm, sửa loại xuất (`POST/PUT api/input-issue-types`) | Cấu hình danh mục. |
 | Xuất tệp phiếu xuất (`api/input-issues/export`) | Backend sinh tệp, xem trên web. |
+
+## 3c. Bổ sung 23/11/2026: thương lái thanh toán hóa đơn
+
+Theo quyết định 21/11/2026: thương lái trả số còn nợ của **một** hóa đơn qua Checkout SDK của Zalo, payOS là bên thứ ba
+(CLAUDE.md mục 10). Bản web giữ luồng VietQR của nó. Cần backend có PR `omts-backend#122` và các khóa `Checkout` trên
+máy chủ; thiếu khóa thì server trả MSG04. Đã qua lint, typecheck và build; **chưa thử trong Zalo** (`CheckoutSDK.createOrder`
+chỉ chạy trong Zalo).
+
+| Màn | Đường dẫn | API |
+|---|---|---|
+| Nút "Thanh toán" ở hóa đơn còn nợ; mục "Thanh toán" trên trang chủ mở "Hóa đơn của tôi" | `/account/invoices` | `GET api/me/invoices/{id}` |
+| Thanh toán: tạo lần thanh toán, mở trang của Zalo, chọn "Chuyển khoản bằng mã QR" thì hiện mã QR do app tự vẽ, lưu ảnh, chép số tài khoản, số tiền, nội dung; hỏi trạng thái mỗi 4 giây, khi quay lại app và khi bấm "Tôi đã chuyển khoản" | `/account/invoices/:id/pay` | `POST api/me/invoices/{id}/checkout`, `POST api/me/checkouts/{id}/zalo-order`, `GET api/me/checkouts/{id}` |
+
+App không tự quyết định là đã trả: chỉ hiện "đã nhận đủ" khi server trả `paidInFull`. Không dùng `customer-payments/pending-transfer`
+và `…/{id}/qr` (VietQR ngoài Checkout SDK). Lưu ảnh QR cần quyền `saveImageToGallery` được Zalo duyệt.
 
 ## 4. Dữ liệu demo bổ sung (28/10/2026)
 
