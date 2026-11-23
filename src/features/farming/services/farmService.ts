@@ -9,6 +9,7 @@ import type {
   WaterFilter,
   WaterHistoryPage,
   WaterRange,
+  WaterCrop,
   WaterRecognition,
   WaterThresholds,
   WaterZoneOverviewItem,
@@ -147,10 +148,15 @@ export function getWater(id: string) {
   return api<WaterDetail>(`/api/water-measurements/${id}`);
 }
 
-/** Gửi ảnh máy đo: backend lưu ảnh và đọc số gợi ý, chưa lưu số đo nào. Đọc không được vẫn trả `photoKey` để nhập tay. */
-export function recognizeWater(zoneId: string, photo: Blob) {
+/**
+ * Gửi ảnh máy đo: backend lưu cả ảnh và đọc số gợi ý (chỉ trong khung màn hình nếu người đo đã chọn), chưa lưu số đo nào.
+ * Đọc không được vẫn trả `photoKey` để nhập tay.
+ */
+export function recognizeWater(zoneId: string, photo: Blob, crop: WaterCrop | null) {
   const form = new FormData();
   appendPhoto(form, "photo", photo);
+  // Dạng "trái,trên,phải,dưới" với dấu chấm thập phân, như backend đọc.
+  if (crop) form.append("crop", [crop.left, crop.top, crop.right, crop.bottom].map((v) => v.toFixed(4)).join(","));
   return api<WaterRecognition>(`/api/zones/${zoneId}/water-measurements/recognize`, { method: "POST", form });
 }
 
