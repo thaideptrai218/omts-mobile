@@ -24,7 +24,7 @@ import "@/features/sales/styles/sales.scss";
 const paidBadge = (isPaid: boolean | null) =>
   isPaid === null ? <Badge text="Đã hủy" tone="neutral" /> : isPaid ? <Badge text="Đã trả đủ" tone="success" /> : <Badge text="Còn nợ" tone="warning" />;
 
-/** Hóa đơn của thương lái: số cân từng lồng, tiền hàng, số còn nợ và trang truy xuất của hàng đã mua. */
+/** Hóa đơn của thương lái: số cân từng lồng, tiền hàng, số còn nợ, nút thanh toán và trang truy xuất của hàng đã mua. */
 export default function MyInvoicesPage() {
   const navigate = useNavigate();
   const openId = new URLSearchParams(useLocation().search).get("open");
@@ -66,6 +66,17 @@ export default function MyInvoicesPage() {
           ["Còn nợ", money(opened.unpaidAmount)],
           ["Trạng thái", paidBadge(opened.isPaid)],
         ]} />
+        {/* Trả số còn nợ qua Checkout SDK của Zalo và payOS (CLAUDE.md mục 10); server quyết định đã trả hay chưa. */}
+        {opened.isPaid === false && opened.unpaidAmount > 0 && (
+          <Section title="Thanh toán">
+            <p className="form__hint">Trả số còn nợ bằng chuyển khoản, xác nhận trên trang thanh toán của Zalo.</p>
+            <Actions>
+              <Button fullWidth size="large" onClick={() => navigate(`/account/invoices/${encodeURIComponent(opened.id)}/pay`)}>
+                Thanh toán {money(opened.unpaidAmount)}
+              </Button>
+            </Actions>
+          </Section>
+        )}
         <Section title="Hàng đã mua">
           {opened.lines.map((line) => (
             <div key={line.lineNumber} className="card form">

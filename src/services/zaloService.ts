@@ -1,5 +1,5 @@
 import type { CheckoutOrderParams, CustomPaymentEvent, CustomPaymentSelection, FakeZalo, FakeZaloWindow } from "@/models/Zalo";
-import { CheckoutSDK, chooseImage, EventName, events, getAccessToken, getLocation, getPhoneNumber, openDocument, openPermissionSetting, scanQRCode } from "zmp-sdk/apis";
+import { CheckoutSDK, chooseImage, EventName, events, getAccessToken, getLocation, getPhoneNumber, openDocument, openPermissionSetting, saveImageToGallery, scanQRCode } from "zmp-sdk/apis";
 
 /** Chỉ gọi sau khi người dùng bấm nút và đã được giải thích mục đích lấy vị trí. */
 export async function zaloLocationToken(): Promise<string> {
@@ -72,6 +72,25 @@ export function onCustomPaymentSelected(handler: (selection: CustomPaymentSelect
     fakeSelections.delete(handler);
     events.off(EventName.OnDataCallback, listener);
   };
+}
+
+/**
+ * Lưu ảnh (data URL base64) vào thư viện ảnh của máy, ví dụ mã QR chuyển khoản để mở bằng app ngân hàng. Quyền lưu ảnh
+ * phải được Zalo duyệt (CLAUDE.md mục 5); chưa duyệt hoặc người dùng từ chối thì báo lỗi để màn hình gợi ý chụp màn hình.
+ */
+export async function saveImage(dataUrl: string): Promise<void> {
+  if (fake()) {
+    const link = document.createElement("a");
+    link.href = dataUrl;
+    link.download = "ma-qr.png";
+    link.click();
+    return;
+  }
+  try {
+    await saveImageToGallery({ imageBase64Data: dataUrl });
+  } catch {
+    throw new Error("Chưa lưu được ảnh vào máy. Bạn có thể chụp màn hình mã QR rồi mở bằng app ngân hàng.");
+  }
 }
 
 /** App được mở lại, ví dụ từ app ngân hàng quay về. Trả hàm hủy đăng ký. */
