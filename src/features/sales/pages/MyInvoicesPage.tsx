@@ -13,7 +13,6 @@ import { Row } from "@/components/Row/Row";
 import { Rows } from "@/components/Rows/Rows";
 import { Section } from "@/components/Section/Section";
 import { PurchasePager } from "@/features/sales/components/PurchaseRequest/PurchaseRequest";
-import { cageList } from "@/features/sales/components/PortWeighing/PortWeighing";
 import { myInvoice, myInvoices } from "@/features/sales/services/invoiceService";
 import { useLoad } from "@/hooks/useLoad";
 import { errorText } from "@/utils/errorText";
@@ -24,7 +23,10 @@ import "@/features/sales/styles/sales.scss";
 const paidBadge = (isPaid: boolean | null) =>
   isPaid === null ? <Badge text="Đã hủy" tone="neutral" /> : isPaid ? <Badge text="Đã trả đủ" tone="success" /> : <Badge text="Còn nợ" tone="warning" />;
 
-/** Hóa đơn của thương lái: số cân từng lồng, tiền hàng, số còn nợ, nút thanh toán và trang truy xuất của hàng đã mua. */
+/**
+ * Hóa đơn của thương lái: hàng đã mua theo lô, tiền hàng, số còn nợ, nút thanh toán và trang truy xuất của hàng đã mua.
+ * Dòng hóa đơn của backend chỉ có kg của lô, không có số cân từng lồng (backend đã gỡ cân từng lồng ở PR #106).
+ */
 export default function MyInvoicesPage() {
   const navigate = useNavigate();
   const openId = new URLSearchParams(useLocation().search).get("open");
@@ -59,7 +61,6 @@ export default function MyInvoicesPage() {
         <Facts items={[
           ["Ngày", date(opened.invoiceDate)],
           ["Vùng", opened.zoneName],
-          ["Số lồng", opened.cageCount ? num(opened.cageCount, "lồng") : null],
           ["Tổng khối lượng", num(opened.totalKg, "kg")],
           ["Tổng tiền", money(opened.total)],
           ["Đã trả", money(opened.covered)],
@@ -82,7 +83,6 @@ export default function MyInvoicesPage() {
             <div key={line.lineNumber} className="card form">
               <p className="weighing-lot__title">{line.productName} · lô {line.lotCode}</p>
               <p>{num(line.kg, "kg")} × {money(line.unitPrice)} = {money(line.amount)}</p>
-              {line.cageKgs.length > 0 && <p className="weighing-lot__cages">{cageList(line.cageKgs)}</p>}
             </div>
           ))}
         </Section>
@@ -111,7 +111,7 @@ export default function MyInvoicesPage() {
               <Rows>
                 {data.page.items.map((row) => (
                   <Row key={row.id} title={`${row.code} · ${money(row.total)}`}
-                    meta={`${date(row.invoiceDate)} · ${row.cageCount ? `${num(row.cageCount, "lồng")} · ` : ""}${num(row.totalKg, "kg")}`}
+                    meta={`${date(row.invoiceDate)} · ${num(row.totalKg, "kg")}`}
                     badge={paidBadge(row.isPaid)} onClick={busy ? undefined : () => void open(row.id)} />
                 ))}
               </Rows>
