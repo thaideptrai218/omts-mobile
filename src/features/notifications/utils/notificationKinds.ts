@@ -1,4 +1,5 @@
 import type { NotificationKind as Kind, NotificationParam, NotificationView as N } from "@/features/notifications/models/Notification";
+import { EMPLOYEE_WORK_ENABLED } from "@/constants/features";
 import { date, dateTime, money, num } from "@/utils/format";
 
 /*
@@ -32,6 +33,8 @@ const customer = (name: string) => (name === "a walk-in customer" ? "khách lẻ
 /** Trang của bản ghi khi thông báo có mã bản ghi; không có thì `fallback` (null: hiện nội dung đầy đủ). */
 const recordPage = (base: string, fallback: string | null) => (n: N) => (n.relatedRecordId ? `${base}/${n.relatedRecordId}` : fallback);
 const page = (path: string) => () => path;
+/** Màn "Công việc của tôi" đang ẩn thì thông báo không mở màn nào. */
+const myWorkPage = EMPLOYEE_WORK_ENABLED ? page("/account/work") : undefined;
 const purchaseRequestPage = (base: string) => (n: N) =>
   n.relatedRecordType === "PurchaseRequest" && n.relatedRecordId ? `${base}?open=${encodeURIComponent(n.relatedRecordId)}` : base;
 
@@ -197,13 +200,13 @@ export const KINDS: Record<string, Kind> = {
     tone: "warning",
     to: page("/manage/cooperative"),
   },
-  WORK_ASSIGNMENT: { title: "Cập nhật phân công", body: () => "Công việc của bạn vừa được cập nhật. Bấm để xem phân công mới nhất.", icon: "zi-list-1", tone: "neutral", to: page("/account/work") },
-  PURCHASE_SHIFT_INVITED: { title: "Mời xác nhận ca làm", body: (n) => `Người phụ trách mời bạn tham gia ca cho ${n.relatedRecordCode ?? "đơn hàng"}. Bấm để đồng ý hoặc từ chối.`, icon: "zi-calendar", tone: "warning", to: page("/account/work") },
+  WORK_ASSIGNMENT: { title: "Cập nhật phân công", body: () => "Công việc của bạn vừa được cập nhật. Bấm để xem phân công mới nhất.", icon: "zi-list-1", tone: "neutral", to: myWorkPage },
+  PURCHASE_SHIFT_INVITED: { title: "Mời xác nhận ca làm", body: (n) => `Người phụ trách mời bạn tham gia ca cho ${n.relatedRecordCode ?? "đơn hàng"}. Bấm để đồng ý hoặc từ chối.`, icon: "zi-calendar", tone: "warning", to: myWorkPage },
   PURCHASE_SHIFT_RESPONDED: { title: "Nhân viên phản hồi ca", body: (n) => `Có phản hồi ca cho ${n.relatedRecordCode ?? "đơn hàng"}. Kiểm tra số người đồng ý trước khi nhận đơn.`, icon: "zi-user-check", tone: "neutral", to: purchaseRequestPage("/manage/purchase-requests") },
-  PURCHASE_SHIFT_CLOSED: { title: "Ca làm đã đóng", body: (n) => `${n.relatedRecordCode ?? "Đơn hàng"} đã hủy hoặc bị từ chối. Ca này không còn giữ lịch làm việc.`, icon: "zi-recall", tone: "warning", to: page("/account/work") },
-  PURCHASE_SHIFT_CONFIRMED: { title: "HTX đã nhận đơn", body: (n) => `Chủ HTX đã nhận ${n.relatedRecordCode ?? "đơn hàng"}. Bấm để xem trạng thái ca của bạn.`, icon: "zi-check-circle", tone: "success", to: page("/account/work") },
+  PURCHASE_SHIFT_CLOSED: { title: "Ca làm đã đóng", body: (n) => `${n.relatedRecordCode ?? "Đơn hàng"} đã hủy hoặc bị từ chối. Ca này không còn giữ lịch làm việc.`, icon: "zi-recall", tone: "warning", to: myWorkPage },
+  PURCHASE_SHIFT_CONFIRMED: { title: "HTX đã nhận đơn", body: (n) => `Chủ HTX đã nhận ${n.relatedRecordCode ?? "đơn hàng"}. Bấm để xem trạng thái ca của bạn.`, icon: "zi-check-circle", tone: "success", to: myWorkPage },
   EMPLOYEE_LEAVE_REQUESTED: { title: "Yêu cầu nghỉ phép", body: () => "Có nhân viên gửi yêu cầu nghỉ phép. Bấm để xem và phản hồi.", icon: "zi-calendar", tone: "warning", to: page("/manage/leave-requests") },
-  EMPLOYEE_LEAVE_REVIEWED: { title: "Phản hồi nghỉ phép", body: () => "Chủ HTX đã phản hồi yêu cầu nghỉ phép của bạn. Bấm để xem kết quả.", icon: "zi-user-check", tone: "neutral", to: page("/account/work") },
+  EMPLOYEE_LEAVE_REVIEWED: { title: "Phản hồi nghỉ phép", body: () => "Chủ HTX đã phản hồi yêu cầu nghỉ phép của bạn. Bấm để xem kết quả.", icon: "zi-user-check", tone: "neutral", to: myWorkPage },
   // OMTS-132: chỉ gửi Chủ HTX, mở màn duyệt yêu cầu (LABOR-05.1).
   EMPLOYEE_REQUEST_NEW: {
     title: "Yêu cầu của nhân viên",
@@ -272,7 +275,7 @@ export const KINDS: Record<string, Kind> = {
       : `Có lô thu hoạch mới ${n.relatedRecordCode ?? ""}.`,
     icon: "zi-check-circle",
     tone: "success",
-    to: page("/manage/harvest"),
+    to: page("/manage/weighings"),
   },
   HARVEST_LOT_AUTO_CLOSE_WARNING: {
     title: "Lô hàu sắp tự đóng",
@@ -281,7 +284,6 @@ export const KINDS: Record<string, Kind> = {
       : `Lô ${n.relatedRecordCode ?? ""} sắp tự đóng. Hãy bán trước hoặc tự đóng lô.`,
     icon: "zi-clock-1",
     tone: "warning",
-    to: page("/manage/harvest"),
   },
   CYCLE_CLOSE_REMINDER: {
     title: "Nhắc đóng vụ nuôi",

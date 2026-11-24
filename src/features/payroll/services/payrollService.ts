@@ -5,7 +5,6 @@ import type {
   PayableEmployees, PayPayrollRequest, PayrollPaymentListParams, PayrollPaymentPage, PayrollPaymentResult, StandalonePaymentResult,
   StandalonePayrollPaymentRequest,
 } from "@/features/payroll/models/PayrollPayment";
-import type { PayrollSettingsPreview, PayrollSettingsSaved, PayrollSettingsView, SavePayrollSettingsRequest } from "@/features/payroll/models/PayrollSettings";
 import type { EmployeeSlipListParams, EmployeeSlipPage, PayrollSlipDetail } from "@/features/payroll/models/Payslip";
 
 import { api } from "@/services/httpClient";
@@ -73,17 +72,4 @@ export function employeePayslips(employeeId: string, filter: EmployeeSlipListPar
 
 export function getPayslip(slipId: string) {
   return api<PayrollSlipDetail>(`/api/payroll-slips/${slipId}`);
-}
-
-// Cài đặt lương (LABOR-16): chỉ Chủ HTX.
-export function getPayrollSettings() {
-  return api<PayrollSettingsView>("/api/payroll-settings");
-}
-
-export function previewPayrollSettings(startDay: number, automaticPayroll: boolean) {
-  return api<PayrollSettingsPreview>(`/api/payroll-settings/preview${query({ startDay, automaticPayroll })}`);
-}
-
-export function savePayrollSettings(body: SavePayrollSettingsRequest) {
-  return api<PayrollSettingsSaved>("/api/payroll-settings", { method: "PUT", body });
 }

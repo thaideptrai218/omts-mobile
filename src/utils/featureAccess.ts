@@ -1,6 +1,7 @@
 import type { MyPermissions } from "@/features/auth/models/Permissions";
 import type { RoleKey } from "@/features/dashboard/models/Dashboard";
 import type { Access, FeatureKey } from "@/models/Navigation";
+import { EMPLOYEE_WORK_ENABLED } from "@/constants/features";
 import { hasFunction } from "@/features/auth/services/permissionsService";
 import { roleName } from "@/utils/labels";
 
@@ -15,7 +16,6 @@ export const FEATURE_ACCESS: Record<FeatureKey, Access> = {
   seeding: { functions: ["CULTIVATION_CYCLES"] },
   cultivationLog: { functions: ["CULTIVATION_LOGS"] },
   water: { functions: ["WATER_MEASUREMENTS"] },
-  harvest: { functions: ["HARVESTS", "HARVEST_LOTS"] },
   raftMaterials: { owner: true },
   assignments: { functions: ["WORK_ASSIGNMENTS"] },
   attendance: { functions: ["ATTENDANCE"] },
@@ -56,7 +56,6 @@ export const FEATURE_ACCESS: Record<FeatureKey, Access> = {
   harvestSettings: { owner: true },
   payRates: { functions: ["PAY_RULES"] },
   payslips: { employee: true },
-  payrollSettings: { owner: true },
   bankAccount: { owner: true },
   // Truy vết (TRACE-02): Quản lý vùng, Kế toán và Chủ HTX; backend lọc theo vùng của lô.
   lotTrace: { owner: true, functions: ["LOT_TRACING"] },
@@ -65,7 +64,11 @@ export const FEATURE_ACCESS: Record<FeatureKey, Access> = {
   trace: { everyone: true },
 };
 
+/** Chức năng mở màn "Công việc của tôi". */
+const EMPLOYEE_WORK_FEATURES: FeatureKey[] = ["myWork", "schedule"];
+
 export function canUseFeature(permissions: MyPermissions, key: FeatureKey): boolean {
+  if (!EMPLOYEE_WORK_ENABLED && EMPLOYEE_WORK_FEATURES.includes(key)) return false;
   const access = FEATURE_ACCESS[key];
   if (access.everyone) return true;
   if (access.employee && (permissions.subjectType === "Staff" || permissions.isCooperativeOwner)) return true;

@@ -30,11 +30,6 @@ export const FEATURES = {
     icon: "zi-poll",
     description: "Nhập và xem độ pH, độ mặn đo được tại từng vùng nuôi, cảnh báo khi vượt ngưỡng.",
   },
-  harvest: {
-    title: "Thu hoạch",
-    icon: "zi-check-circle",
-    description: "Ghi nhận các đợt thu hoạch và tạo lô truy xuất cho hàu đã thu.",
-  },
   raftMaterials: {
     title: "Chi phí vật tư bè",
     icon: "zi-list-2",
@@ -201,7 +196,6 @@ export const FEATURES = {
   harvestSettings: { title: "Cài đặt lô hàu", icon: "zi-setting", description: "Số kg trung bình mỗi lồng và số ngày tự đóng lô." },
   payRates: { title: "Bảng giá công", icon: "zi-list-1", description: "Giá mỗi giờ theo loại việc." },
   payslips: { title: "Phiếu lương", icon: "zi-file", description: "Phiếu lương hằng tháng của bạn." },
-  payrollSettings: { title: "Cài đặt lương", icon: "zi-setting", description: "Ngày bắt đầu kỳ lương và tự tạo bảng lương." },
   bankAccount: { title: "Tài khoản nhận tiền", icon: "zi-check-circle", description: "Tài khoản ngân hàng nhận tiền chuyển khoản của hóa đơn." },
   lotTrace: {
     title: "Truy vết lô hàu",
@@ -226,7 +220,6 @@ export const FEATURE_HINTS: Record<keyof typeof FEATURES, string> = {
   seeding: "Lô giống, lần thả",
   cultivationLog: "Việc hằng ngày trên bè",
   water: "Độ pH, độ mặn",
-  harvest: "Các đợt thu hoạch",
   raftMaterials: "Tiền phao, dây, lồng",
   assignments: "Giao việc, ghi giờ làm",
   attendance: "Vào ca, ra ca",
@@ -265,11 +258,17 @@ export const FEATURE_HINTS: Record<keyof typeof FEATURES, string> = {
   harvestSettings: "Kg mỗi lồng, ngày đóng lô",
   payRates: "Giá mỗi giờ công",
   payslips: "Lương hằng tháng",
-  payrollSettings: "Kỳ lương",
   bankAccount: "Tài khoản ngân hàng của HTX",
   lotTrace: "Giống từ đâu, bán cho ai",
   trace: "Xem nguồn gốc lô hàu",
 };
+
+/**
+ * "Công việc của tôi" của nhân viên (`api/me/workforce`, `attendance-qr`, `leave-requests`) chỉ nhận phiên của app nhân viên, còn Mini App
+ * đăng nhập bằng tài khoản nên mọi lần gọi đều bị từ chối. Để `false` thì ẩn chức năng, đường dẫn và lối vào từ thông báo; bật lại khi
+ * backend nhận được phiên của nhân viên.
+ */
+export const EMPLOYEE_WORK_ENABLED = false;
 
 /** Chức năng backend chưa có API: bản dev mở màn dữ liệu mẫu `/mock/<key>`, bản production mở trang "chưa có". */
 export const MOCK_FEATURES: FeatureKey[] = ["payslips", "broadcast", "pickup"];
@@ -294,7 +293,6 @@ export const FEATURE_ROUTES: Partial<Record<FeatureKey, string>> = {
   cycles: "/manage/cycles",
   seeding: "/manage/cycles?for=seeding",
   cultivationLog: "/manage/cycles?for=logs",
-  harvest: "/manage/harvest",
   portWeighing: "/manage/weighings",
   salesOrders: "/manage/purchase-requests",
   salesProducts: "/manage/sales-products",
@@ -326,7 +324,6 @@ export const FEATURE_ROUTES: Partial<Record<FeatureKey, string>> = {
   claims: "/account/claims",
   payroll: "/manage/payrolls",
   payRates: "/manage/pay-rates",
-  payrollSettings: "/manage/payroll-settings",
   reports: "/manage/reports",
   auditLog: "/manage/audit-log",
 };

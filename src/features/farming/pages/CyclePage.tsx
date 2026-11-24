@@ -17,6 +17,7 @@ import {
 import { useAction } from "@/hooks/useAction";
 import { useLoad } from "@/hooks/useLoad";
 import { date, num } from "@/utils/format";
+import "@/features/farming/styles/laneOptions.scss";
 
 type Mode = "view" | "edit" | "close";
 
