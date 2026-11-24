@@ -58,7 +58,7 @@ export const FEATURES = {
   portWeighing: {
     title: "Cân tại cảng",
     icon: "zi-inbox",
-    description: "Ghi số cân khi giao hàu cho thương lái tại cảng.",
+    description: "Cân từng lồng của lô vừa thu cho đơn, mỗi lồng lưu ngay, xong bấm Hoàn tất để chốt tổng kg của lô.",
   },
   salesOrders: {
     title: "Yêu cầu mua",
