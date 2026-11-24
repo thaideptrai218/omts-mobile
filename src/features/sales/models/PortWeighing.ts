@@ -1,5 +1,3 @@
-import type { Paged } from "@/models/Pagination";
-
 /** Các lồng của một lô trong lần cân, theo thứ tự cân. */
 export type PortWeighingLot = {
   harvestLotId: string;
@@ -8,7 +6,7 @@ export type PortWeighingLot = {
   cageKgs: number[];
 };
 
-/** Lần cân ở cảng: quản lý vùng ghi số cân từng lồng, thương lái chốt, hóa đơn lập từ lần cân đã chốt. */
+/** Lần cân cũ ở cảng (backend đã gỡ, chốt 24/11/2026, OMTS-227): chỉ còn màn lập hóa đơn cũ đọc kiểu này. */
 export type PortWeighing = {
   id: string;
   purchaseRequestId: string;
@@ -28,23 +26,4 @@ export type PortWeighing = {
   invoiceId: string | null;
   invoiceCode: string | null;
   rowVersion: string;
-};
-
-export type MyPortWeighingList = {
-  page: Paged<PortWeighing>;
-  message: string | null;
-  messageCode: string | null;
-};
-
-/** Một lô trên phiếu cân đang nhập: kg từng lồng gõ dạng chữ. */
-export type WeighingLotDraft = {
-  harvestLotId: string;
-  lotCode: string;
-  cageKgs: string[];
-};
-
-/** Một lô gửi lên server: kg từng lồng. */
-export type PortWeighingLotEntry = {
-  harvestLotId: string;
-  cageKgs: number[];
 };
