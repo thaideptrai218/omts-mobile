@@ -6,11 +6,11 @@ import type {
   ReceiptPayment,
   ReceiptSearch,
   ReceiptView,
+  PurchaseReturnSaved,
   SavePurchaseReturn,
   SaveReceipt,
 } from "@/features/purchasing/models/PurchaseReceipt";
 import type { RaftMaterialCostResult } from "@/features/purchasing/models/RaftMaterialCost";
-import type { RaftLookup, ZoneLookup } from "@/features/purchasing/models/Reference";
 import type { SaveSupplier, SupplierListItem, SupplierSearchParams, SupplierView } from "@/features/purchasing/models/Supplier";
 import type { SupplierDebtDetail, SupplierDebtList, SupplierDebtSearchParams, SupplierDebtStatement } from "@/features/purchasing/models/SupplierDebt";
 import type { SaveSupplierPayment, SupplierPayment, SupplierPaymentSearch, SupplierPaymentSearchParams } from "@/features/purchasing/models/SupplierPayment";
@@ -138,8 +138,8 @@ export function cancelReceipt(id: string, body: CancelReceiptRequest) {
   return api<ReceiptView>(`/api/purchase-receipts/${id}/cancel`, { method: "POST", body });
 }
 
-export function createPurchaseReturn(id: string, body: SavePurchaseReturn) {
-  return api<ReceiptView>(`/api/purchase-receipts/${id}/returns`, { method: "POST", body });
+export function createPurchaseReturn(body: SavePurchaseReturn) {
+  return api<PurchaseReturnSaved>("/api/purchase-returns", { method: "POST", body });
 }
 
 /** Chi phí vật tư theo bè trong kỳ, tính từ vật tư đã dùng; bỏ trống kỳ thì backend lấy kỳ mặc định. */
@@ -160,13 +160,4 @@ export function newDeduplicationKey() {
 
 export function recordSupplierPayment(body: SaveSupplierPayment) {
   return api<SupplierPayment>("/api/supplier-payments", { method: "POST", body });
-}
-
-export function lookupZones() {
-  return api<ZoneLookup[]>("/api/zones/lookup");
-}
-
-/** Bè gắn được vào dòng hàng của phiếu nhập (`raft-lookup`): bè đang dùng mà người dùng được chọn. */
-export function lookupRafts() {
-  return api<RaftLookup[]>("/api/purchase-receipts/raft-lookup");
 }

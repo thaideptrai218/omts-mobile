@@ -83,7 +83,9 @@ function ReturnForm({ receipt }: { receipt: ReceiptView }) {
     setBusy(true);
     setError("");
     try {
-      await createPurchaseReturn(receipt.id, {
+      await createPurchaseReturn({
+        receiptId: receipt.id,
+        complete: true,
         reason: reason.trim(),
         lines: chosen(),
         ownerApproved,

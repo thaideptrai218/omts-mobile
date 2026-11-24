@@ -147,15 +147,14 @@ export type ReceiptPayment = {
 };
 
 /**
- * Dòng hàng khi lưu. Lưu phiếu nháp thay mọi dòng, nên khi sửa phải gửi lại bè, giảm giá và đơn vị của từng dòng (có thể
- * đã đặt trên web). `raftId` chỉ có nghĩa với dòng giống hoặc vật tư; `supplierLotCode` chỉ với dòng giống.
+ * Dòng hàng khi lưu. Lưu phiếu nháp thay mọi dòng, nên khi sửa phải gửi lại giảm giá và đơn vị của từng dòng (có thể đã đặt
+ * trên web). `supplierLotCode` chỉ có nghĩa với dòng giống.
  */
 export type SaveReceiptLine = {
   itemId: string | null;
   quantity: number | null;
   unitPrice: number | null;
   supplierLotCode?: string | null;
-  raftId?: string | null;
   discount?: number | null;
   itemUnitId?: string | null;
   lineId?: string | null;
@@ -170,7 +169,6 @@ export type SaveReceipt = {
   complete: boolean;
   rowVersion?: string | null;
   discount: number;
-  zoneId: string | null;
 };
 
 export type PurchaseReceiptStatusFilter = "all" | "draft" | "completed" | "cancelled";
@@ -215,12 +213,20 @@ export type ReturnLineInput = {
 };
 
 /**
- * Trả hàng nhà cung cấp từ một phiếu (PURCHASE-02), ghi ngay. `ownerApproved` là câu trả lời của Quản lý vùng cho câu hỏi
- * MSG-PURCHASE-02 (Chủ HTX đã đồng ý chưa); Chủ HTX không cần. Bỏ trống `returnedAt` là bây giờ.
+ * Trả hàng nhà cung cấp từ một phiếu (PURCHASE-02, `POST api/purchase-returns`), ghi ngay (`complete`). `ownerApproved` là câu trả
+ * lời của Quản lý vùng cho câu hỏi MSG-PURCHASE-02 (Chủ HTX đã đồng ý chưa); Chủ HTX không cần. Bỏ trống `returnedAt` là bây giờ.
  */
 export type SavePurchaseReturn = {
+  receiptId: string;
+  complete: true;
   reason: string;
   lines: ReturnLineInput[];
   ownerApproved: boolean;
   returnedAt: string | null;
+};
+
+/** Phiếu trả hàng vừa lưu; chỉ phần màn hình cần. */
+export type PurchaseReturnSaved = {
+  id: string;
+  code: string;
 };
