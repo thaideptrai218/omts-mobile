@@ -171,7 +171,7 @@ export const KINDS: Record<string, Kind> = {
   WATER_MEASUREMENT_OVERDUE: {
     title: "Quá hạn đo nước",
     body: (n) => has(n)
-      ? `Vùng ${text(n, "zone_name")} chưa có số đo nước nào từ ngày ${day(n, "last_date")}. Hãy đo nước và ghi vào OTMS.`
+      ? `Vùng ${text(n, "zone_name")} chưa có số đo nước nào từ ngày ${day(n, "last_date")}. Hãy đo nước và ghi vào OMTS.`
       : `Vùng ${n.relatedRecordCode ?? ""} đã hơn 1 tháng chưa có số đo nước được xác nhận. Vui lòng đo và ghi nhận.`,
     icon: "zi-clock-1",
     tone: "warning",

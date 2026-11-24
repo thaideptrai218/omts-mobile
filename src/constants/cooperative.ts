@@ -3,6 +3,8 @@
  * Các giá trị dưới đây là dữ liệu mẫu, cần thay bằng thông tin thật của HTX trước khi gửi duyệt.
  */
 export const COOPERATIVE = {
+  /** Tên Mini App, phải trùng với `title` trong app-config.json và tên khai báo ở Mini App Center. */
+  appName: "Truy xuất nguồn gốc hàu và quản lý hàu Trung Nam",
   name: "Hợp tác xã Thủy sản Trung Nam",
   shortName: "HTX Thủy sản Trung Nam",
   registrationNo: "Mã số HTX: 5701234567",

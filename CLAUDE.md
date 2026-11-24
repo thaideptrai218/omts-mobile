@@ -80,7 +80,8 @@ Cấu trúc hiện hành: `docs/PROJECT_STRUCTURE.md` (theo cây thư mục ngư
 
 ## 1. Phạm vi app
 
-- OTMS (Oyster and Traceability Management System) của **HTX Thủy sản Trung Nam**.
+- OMTS (Oyster Management and Traceability System) của **HTX Thủy sản Trung Nam**. Tên Mini App (chốt 24/11/2026):
+  "Truy xuất nguồn gốc hàu và quản lý hàu Trung Nam"; "OMTS" là tên hệ thống, giữ trong câu chữ của app.
 - Đây là app **quản trị kết hợp truy xuất nguồn gốc**, không phải cửa hàng bán thực phẩm.
 - Ba nhóm người dùng:
   - Người tiêu dùng quét QR trên sản phẩm để truy xuất: công khai, không cần đăng nhập.
@@ -111,8 +112,10 @@ Cấu trúc hiện hành: `docs/PROJECT_STRUCTURE.md` (theo cây thư mục ngư
 - **Tên**: không viết hoa toàn bộ; chỉ viết hoa chữ cái đầu, tên riêng doanh nghiệp hoặc địa danh;
   không chứa "App", "Mini App", "Zalo", ký tự đặc biệt (#, $, @, !), emoji; nên có tiền tố hoặc hậu tố
   thể hiện đơn vị sở hữu; không dùng danh từ chung, từ khóa mơ hồ.
-  - "OTMS" viết hoa toàn bộ có rủi ro bị từ chối. Muốn giữ thì cần giấy đăng ký nhãn hiệu.
-    Gợi ý kiểu tên: "Truy xuất hàu Trung Nam".
+  - Tên đã chốt (24/11/2026): "Truy xuất nguồn gốc hàu và quản lý hàu Trung Nam", đặt ở `title` của `app-config.json`
+    và `COOPERATIVE.appName` (`src/constants/cooperative.ts`). Ba chỗ này và tên ở Mini App Center phải trùng nhau.
+  - Đổi tên sau khi đã tạo Mini App: không sửa trực tiếp được, phải gửi ticket hỗ trợ và chờ bộ phận kiểm duyệt
+    xác nhận (docs.zaloplatforms.com/docs/MA/intro/getting-started, mục 2.2). Tài liệu không nêu giới hạn độ dài tên.
 - **Logo**: logo chính chủ, đúng chức năng; không nền trong suốt; không chứa số điện thoại, mã QR.
 - **Mô tả**: đúng chức năng, đối tượng, mục đích; không chứa đường link.
 
@@ -137,7 +140,7 @@ Cấu trúc hiện hành: `docs/PROJECT_STRUCTURE.md` (theo cây thư mục ngư
 
 - **Không bắt đăng nhập/đăng ký để dùng app**, trừ app nội bộ. App có form tài khoản + mật khẩu
   sẽ bị **tắt khỏi tìm kiếm Zalo và Mini App Store**, chỉ vào được qua QR, deeplink, shortcut.
-- Hướng của OTMS:
+- Hướng của OMTS:
   - Phần truy xuất nguồn gốc dùng được ngay, không cần đăng nhập hay cấp quyền.
   - Thương lái và nhân viên định danh bằng **tài khoản Zalo**, liên kết **một lần** với hồ sơ trong OMTS.
     Chức năng này phải tên là "Liên kết tài khoản". Liên kết xong không được bắt đăng nhập lại.
@@ -333,9 +336,7 @@ Cấu trúc hiện hành: `docs/PROJECT_STRUCTURE.md` (theo cây thư mục ngư
   giữ trong lần mở app hiện tại.
 - Nội dung "Điều khoản sử dụng" trong `src/features/account/pages/AccountPage.tsx` là bản nháp, HTX cần duyệt trước khi gửi Zalo.
 - "Xóa dữ liệu của tôi" mới mở chính sách bảo mật (hướng dẫn gọi HTX), chưa xóa được trong app như mục 6 yêu cầu.
-- Tên app "OTMS" trong `app-config.json` đang viết hoa toàn bộ (xem mục 3).
-- Tên viết tắt chưa thống nhất: repo, Jira, backend và README dùng "OMTS" (Oyster Management and Traceability
-  System), còn mục 1, `app-config.json` và giao diện dùng "OTMS". Chốt một tên trước khi gửi duyệt.
+- Tên Mini App ở Mini App Center vẫn là tên cũ cho tới khi ticket đổi tên được duyệt (xem mục 3). Code đã dùng tên mới.
 - Header do app tự vẽ phải chừa vùng menu Zalo ở góc trên bên phải.
 
 ## Nguồn

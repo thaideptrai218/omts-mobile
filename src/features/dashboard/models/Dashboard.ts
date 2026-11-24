@@ -1,7 +1,7 @@
 import type { AreaKey, FeatureKey } from "@/models/Navigation";
 import type { Tone } from "@/models/UI";
 
-/** Các vai trò theo SRS hiện tại của OTMS. */
+/** Các vai trò theo SRS hiện tại của OMTS. */
 export type RoleKey = "owner" | "zoneManager" | "staff" | "accountant" | "trader" | "admin" | "viewer";
 
 export type Stat = {
