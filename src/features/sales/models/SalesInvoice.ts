@@ -1,39 +1,7 @@
 import type { OriginState } from "@/models/OriginState";
 import type { Paged } from "@/models/Pagination";
 
-/** Phần tiền mặt không trả hết thì trả thế nào: không còn gì, hoặc ghi công nợ. */
-export type InvoiceRestPayment = "None" | "PayLater";
-
 export type SalesPaymentTerm = "PayNow" | "PayLater";
-
-export type SalesInvoiceLineEntry = {
-  productId: string;
-  harvestLotId: string;
-  /** Hóa đơn lập từ lần cân lấy kg của lần cân nên để null. */
-  kg: number | null;
-};
-
-export type SalesInvoicePaymentEntry = {
-  cashAmount: number;
-  rest: InvoiceRestPayment;
-  /** Trả lời câu hỏi MSG-SALE-11 (tiền thừa trừ vào công nợ); null là chưa hỏi. */
-  subtractExtraFromDebt: boolean | null;
-  /** Trả lời "có" cho MSG-SALE-12: Chủ HTX đã đồng ý cho ghi nợ. */
-  payLaterOwnerAgreed: boolean;
-};
-
-export type CreateSalesInvoice = {
-  customerId: string;
-  walkInCustomer: boolean;
-  zoneId: string | null;
-  lines: SalesInvoiceLineEntry[];
-  payment: SalesInvoicePaymentEntry;
-  purchaseRequestId: string;
-  takesRequestInFull: boolean;
-  notSoldWholeLotIds: string[];
-  deduplicationKey: string;
-  portWeighingId: string;
-};
 
 export type SalesInvoiceLine = {
   id: string;
@@ -86,16 +54,7 @@ export type SalesInvoice = {
   qrDecidedAt: string | null;
   deliveryStatus: string;
   debtEffect: SalesInvoiceDebtEffect;
-  portWeighingId: string | null;
   rowVersion: string;
-};
-
-export type SalesInvoiceSaved = {
-  invoice: SalesInvoice;
-  change: number;
-  subtractedFromDebt: number;
-  message: string;
-  messageCode: string;
 };
 
 /** Kết quả công bố nguồn gốc của một lô khi kết thúc bán. */
@@ -125,13 +84,6 @@ export type InvoicePublishCheck = {
 
 export type FinishSalesInvoice = {
   wantsQrCode: boolean;
-};
-
-/** Giá bán theo bảng giá của HTX, quản lý vùng và Chủ HTX đọc được. */
-export type ProductPrice = {
-  id: string;
-  name: string;
-  unitPrice: number | null;
 };
 
 export type MyInvoiceRow = {

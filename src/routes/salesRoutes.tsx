@@ -12,7 +12,6 @@ export const ROUTES: ManageRoute[] = [
   { path: "/manage/sales-products", element: lazyPage(() => import("@/features/sales/pages/SalesProductsPage")) },
   { path: "/manage/weighings", element: lazyPage(() => import("@/features/sales/pages/WeighingsPage")) },
   { path: "/manage/weighings/:lotId", element: lazyPage(() => import("@/features/sales/pages/LotWeighingPage")) },
-  { path: "/manage/invoices/new", element: lazyPage(() => import("@/features/sales/pages/InvoiceFormPage")) },
   { path: "/manage/invoices/:id", element: lazyPage(() => import("@/features/sales/pages/InvoiceDetailPage")) },
   { path: "/manage/customers", element: lazyPage(() => import("@/features/customers/pages/CustomersPage")) },
   { path: "/manage/customers/new", element: lazyPage(() => import("@/features/customers/pages/CustomerFormPage")) },

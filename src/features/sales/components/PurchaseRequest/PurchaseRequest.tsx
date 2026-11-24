@@ -25,7 +25,6 @@ export function PurchaseFacts({ row }: { row: PurchaseRequest | TraderPurchaseRe
     ["Ngày làm dự kiến", staffing ? date(staffing.workDate) : null],
     ["Xác nhận nhân lực", staffing ? `${staffing.approvedEmployees}/${staffing.requiredEmployees} người đã đồng ý` : null],
     ["Cho trả sau", row.response?.payLaterAgreed != null ? (row.response.payLaterAgreed ? "Có" : "Không") : null],
-    ["Thu hoạch", row.statusId === PURCHASE_STATUS.accepted ? (row.harvestCompletedAt ? `Đã thu xong lúc ${dateTime(row.harvestCompletedAt)}` : "Đang thu, chưa xong") : null],
     ["Phản hồi HTX", row.response?.note], ["Phản hồi lúc", row.response ? dateTime(row.response.respondedAt) : null],
     ["Lý do hủy", row.cancelReason], ["Hủy lúc", row.cancelledAt ? dateTime(row.cancelledAt) : null], ["Gửi lúc", dateTime(row.sentAt)],
   ]} />;

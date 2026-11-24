@@ -6,7 +6,6 @@ import FormError from "@/components/FormError/FormError";
 import { PurchaseBadge, PurchaseFacts, PurchasePager, PURCHASE_FILTERS } from "@/features/sales/components/PurchaseRequest/PurchaseRequest";
 import SalesGate from "@/features/sales/components/SalesGate/SalesGate";
 import PurchaseStaffing from "@/features/sales/components/PurchaseStaffing/PurchaseStaffing";
-import PurchaseHarvest from "@/features/sales/components/PurchaseHarvest/PurchaseHarvest";
 import { Chips } from "@/components/Chips/Chips";
 import { Empty } from "@/components/Empty/Empty";
 import { Loadable } from "@/components/Loadable/Loadable";
@@ -68,7 +67,6 @@ function Inbox() {
     {selected ? <>
       <PurchaseFacts row={selected} />
       {owner && <PurchaseStaffing key={selected.id} row={selected} onUpdated={row => { setSelected(row); void list.reload(); }} />}
-      <PurchaseHarvest key={`harvest-${selected.id}`} row={selected} onUpdated={row => { setSelected(row); void list.reload(); }} />
       <div className="button-stack">{canDecide && !selected.staffing?.hasEnoughStaff && <p className="form__hint">Chưa đủ nhân viên đồng ý ca nên chưa thể chấp nhận đơn.</p>}<Button fullWidth size="large" variant="secondary" disabled={busy} onClick={() => void open(selected.id)}>Cập nhật yêu cầu</Button></div>
     </> : <>
       <p className="sales-filter-label">Lọc theo trạng thái</p>
