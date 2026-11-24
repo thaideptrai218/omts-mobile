@@ -285,6 +285,7 @@ const SERVER_TEXT: Record<string, string | ((details: ProblemDetails) => string)
   // Mã cũ của MSG-GEN-09. Khiếu nại và vật tư sửa bè nói rõ lý do; các trường hợp khác giữ câu chung.
   MSG61: (d) => {
     const detail = String(d.detail ?? "");
+    if (d.reasonCode === "WEIGHING_NOT_AGREED") return `Thương lái chưa đồng ý số cân của lô ${String(d.lotCode ?? "")}, nên chưa lập hóa đơn được.`;
     if (d.cycleId) return "Ngày này thuộc chu kỳ nuôi đã đóng nên không ghi hay sửa được. Hãy chọn ngày khác.";
     if (/under a quality claim/i.test(detail)) return "Hóa đơn này đang có khiếu nại chờ HTX trả lời.";
     if (/^Sales invoice .* is returned/i.test(detail)) return "Hóa đơn này đã trả hàng nên không gửi khiếu nại được.";

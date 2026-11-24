@@ -5,6 +5,7 @@ import { lazyPage } from "@/routes/lazyPage";
 export const ROUTES: ManageRoute[] = [
   { path: "/account/purchases", element: lazyPage(() => import("@/features/sales/pages/MyPurchasesPage")) },
   { path: "/account/weighings", element: lazyPage(() => import("@/features/sales/pages/MyWeighingsPage")) },
+  { path: "/account/weighings/:lotId", element: lazyPage(() => import("@/features/sales/pages/MyLotWeighingPage")) },
   { path: "/account/invoices", element: lazyPage(() => import("@/features/sales/pages/MyInvoicesPage")) },
   { path: "/account/invoices/:id/pay", element: lazyPage(() => import("@/features/sales/pages/PayInvoicePage")) },
   { path: "/manage/purchase-requests", element: lazyPage(() => import("@/features/sales/pages/PurchaseRequestsPage")) },

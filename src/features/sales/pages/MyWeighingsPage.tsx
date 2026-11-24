@@ -1,118 +1,58 @@
-import type { PortWeighing } from "@/features/sales/models/PortWeighing";
-import { useState } from "react";
-import { Button, useNavigate } from "zmp-ui";
+import type { TraderWeighingRow } from "@/features/sales/models/LotWeighing";
+import { useCallback } from "react";
+import { useNavigate } from "zmp-ui";
 
-import { ConfirmSheet } from "@/components/ConfirmSheet/ConfirmSheet";
-import { Empty } from "@/components/Empty/Empty";
-import FormError from "@/components/FormError/FormError";
-import { Loadable } from "@/components/Loadable/Loadable";
+import { Badge } from "@/components/Badge/Badge";
 import { ManagePage } from "@/components/ManagePage/ManagePage";
-import { PurchasePager } from "@/features/sales/components/PurchaseRequest/PurchaseRequest";
-import { WeighingBadge, WeighingFacts } from "@/features/sales/components/PortWeighing/PortWeighing";
-import { confirmWeighing, myWeighing, myWeighings } from "@/features/sales/services/weighingService";
-import { useLoad } from "@/hooks/useLoad";
-import { ApiError } from "@/services/errors";
-import { errorText } from "@/utils/errorText";
+import PagedList from "@/components/PagedList/PagedList";
+import { Row } from "@/components/Row/Row";
+import { myWeighingLots } from "@/features/sales/services/lotWeighingService";
+import { usePaged } from "@/hooks/usePaged";
 import { dateTime, num } from "@/utils/format";
-import "@/features/sales/styles/sales.scss";
 
-/** Phiếu cân của thương lái: xem kg từng lồng HTX đã cân và đồng ý số cân để HTX lập hóa đơn. */
+/** Nhãn việc của một lô: có chữ, không chỉ dựa vào màu. */
+function rowBadge(row: TraderWeighingRow) {
+  if (row.agreed) return <Badge text="Đã đồng ý" tone="success" />;
+  if (row.weighedKg === null) return <Badge text="Chờ HTX hoàn tất" tone="neutral" />;
+  if (row.needsAgreement) return <Badge text="Cần bạn đồng ý" tone="warning" />;
+  return <Badge text={row.status} tone="neutral" />;
+}
+
+/**
+ * Phiếu cân của thương lái (chốt 24/11/2026, OMTS-227): các lô thu cho đơn của mình. Thương lái cân từng lồng cùng HTX ở cảng, đối chiếu với số
+ * HTX, rồi đồng ý số cân sau khi HTX hoàn tất; chưa đồng ý thì HTX chưa lập được hóa đơn cho lô. Backend chỉ trả lô của chính thương lái.
+ */
 export default function MyWeighingsPage() {
   const navigate = useNavigate();
-  const [page, setPage] = useState(1);
-  const list = useLoad(() => myWeighings(page), [page]);
-  const [opened, setOpened] = useState<PortWeighing | null>(null);
-  const [confirm, setConfirm] = useState(false);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState("");
-  const [notice, setNotice] = useState("");
-
-  const open = async (row: PortWeighing) => {
-    setBusy(true);
-    setError("");
-    try {
-      setOpened(await myWeighing(row.id));
-    } catch (err) {
-      setError(errorText(err));
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const agree = async () => {
-    if (!opened) return;
-    setBusy(true);
-    setError("");
-    try {
-      setOpened(await confirmWeighing(opened));
-      setNotice("Bạn đã đồng ý số cân. HTX sẽ lập hóa đơn theo số này.");
-      void list.reload();
-    } catch (err) {
-      // HTX vừa sửa số cân sau khi bạn mở: đọc lại để xem số mới.
-      if (err instanceof ApiError && err.status === 409) {
-        setError("HTX vừa sửa số cân. Hãy xem lại số mới rồi đồng ý.");
-        setOpened(await myWeighing(opened.id).catch(() => opened));
-      } else {
-        setError(errorText(err));
-      }
-    } finally {
-      setBusy(false);
-      setConfirm(false);
-    }
-  };
-
-  if (opened) {
-    const footer = opened.invoiceId ? (
-      <Button fullWidth size="large" onClick={() => navigate(`/account/invoices?open=${opened.invoiceId}`)}>Xem hóa đơn</Button>
-    ) : !opened.confirmedAt ? (
-      <div className="sheet-actions">
-        <Button fullWidth size="large" disabled={busy} onClick={() => setConfirm(true)}>Đồng ý số cân</Button>
-        <Button fullWidth size="large" variant="secondary" disabled={busy} onClick={() => void open(opened)}>Tải lại số cân</Button>
-      </div>
-    ) : undefined;
-    return (
-      <ManagePage title="Phiếu cân" footer={footer} onBack={() => { setOpened(null); setNotice(""); setError(""); void list.reload(); }}>
-        {notice && <p className="card form sales-notice" role="status">{notice}</p>}
-        <FormError text={error} />
-        {!opened.confirmedAt && <p className="form__intro">Kiểm tra kg của từng lồng. Số cân sai thì báo HTX sửa trước khi đồng ý.</p>}
-        <WeighingFacts row={opened} />
-        <ConfirmSheet visible={confirm} title="Đồng ý số cân?" busy={busy} confirmText="Đồng ý số cân"
-          message={`${num(opened.cageCount, "lồng")}, tổng ${num(opened.totalKg, "kg")}. Đồng ý xong thì số cân không sửa được nữa và HTX lập hóa đơn theo số này.`}
-          onClose={() => { if (!busy) setConfirm(false); }} onConfirm={() => void agree()} />
-      </ManagePage>
-    );
-  }
+  const fetchPage = useCallback((page: number) => myWeighingLots(page), []);
+  const list = usePaged(fetchPage);
 
   return (
     <ManagePage title="Phiếu cân">
-      <FormError text={error} />
-      <Loadable data={list.data} error={list.error} reload={() => void list.reload()}>
-        {(data) => (
-          <>
-            {data.page.items.length ? (
-              <ul className="rows">
-                {data.page.items.map((row) => (
-                  <li key={row.id}>
-                    <button type="button" className="row" disabled={busy} onClick={() => void open(row)}>
-                      <span className="row__text">
-                        <span className="row__title">{row.productName} · {num(row.cageCount, "lồng")} · {num(row.totalKg, "kg")}</span>
-                        <span className="row__meta">Cân lúc {dateTime(row.weighedAt)}</span>
-                        <span className="row__badges"><WeighingBadge row={row} /></span>
-                      </span>
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <Empty icon="zi-file" title="Chưa có phiếu cân" text="Khi HTX cân hàng của bạn ở cảng, phiếu cân hiện ở đây để bạn đồng ý." />
-            )}
-            <PurchasePager page={page} total={data.page.total} onChange={setPage} />
-          </>
+      <p className="form__intro">Chọn lô HTX đang thu cho đơn của bạn. Cân từng lồng cùng HTX ở cảng; HTX hoàn tất phiếu cân xong thì bạn bấm "Đồng ý số cân".</p>
+      <PagedList
+        list={list}
+        unit="lô"
+        emptyIcon="zi-file"
+        emptyTitle="Chưa có lô nào để cân"
+        emptyText="Khi HTX thu hàu cho đơn của bạn, lô sẽ hiện ở đây để bạn cân cùng và đồng ý số cân."
+      >
+        {(row) => (
+          <Row
+            key={row.lotId}
+            title={`Lô ${row.lotCode}`}
+            meta={[
+              row.orderCodes.length ? `đơn ${row.orderCodes.join(", ")}` : null,
+              row.productName,
+              row.weighedKg !== null ? `HTX chốt ${num(row.weighedKg, "kg")}` : `HTX đã cân ${num(row.cageCount, "lồng")}, ${num(row.cagesKg, "kg")}`,
+              `bạn cân ${num(row.traderCageCount, "lồng")}, ${num(row.traderCagesKg, "kg")}`,
+              `thu lúc ${dateTime(row.harvestedAt)}`,
+            ].filter(Boolean).join(" · ")}
+            badge={rowBadge(row)}
+            onClick={() => navigate(`/account/weighings/${row.lotId}`)}
+          />
         )}
-      </Loadable>
-      <div className="button-stack">
-        <Button fullWidth size="large" variant="secondary" onClick={() => void list.reload()}>Tải lại</Button>
-      </div>
+      </PagedList>
     </ManagePage>
   );
 }

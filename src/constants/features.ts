@@ -119,7 +119,7 @@ export const FEATURES = {
   weighSlips: {
     title: "Phiếu cân",
     icon: "zi-file",
-    description: "Xem kg từng lồng HTX đã cân ở cảng và đồng ý số cân để HTX lập hóa đơn.",
+    description: "Cân từng lồng cùng HTX ở cảng, đối chiếu với số HTX và đồng ý số cân để HTX lập hóa đơn.",
   },
   myInvoices: {
     title: "Hóa đơn của tôi",
@@ -244,7 +244,7 @@ export const FEATURE_HINTS: Record<keyof typeof FEATURES, string> = {
   reports: "Sản lượng thu hoạch",
   orders: "Đặt số lồng, xem phản hồi",
   payment: "Trả công nợ",
-  weighSlips: "Đồng ý số cân ở cảng",
+  weighSlips: "Cân cùng HTX, đồng ý số cân",
   myInvoices: "Hóa đơn và số còn nợ",
   pickup: "Giờ và nơi nhận hàng",
   claims: "Gửi và theo dõi khiếu nại",
