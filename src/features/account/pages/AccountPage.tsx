@@ -190,7 +190,7 @@ function AccountPage() {
         actions={[{ text: "Đã hiểu", close: true, highLight: true }]}
       >
         <div className="policy">
-          <p>Đây là chính sách bảo mật của Mini App OTMS do {COOPERATIVE.name} vận hành.</p>
+          <p>Đây là chính sách bảo mật của Mini App “{COOPERATIVE.appName}” do {COOPERATIVE.name} vận hành.</p>
           <p>
             Ứng dụng chỉ dùng tên hiển thị, email và số điện thoại bạn đăng ký với HTX để liên kết tài khoản Zalo và gửi thông báo về công
             việc, đơn hàng. Dữ liệu được lưu trên máy chủ đặt tại Việt Nam và không chia sẻ cho bên thứ ba khi chưa có sự đồng ý của bạn.
@@ -207,7 +207,7 @@ function AccountPage() {
         actions={[{ text: "Đã hiểu", close: true, highLight: true }]}
       >
         <div className="policy">
-          <p>Đây là điều khoản sử dụng của Mini App OTMS do {COOPERATIVE.name} vận hành.</p>
+          <p>Đây là điều khoản sử dụng của Mini App “{COOPERATIVE.appName}” do {COOPERATIVE.name} vận hành.</p>
           <p>Ai cũng có thể tra cứu nguồn gốc hàu bằng mã QR hoặc mã lô mà không cần đăng nhập. Thông tin truy xuất do HTX công bố và chịu trách nhiệm.</p>
           <p>
             Các chức năng quản lý chỉ dành cho nhân viên và thương lái đã được HTX cấp tài khoản và đã liên kết với Zalo của mình. Bạn chịu trách
