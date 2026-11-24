@@ -1,49 +1,45 @@
 import type { OriginState } from "@/models/OriginState";
 
-export type PublicOriginSeedLot = {
-  itemName: string | null;
-  supplierLotCode: string | null;
-  supplierName: string;
-  receivedOn: string;
+/** Trạng thái trang truy xuất: có lô để hiện, hóa đơn chưa có lô nào công bố, hoặc hóa đơn đã hủy (chỉ còn thông tin HTX). */
+export type ProvenanceStatus = "Ok" | "NoLots" | "Cancelled";
+
+export type ProvenanceSeeding = {
+  seedingDate: string;
+  seedItemName: string;
 };
 
-export type PublicOriginWater = {
-  measurementCount: number;
-  averageSalinity: number | null;
-  averageTemperature: number | null;
-  averagePh: number | null;
-};
-
-/** Nguồn gốc của một lô đã công bố, từ con giống đến lúc bán. Không có người mua, nhân viên hay giá. */
-export type PublicOriginDetail = {
-  productNames: string[];
-  zoneName: string;
-  raftCode: string;
-  cycleStartDate: string;
-  seedLots: PublicOriginSeedLot[];
-  firstSeedingDate: string | null;
-  lastSeedingDate: string | null;
-  laneCount: number;
-  cultivationLogCount: number;
-  water: PublicOriginWater;
+/** Nguồn gốc của một lô đã công bố. Không có người mua, nhân viên, nhà cung cấp, giá hay khối lượng. */
+export type ProvenanceOrigin = {
   harvestDate: string;
-  harvestedCages: number;
-  harvestedKg: number;
-  soldOn: string;
-  soldKg: number;
-  weighedCages: number;
+  raftCode: string;
+  zoneName: string;
+  /** Số ngày từ lần thả giống đầu tiên đến ngày thu hoạch; null khi không tìm được đợt thả giống. */
+  daysOfFarming: number | null;
+  seedings: ProvenanceSeeding[];
 };
 
-export type PublicOriginLot = {
+export type ProvenanceLot = {
   lotCode: string;
+  /** Tên các sản phẩm bán từ lô trên hóa đơn này. */
+  products: string[];
   originState: OriginState;
-  withdrawnAt: string | null;
+  /** Ngày thu hồi; null khi lô đang công bố. */
+  withdrawalDate: string | null;
   /** Null khi lô đã bị thu hồi. */
-  detail: PublicOriginDetail | null;
+  origin: ProvenanceOrigin | null;
 };
 
-/** Trang truy xuất công khai mà mã QR mở ra. */
-export type PublicOrigin = {
-  cooperativeName: string;
-  lots: PublicOriginLot[];
+export type ProvenanceCooperative = {
+  fullName: string;
+  shortName: string | null;
+};
+
+/** Trang truy xuất công khai mà mã QR mở ra (`GET api/public/provenance/{qrToken}`). */
+export type ProvenancePage = {
+  language: string;
+  status: ProvenanceStatus;
+  /** Thông báo của máy chủ khi không có lô để hiện; null khi có lô. */
+  message: string | null;
+  cooperative: ProvenanceCooperative;
+  lots: ProvenanceLot[];
 };

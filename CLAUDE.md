@@ -324,7 +324,7 @@ Cấu trúc hiện hành: `docs/PROJECT_STRUCTURE.md` (theo cây thư mục ngư
   mới thì thêm vào `KINDS` của `src/features/notifications/utils/notificationKinds.ts` (câu tiếng Việt dựng từ `messageParams`, màn mở khi bấm). Nghiệm thu so khớp MSGxx nguyên văn tiếng Anh
   cần thống nhất lại với SRS.
 - Trang chủ không còn số mẫu (gỡ 05/11/2026): chỉ Chủ HTX có số liệu từ API, các vai trò khác chỉ có chức năng theo quyền.
-  Tra cứu truy xuất đọc trang công khai `GET /api/origin/{mã QR}` (không đăng nhập), mở từ mã QR của hóa đơn hoặc dán đường link; chưa tra được bằng mã lô gõ tay (chốt 10/11/2026).
+  Tra cứu truy xuất đọc trang công khai `GET /api/public/provenance/{mã QR}` (không đăng nhập), mở từ mã QR của hóa đơn hoặc dán đường link; chưa tra được bằng mã lô gõ tay (chốt 10/11/2026).
 - `nativeStorage` của zmp-sdk không ghi gì khi chạy ngoài Zalo (`npm start`): phiên chỉ sống trong một lần
   mở trang, tải lại trang là mất; trong Zalo cần quyền native storage được duyệt.
 - Thông tin HTX trong `src/constants/cooperative.ts` (mã số, địa chỉ, điện thoại, kênh hỗ trợ) là dữ liệu mẫu,
