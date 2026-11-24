@@ -8,10 +8,13 @@ import { ConfirmSheet } from "@/components/ConfirmSheet/ConfirmSheet";
 import { Empty } from "@/components/Empty/Empty";
 import { Loadable } from "@/components/Loadable/Loadable";
 import { ManagePage } from "@/components/ManagePage/ManagePage";
+import { NumberInput } from "@/components/NumberInput/NumberInput";
 import { Row } from "@/components/Row/Row";
 import { Rows } from "@/components/Rows/Rows";
 import { useLoad } from "@/hooks/useLoad";
+import { ApiError } from "@/services/errors";
 import { errorText } from "@/utils/errorText";
+import { parseNumber } from "@/utils/format";
 import { listSalesProducts, saveSalesProduct } from "@/features/sales/services/salesService";
 import "@/features/sales/styles/sales.scss";
 
@@ -19,26 +22,33 @@ export default function SalesProductsPage() { return <SalesGate mode="owner"><Pr
 function Products() {
   const list = useLoad(() => listSalesProducts(true), []);
   const [editing, setEditing] = useState<SalesProduct | "new" | null>(null);
-  const [code, setCode] = useState(""); const [name, setName] = useState(""); const [description, setDescription] = useState(""); const [inUse, setInUse] = useState(true);
+  const [code, setCode] = useState(""); const [name, setName] = useState(""); const [description, setDescription] = useState(""); const [price, setPrice] = useState(""); const [inUse, setInUse] = useState(true);
   const [error, setError] = useState(""); const [notice, setNotice] = useState(""); const [busy, setBusy] = useState(false); const lock = useRef(false);
   const [leaving, setLeaving] = useState(false);
   const open = (product: SalesProduct | "new") => {
     setEditing(product); setCode(product === "new" ? "" : product.code); setName(product === "new" ? "" : product.name);
-    setDescription(product === "new" ? "" : product.description ?? ""); setInUse(product === "new" || product.inUse); setError(""); setNotice("");
+    setDescription(product === "new" ? "" : product.description ?? ""); setPrice(""); setInUse(product === "new" || product.inUse); setError(""); setNotice("");
   };
   const save = async (event?: FormEvent) => {
     event?.preventDefault(); if (!editing || lock.current) return;
     if (!code.trim() || !name.trim()) { setError("Nhập mã và tên sản phẩm."); return; }
+    // Giá bán mỗi kg là số đồng nguyên lớn hơn 0; sản phẩm đang sửa để trống thì giữ giá hiện tại.
+    const unitPrice = parseNumber(price);
+    if (price.trim() ? unitPrice === null || !Number.isInteger(unitPrice) || unitPrice <= 0 : editing === "new") { setError("Nhập giá bán mỗi kg, là số đồng lớn hơn 0."); return; }
     lock.current = true; setBusy(true); setError("");
     try {
-      await saveSalesProduct(editing === "new" ? null : editing.id, { code: code.trim(), name: name.trim(), description: description.trim(), inUse, rowVersion: editing === "new" ? undefined : editing.rowVersion });
+      await saveSalesProduct(editing === "new" ? null : editing.id, { code: code.trim(), name: name.trim(), description: description.trim(), inUse, ...(unitPrice !== null ? { unitPrice } : {}), rowVersion: editing === "new" ? undefined : editing.rowVersion });
       setEditing(null); setNotice("Đã lưu sản phẩm."); await list.reload();
-    } catch (e) { setError(errorText(e)); } finally { lock.current = false; setBusy(false); }
+    } catch (e) {
+      // Sản phẩm đã bị xóa khỏi danh mục: máy chủ không còn tìm thấy nên quay về danh sách đã làm mới.
+      if (e instanceof ApiError && e.status === 404 && editing !== "new") { setEditing(null); setNotice("Sản phẩm này không còn trong danh mục."); await list.reload(); }
+      else setError(errorText(e));
+    } finally { lock.current = false; setBusy(false); }
   };
   /** Có sửa so với lúc mở form hay chưa, để "Quay lại" không âm thầm bỏ phần đã nhập. */
   const dirty = !!editing && (editing === "new"
-    ? code !== "" || name !== "" || description !== "" || !inUse
-    : code !== editing.code || name !== editing.name || description !== (editing.description ?? "") || inUse !== editing.inUse);
+    ? code !== "" || name !== "" || description !== "" || price !== "" || !inUse
+    : code !== editing.code || name !== editing.name || description !== (editing.description ?? "") || price !== "" || inUse !== editing.inUse);
   const goBack = () => { if (lock.current) return; if (dirty) setLeaving(true); else { setEditing(null); setError(""); } };
   const footer = editing
     ? <Button fullWidth size="large" loading={busy} disabled={busy} onClick={() => void save()}>Lưu sản phẩm</Button>
@@ -48,6 +58,8 @@ function Products() {
     {editing ? <form className="card form" onSubmit={save} noValidate>
       <Input label="Mã sản phẩm (bắt buộc)" value={code} maxLength={50} disabled={busy} onChange={e => setCode(e.target.value)} />
       <Input label="Tên sản phẩm (bắt buộc)" value={name} maxLength={200} disabled={busy} onChange={e => setName(e.target.value)} />
+      <NumberInput label={editing === "new" ? "Giá bán mỗi kg (đồng, bắt buộc)" : "Giá bán mỗi kg (đồng)"} value={price} disabled={busy} onChange={v => { setPrice(v); setError(""); }}
+        helperText={editing === "new" ? undefined : "Để trống thì giữ giá hiện tại."} />
       <Input.TextArea label="Mô tả" value={description} maxLength={2000} disabled={busy} onChange={e => setDescription(e.target.value)} />
       <Checkbox className="sales-option" value="in-use" checked={inUse} disabled={busy} onChange={e => setInUse(e.target.checked)}>Đang bán</Checkbox>
       <FormError text={error} />

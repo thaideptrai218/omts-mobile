@@ -31,6 +31,7 @@ const SERVER_FIELD: Record<string, string> = {
   "Cultivation log": "Nhật ký nuôi",
   "Assessment": "Đánh giá chu kỳ",
   "Product": "Sản phẩm",
+  "Unit price": "Giá bán mỗi kg",
   "Product unavailable": "Sản phẩm đã ngừng bán hoặc ngoài thời gian bán",
   "Customer profile": "Hồ sơ thương lái",
   "Client operation": "Lần gửi yêu cầu",
