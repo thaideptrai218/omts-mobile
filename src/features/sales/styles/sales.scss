@@ -77,3 +77,24 @@
   border-radius: var(--radius-sm);
   background: #fff;
 }
+
+/* Phiếu cân: tổng kg các lồng đã cân, chữ lớn để đọc ngoài nắng. */
+.weighing-total {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-start;
+  margin: 12px 0;
+}
+
+.weighing-total__value {
+  font-size: 2rem;
+  line-height: 2.5rem;
+  font-weight: 800;
+}
+
+.weighing-total__meta {
+  font-size: 1rem;
+  line-height: 1.5rem;
+  color: var(--ink-2);
+}

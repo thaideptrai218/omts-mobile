@@ -1,51 +1,59 @@
-import { useState } from "react";
-import { Button, useNavigate } from "zmp-ui";
+import { useCallback, useState } from "react";
+import { useNavigate } from "zmp-ui";
 
 import { Badge } from "@/components/Badge/Badge";
-import { Empty } from "@/components/Empty/Empty";
-import FormError from "@/components/FormError/FormError";
-import { Loadable } from "@/components/Loadable/Loadable";
+import { Chips } from "@/components/Chips/Chips";
 import { ManagePage } from "@/components/ManagePage/ManagePage";
+import PagedList from "@/components/PagedList/PagedList";
 import { Row } from "@/components/Row/Row";
-import { Rows } from "@/components/Rows/Rows";
-import { PurchasePager } from "@/features/sales/components/PurchaseRequest/PurchaseRequest";
-import { listPurchaseRequests } from "@/features/sales/services/salesService";
-import { useLoad } from "@/hooks/useLoad";
-import { date, num } from "@/utils/format";
+import { listWeighingLots } from "@/features/sales/services/lotWeighingService";
+import { usePaged } from "@/hooks/usePaged";
+import { dateTime, num } from "@/utils/format";
 
-/** Cân tại cảng: các đơn HTX đã chấp nhận, chọn một đơn để cân từng lồng. */
+type Filter = "waiting" | "weighed";
+
+const FILTERS: [Filter, string][] = [
+  ["waiting", "Chờ cân"],
+  ["weighed", "Đã cân"],
+];
+
+/**
+ * Cân tại cảng (chốt 24/11/2026, OMTS-227): mỗi lần thu hàng cho một đơn là một lô thu hoạch. Chọn lô để cân từng lồng rồi hoàn tất; lô đã cân vẫn mở lại
+ * được để sửa một lồng cho tới khi lô đóng. Backend chỉ trả lô trong vùng người dùng phụ trách.
+ */
 export default function WeighingsPage() {
   const navigate = useNavigate();
-  const [page, setPage] = useState(1);
-  const list = useLoad(() => listPurchaseRequests("accepted", page), [page]);
+  const [filter, setFilter] = useState<Filter>("waiting");
+  const fetchPage = useCallback((page: number) => listWeighingLots(filter === "weighed", page), [filter]);
+  const list = usePaged(fetchPage);
+
   return (
     <ManagePage title="Cân tại cảng">
-      <p className="form__intro">Chọn đơn của thương lái đang giao hàng. Mỗi lần cân ghi kg của từng lồng, thương lái đồng ý số cân rồi mới lập hóa đơn.</p>
-      <Loadable data={list.data} error={list.error} reload={() => void list.reload()}>
-        {(data) => (
-          <>
-            {data.items.length ? (
-              <Rows>
-                {data.items.map((row) => (
-                  <Row key={row.id} title={`${row.customer.name} · ${row.productName}`}
-                    meta={`${num(row.response?.acceptedCages ?? null, "lồng")} đã nhận đơn · giao ${date(row.response?.pickupDate)}`}
-                    badge={row.fulfilled ? <Badge text="Đã giao đủ" tone="neutral" />
-                      : row.harvestCompletedAt ? <Badge text="Đã thu xong, chờ cân" tone="warning" />
-                      : <Badge text="Đang thu, chưa cân được" tone="neutral" />}
-                    onClick={() => navigate(`/manage/weighings/${row.id}`)} />
-                ))}
-              </Rows>
-            ) : (
-              <Empty icon="zi-inbox" title="Chưa có đơn nào đã chấp nhận" text="Đơn được Chủ HTX chấp nhận sẽ hiện ở đây để cân." />
-            )}
-            <PurchasePager page={page} total={data.total} onChange={setPage} />
-          </>
+      <p className="form__intro">Chọn lô vừa thu cho đơn của thương lái. Cân từng lồng, mỗi lồng lưu ngay; cân xong bấm "Hoàn tất" để chốt tổng số kg của lô.</p>
+      <Chips options={FILTERS} value={filter} onChange={setFilter} />
+      <PagedList
+        list={list}
+        unit="lô"
+        emptyIcon="zi-inbox"
+        emptyTitle={filter === "waiting" ? "Không có lô nào chờ cân" : "Chưa có lô nào đã cân"}
+        emptyText={filter === "waiting" ? "Lô thu hoạch ghi theo kế hoạch của đơn sẽ hiện ở đây để cân." : undefined}
+      >
+        {(lot) => (
+          <Row
+            key={lot.id}
+            title={`Lô ${lot.lotCode}`}
+            meta={[
+              `Bè ${lot.raftCode} · vùng ${lot.zoneCode}`,
+              lot.harvestPlan ? `kế hoạch ${lot.harvestPlan.code}` : null,
+              `${num(lot.cageCount, "lồng")} lúc thu`,
+              lot.weighedKg !== null ? `cân ${num(lot.weighedKg, "kg")}` : `ước ${num(lot.estimatedKg, "kg")}`,
+              `thu lúc ${dateTime(lot.harvestedAt)}`,
+            ].filter(Boolean).join(" · ")}
+            badge={lot.weighedKg === null ? <Badge text="Chờ cân" tone="warning" /> : <Badge text={lot.status} tone="neutral" />}
+            onClick={() => navigate(`/manage/weighings/${lot.id}`)}
+          />
         )}
-      </Loadable>
-      {list.data && list.error && <FormError text={list.error} />}
-      <div className="button-stack">
-        <Button fullWidth size="large" variant="secondary" onClick={() => void list.reload()}>Tải lại</Button>
-      </div>
+      </PagedList>
     </ManagePage>
   );
 }

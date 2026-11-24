@@ -20,7 +20,8 @@ export const FEATURE_ACCESS: Record<FeatureKey, Access> = {
   assignments: { functions: ["WORK_ASSIGNMENTS"] },
   attendance: { functions: ["ATTENDANCE"] },
   schedule: { functions: ["WORK_ASSIGNMENTS", "ATTENDANCE"] },
-  portWeighing: { functions: ["SALES_INVOICES"] },
+  // Cân từng lồng (`api/harvest-lots/{id}/cages`) cần quyền sửa lô thu hoạch trong vùng (HarvestLots Edit), như việc cân lô.
+  portWeighing: { functions: ["HARVEST_LOTS"] },
   salesOrders: { functions: ["PURCHASE_REQUESTS"] },
   receivables: { functions: ["CUSTOMER_DEBTS"] },
   receipts: { functions: ["CUSTOMER_PAYMENTS"] },
