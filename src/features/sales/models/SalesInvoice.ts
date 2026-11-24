@@ -47,7 +47,6 @@ export type SalesInvoiceLine = {
   listPrice: number;
   amount: number;
   soldWholeLot: boolean;
-  cageKgs: number[];
 };
 
 export type SalesInvoicePayment = {
@@ -142,7 +141,6 @@ export type MyInvoiceRow = {
   invoiceDate: string;
   zoneName: string;
   purchaseRequestCode: string | null;
-  cageCount: number;
   totalKg: number;
   total: number;
   statusId: number;
@@ -165,7 +163,6 @@ export type MyInvoiceLine = {
   kg: number;
   unitPrice: number;
   amount: number;
-  cageKgs: number[];
 };
 
 export type MyInvoice = {
@@ -176,7 +173,6 @@ export type MyInvoice = {
   zoneName: string;
   purchaseRequestCode: string | null;
   lines: MyInvoiceLine[];
-  cageCount: number;
   totalKg: number;
   total: number;
   paymentTerm: SalesPaymentTerm;

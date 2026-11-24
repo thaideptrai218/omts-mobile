@@ -8,7 +8,6 @@ import FormError from "@/components/FormError/FormError";
 import { Loadable } from "@/components/Loadable/Loadable";
 import { ManagePage } from "@/components/ManagePage/ManagePage";
 import { Section } from "@/components/Section/Section";
-import { cageList } from "@/features/sales/components/PortWeighing/PortWeighing";
 import { finishInvoice, getInvoice, publishCheck } from "@/features/sales/services/invoiceService";
 import { useLoad } from "@/hooks/useLoad";
 import { errorText } from "@/utils/errorText";
@@ -115,7 +114,6 @@ function InvoiceFacts({ row }: { row: SalesInvoice }) {
           <div key={line.id} className="card form">
             <p className="weighing-lot__title">{line.productName} · lô {line.lotCode}</p>
             <p>{num(line.kg, "kg")} × {money(line.unitPrice)} = {money(line.amount)}</p>
-            {line.cageKgs.length > 0 && <p className="weighing-lot__cages">{cageList(line.cageKgs)}</p>}
           </div>
         ))}
       </Section>
