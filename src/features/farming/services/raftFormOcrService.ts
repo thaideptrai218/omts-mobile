@@ -1,8 +1,7 @@
 import type { RaftFormSuggestion } from "@/features/farming/models/RaftForm";
-import type { Worker } from "tesseract.js";
-import workerUrl from "tesseract.js/dist/worker.min.js?url";
 
 import { parseCoordinate } from "@/utils/coordinates";
+import { recognizeText } from "@/services/ocrService";
 
 const labels: Record<string, keyof RaftFormSuggestion> = {
   "ma be": "code", "ma so be": "code", "raft code": "code",
@@ -31,31 +30,8 @@ export function extractRaftForm(text: string): RaftFormSuggestion {
   return result;
 }
 
-/** OCR tiếng Việt chạy trên thiết bị. Chỉ tải mã/model; không gửi ảnh ra bên ngoài và không dùng storage. */
+/** Đọc ảnh giấy tờ của bè trên thiết bị rồi lấy các trường có nhãn rõ ràng. */
 export async function recognizeRaftForm(image: File | string, signal: AbortSignal, onProgress: (progress: number) => void) {
-  const { createWorker } = await import("tesseract.js");
-  if (signal.aborted) throw new DOMException("Đã hủy", "AbortError");
-  let worker: Worker | undefined;
-  let finished = false;
-  let rejectAbort: (reason: Error) => void = () => undefined;
-  let rejectWorker: (reason: Error) => void = () => undefined;
-  const aborted = new Promise<never>((_, reject) => { rejectAbort = reject; });
-  const workerError = new Promise<never>((_, reject) => { rejectWorker = reject; });
-  const stop = () => { rejectAbort(new DOMException("Đã hủy", "AbortError")); void worker?.terminate(); };
-  signal.addEventListener("abort", stop, { once: true });
-  const timeout = window.setTimeout(() => rejectWorker(new Error("Đọc ảnh mất quá lâu. Vui lòng thử ảnh rõ hơn hoặc nhập thông tin bằng tay.")), 60000);
-  const work = async () => {
-    worker = await createWorker("vie", 1, {
-      workerPath: new URL(workerUrl, window.location.href).href,
-      workerBlobURL: false,
-      cacheMethod: "none",
-      logger: (event) => { if (!signal.aborted) onProgress(Math.round(Math.max(0, Math.min(1, event.progress || 0)) * 100)); },
-      errorHandler: () => rejectWorker(new Error("Không đọc được ảnh. Vui lòng thử ảnh rõ hơn hoặc nhập thông tin bằng tay.")),
-    });
-    if (signal.aborted || finished) { await worker.terminate(); throw new DOMException("Đã hủy", "AbortError"); }
-    const { data } = await worker.recognize(image);
-    return { text: data.text, confidence: data.confidence, fields: extractRaftForm(data.text) };
-  };
-  try { return await Promise.race([work(), aborted, workerError]); }
-  finally { finished = true; window.clearTimeout(timeout); signal.removeEventListener("abort", stop); await worker?.terminate(); }
+  const { text, confidence } = await recognizeText({ image, signal, onProgress });
+  return { text, confidence, fields: extractRaftForm(text) };
 }
