@@ -275,8 +275,6 @@ const SERVER_TEXT: Record<string, string | ((details: ProblemDetails) => string)
   MSG19: MESSAGES.MSG19,
   MSG20: MESSAGES.MSG20,
   MSG21: "Kênh thông báo này chưa được cấu hình hoặc chưa đủ điều kiện nên chưa bật được.",
-  MSG22: MESSAGES.MSG22,
-  MSG23: MESSAGES.MSG23,
   MSG24: "Tài khoản này đã gắn với một hồ sơ nhân viên khác.",
   MSG28: "Giá trị nhỏ nhất phải nhỏ hơn giá trị lớn nhất.",
   MSG41: "Số tiền phải là bội số của 1.000 đồng.",

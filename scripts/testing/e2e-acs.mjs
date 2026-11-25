@@ -129,7 +129,6 @@ async function modalAction(text) {
 const MSG19 = "Your login session has expired. Please log in again.";
 const MSG07 = "No connection. The data is kept temporarily on the device and synchronized once online; protected data is not displayed from the local copy.";
 const MSG13 = "This account cannot be used at the moment. Please contact the support channel.";
-const MSG23 = "This notification item is mandatory and cannot be turned off.";
 
 const phone = "09" + String(Math.floor(Math.random() * 1e8)).padStart(8, "0");
 const PASSWORD = "Trader123";
@@ -210,22 +209,6 @@ try {
   sb = await snackbarText("You cannot change your username");
   check("D username → MSG20", sb.includes("You cannot change your username yourself"), sb);
   check("D contacts read-only", (await page.locator(".contact-row .zaui-btn").count()) === 0 && (await page.textContent("body")).includes(phone));
-
-  // E. Tùy chọn thông báo
-  await goAccount("Tùy chọn thông báo");
-  check("E → /account/notifications", await waitPath("/account/notifications"), path());
-  await page.locator(".pref").first().waitFor({ timeout: 10000 });
-  const body = await page.textContent("body");
-  check("E MSG23 on mandatory rows", body.includes(MSG23));
-  check("E push unavailable text", body.includes("Push chưa khả dụng"));
-  const emailSwitch = page.locator(".pref").first().locator(".pref__row:has-text('Email') input[type=checkbox]");
-  const wasChecked = await emailSwitch.isChecked();
-  await emailSwitch.click({ force: true });
-  await btn("Lưu tùy chọn").click();
-  sb = await snackbarText("Notification settings saved.");
-  check("E prefs saved", sb.includes("Notification settings saved."), sb);
-  check("E email toggle persisted", (await emailSwitch.isChecked()) === !wasChecked);
-  await shot("E-notification-prefs");
 
   // F. Đăng xuất offline: xếp hàng thu hồi, gửi khi có mạng
   const before = await realTokens(phone, PASSWORD); // phiên khác của cùng tài khoản để so sánh

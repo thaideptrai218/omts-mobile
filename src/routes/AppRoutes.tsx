@@ -4,7 +4,6 @@ import AccountPage from "@/features/account/pages/AccountPage";
 import ProfilePage from "@/features/account/pages/ProfilePage";
 import LinkAccountPage from "@/features/auth/pages/LinkAccountPage";
 import NotificationsPage from "@/features/notifications/pages/InboxPage";
-import NotificationPreferencesPage from "@/features/notifications/pages/PreferencesPage";
 import TraderRequestsPage from "@/features/organization/pages/TraderRequestsPage";
 import TracePage from "@/features/traceability/pages/TracePage";
 import FeaturePage from "@/pages/FeaturePage";
@@ -29,7 +28,6 @@ function AppRoutes() {
       <Route path="/feature/:key" element={<FeaturePage />} />
       <Route path="/link" element={<LinkAccountPage />} />
       <Route path="/account/profile" element={<ProfilePage />} />
-      <Route path="/account/notifications" element={<NotificationPreferencesPage />} />
       <Route path="/account/trader-requests" element={<TraderRequestsPage />} />
       {[...FARM_ROUTES, ...PURCHASING_ROUTES, ...ORG_ROUTES, ...SALES_ROUTES, ...WORKFORCE_ROUTES, ...DEVELOPMENT_ROUTES].map((route) => (
         <Route key={route.path} path={route.path} element={route.element} />

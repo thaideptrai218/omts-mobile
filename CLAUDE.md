@@ -28,7 +28,7 @@ Cấu trúc hiện hành: `docs/PROJECT_STRUCTURE.md` (theo cây thư mục ngư
   15 phút, một lần làm mới dùng chung cho các request song song, 401 sau làm mới → phiên hết hạn MSG19);
   `src/features/auth/services/sessionService.ts` giữ token trong atom + nativeStorage, hàng đợi thu hồi phiên khi đăng
   xuất offline, cờ "đã đăng xuất" để không tự vào lại; `src/features/*/services` là các lời gọi API theo use case
-  (link, profile, notifications, permissions, push). `src/constants/messages.ts` giữ thông báo MSGxx,
+  (link, profile, permissions). `src/constants/messages.ts` giữ thông báo MSGxx,
   `src/utils/errorText.ts` dịch lỗi backend. Model/DTO nằm trong `src/features/<nghiệp-vụ>/models/`;
   kiểu chung nằm trong `src/models/`. Service và UI import type trực tiếp từ model. Model không chứa HTTP,
   SDK, atom hay dữ liệu mẫu; ESLint chặn khai báo kiểu dữ liệu trong service.
@@ -315,9 +315,9 @@ Cấu trúc hiện hành: `docs/PROJECT_STRUCTURE.md` (theo cây thư mục ngư
 - `POST api/auth/zalo/link`, `POST api/auth/zalo/login`, `DELETE api/me/zalo-link` và CORS cho `https://h5.zdn.vn`
   đã viết ở backend (28/10/2026) nhưng chưa vào `develop`: chờ mã Jira để mở PR. Development dùng `Zalo:Provider = Fake`
   (token `fake:<id>`, `fake:<số>`); thử với Zalo thật cần `Zalo:Provider = Graph` và secret key của Zalo App.
-- Kênh Push chưa chốt (OMTS-215): `PUSH_PROVIDER` trong `src/constants/env.ts` đang là `"none"`, màn tùy chọn thông
-  báo hiện Push là chưa khả dụng; đổi sang `"zalo"` thì luồng xin quyền + đăng ký thiết bị trong
-  `src/features/notifications/services/pushService.ts` được bật.
+- Không có push (SRS 6.2, 24/11/2026): nhân viên đọc thông báo trong danh sách trong app (`InboxPage`) và nhận SMS cho
+  loại bắt buộc; thương lái và nhân viên nhận Zalo ZNS, hoặc SMS khi chưa cấu hình ZNS. App không đăng ký thiết bị
+  và không có màn tùy chọn thông báo.
 - **Mọi chữ hiện cho người dùng bằng tiếng Việt** (chốt 28/10/2026), kể cả thông báo MSGxx: backend trả chữ tiếng
   Anh trong `detail` nhưng app không hiện chữ đó, mà dịch theo `code` ở `errorText` (`src/utils/errorText.ts`,
   một chỗ duy nhất). Thêm mã lỗi mới ở backend thì thêm chữ tiếng Việt vào `SERVER_TEXT`; thêm loại thông báo

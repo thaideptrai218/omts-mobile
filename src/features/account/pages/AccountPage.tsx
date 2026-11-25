@@ -107,7 +107,6 @@ function AccountPage() {
               {permissions?.isCooperativeOwner && (
                 <MenuRow icon="zi-user-check" area="sell" label="Duyệt thương lái" onClick={() => navigate("/account/trader-requests")} />
               )}
-              <MenuRow icon="zi-notif" area="people" label="Tùy chọn thông báo" onClick={() => navigate("/account/notifications")} />
             </ul>
             <Actions>
               <Button fullWidth size="large" variant="secondary" type="danger" onClick={() => setLogoutOpen(true)}>

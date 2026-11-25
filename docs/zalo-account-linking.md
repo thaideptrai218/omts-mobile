@@ -42,12 +42,6 @@ ký thương lái; các API đó chỉ còn cho bản web. Mobile chỉ dùng th
   thương lái thấy lý do và gửi lại được) qua `api/trader-requests` (web và mini app). Hai trạng thái và ba bước
   chuyển này chưa có trong SRS: cần cập nhật SRS.
 
-### Để sau (không liên quan tới liên kết)
-
-- Push qua Zalo khi OMTS-215 chốt kênh thông báo. Mobile đã có sẵn: gọi `POST api/me/devices` với `token` = Zalo user ID
-  (`getUserID()`), `platform` = `ios`/`android`/`web`, `permissionGranted`. `PushDeviceService` hiện mô tả token là "Expo
-  push token", nên cần thêm provider gửi qua Zalo OA/ZNS.
-
 ## 2. Luồng
 
 ```
