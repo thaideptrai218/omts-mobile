@@ -1,10 +1,12 @@
 import type { RaftView } from "@/features/farming/models/Raft";
 import type { RaftFormSuggestion } from "@/features/farming/models/RaftForm";
+import type { ZoneBoundary } from "@/features/farming/models/ZoneBoundary";
 import type { Coordinates } from "@/models/Coordinates";
 import { useEffect, useState } from "react";
 import { Button, Input, useNavigate, useParams } from "zmp-ui";
 
 import FormError from "@/components/FormError/FormError";
+import { ConfirmSheet } from "@/components/ConfirmSheet/ConfirmSheet";
 import LocationInput from "@/features/farming/components/LocationInput/LocationInput";
 import RaftFormImport from "@/features/farming/components/RaftFormImport/RaftFormImport";
 import { ManagePage } from "@/components/ManagePage/ManagePage";
@@ -15,6 +17,7 @@ import { MESSAGES } from "@/constants/messages";
 import { createRaft, getRaft, getZone, updateRaft } from "@/features/farming/services/farmService";
 import { parseNumber } from "@/utils/format";
 import { readCoordinates } from "@/utils/coordinates";
+import { placementOf } from "@/features/farming/utils/zoneBoundary";
 
 /** Số hàng tối đa backend nhận (RaftLaneChange.MaxLaneCount). */
 const MAX_LANES = 200;
@@ -37,6 +40,8 @@ function RaftFormPage() {
   const [lat, setLat] = useState("");
   const [lng, setLng] = useState("");
   const [zoneCenter, setZoneCenter] = useState<Coordinates | null>(null);
+  const [boundary, setBoundary] = useState<ZoneBoundary | null>(null);
+  const [confirmOutside, setConfirmOutside] = useState(false);
   const [error, setError] = useState("");
   const [saveTries, setSaveTries] = useState(0);
   const [busy, setBusy] = useState(false);
@@ -68,17 +73,24 @@ function RaftFormPage() {
       .catch((err) => setError(errorText(err)));
   }, [raftId]);
 
-  // Tọa độ vùng chỉ dùng căn giữa bản đồ, không gán nhầm thành vị trí của mọi bè mới.
+  // Tọa độ vùng chỉ dùng căn giữa bản đồ, không gán nhầm thành vị trí của mọi bè mới. Ranh giới vùng (nếu có) dùng để báo
+  // ngay khi ghim bè nằm ngoài vùng, cả lúc thêm lẫn lúc sửa bè.
+  const ownerZoneId = zoneId ?? raft?.zone.id;
   useEffect(() => {
-    if (!zoneId || raftId) return;
-    getZone(zoneId)
+    if (!ownerZoneId) return;
+    getZone(ownerZoneId)
       .then((z) => {
-        setZoneCenter(readCoordinates(String(z.latitude ?? ""), String(z.longitude ?? "")));
+        if (!raftId) setZoneCenter(readCoordinates(String(z.latitude ?? ""), String(z.longitude ?? "")));
+        setBoundary(z.boundary ?? null);
       })
       .catch(() => undefined);
-  }, [zoneId, raftId]);
+  }, [ownerZoneId, raftId]);
 
-  const save = async () => {
+  // Ghim đang nhập so với ranh giới vùng; null khi vùng chưa có ranh giới hoặc chưa có tọa độ.
+  const typed = readCoordinates(lat, lng);
+  const placement = typed ? placementOf(boundary, typed) : null;
+
+  const save = async (outsideConfirmed = false) => {
     if (busy || importing || (editing && !raft)) return;
     // Tọa độ không bắt buộc, nhưng đã nhập thì phải đủ cả vĩ độ và kinh độ.
     const hasCoordinates = Boolean(lat.trim() || lng.trim());
@@ -107,6 +119,12 @@ function RaftFormPage() {
       laneCount: count,
       rowVersion: raft?.rowVersion ?? null,
     };
+    // Ghim ngoài ranh giới vùng: hỏi lại một lần rồi vẫn cho lưu (PM chốt 25/11/2026, chỉ cảnh báo).
+    if (!outsideConfirmed && placement?.inside === false) {
+      setConfirmOutside(true);
+      return;
+    }
+    setConfirmOutside(false);
     setBusy(true);
     setError("");
     try {
@@ -158,7 +176,7 @@ function RaftFormPage() {
               </Section>
               <Section step={3} title="Vị trí của bè">
                 <div className="form">
-                  <LocationInput latitude={lat} longitude={lng} onChange={(latitude, longitude) => { setLat(latitude); setLng(longitude); }} mapCenter={zoneCenter} disabled={busy || importing} />
+                  <LocationInput latitude={lat} longitude={lng} onChange={(latitude, longitude) => { setLat(latitude); setLng(longitude); }} mapCenter={zoneCenter} boundary={boundary} disabled={busy || importing} />
                   <Input label="Vị trí" value={location} onChange={(e) => setLocation(e.target.value)} maxLength={500} disabled={busy} />
                 </div>
               </Section>
@@ -181,6 +199,16 @@ function RaftFormPage() {
               </Section>
             </div>
           </fieldset>
+          <ConfirmSheet
+            visible={confirmOutside}
+            title="Bè nằm ngoài ranh giới vùng"
+            message={`Vị trí bè cách ranh giới vùng theo sơ đồ cấp phép khoảng ${Math.round(placement?.distanceM ?? 0).toLocaleString("vi-VN")} m. Bạn đã kiểm tra lại và vẫn muốn lưu?`}
+            confirmText="Vẫn lưu"
+            cancelText="Sửa lại vị trí"
+            busy={busy}
+            onClose={() => setConfirmOutside(false)}
+            onConfirm={() => void save(true)}
+          />
         </>
       )}
     </ManagePage>

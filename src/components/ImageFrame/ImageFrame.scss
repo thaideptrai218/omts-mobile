@@ -1,11 +1,11 @@
-/* Khung chọn màn hình số trên ảnh máy đo vừa chụp. Khung bọc sát ảnh nên tọa độ phần trăm của khung là tỉ lệ của ảnh. */
-.display-frame__stage {
+/* Khung chọn một phần ảnh. Khung bọc sát ảnh nên tọa độ phần trăm của khung là tỉ lệ của ảnh. */
+.image-frame__stage {
   display: flex;
   justify-content: center;
   margin-bottom: 16px;
 }
 
-.display-frame__box {
+.image-frame__box {
   position: relative;
   display: inline-block;
   max-width: 100%;
@@ -17,13 +17,13 @@
   user-select: none;
 }
 
-.display-frame__photo {
+.image-frame__photo {
   display: block;
   max-width: 100%;
   max-height: 52vh;
 }
 
-.display-frame__frame {
+.image-frame__frame {
   position: absolute;
   box-sizing: border-box;
   border: 3px solid #ffffff;
@@ -35,7 +35,7 @@
 }
 
 /* Nút kéo 48px (vùng chạm tối thiểu cho người lớn tuổi), tâm đặt đúng góc khung. */
-.display-frame__handle {
+.image-frame__handle {
   position: absolute;
   width: 48px;
   height: 48px;
@@ -46,13 +46,13 @@
   touch-action: none;
 }
 
-.display-frame__handle--start {
+.image-frame__handle--start {
   left: -24px;
   top: -24px;
   cursor: nwse-resize;
 }
 
-.display-frame__handle--end {
+.image-frame__handle--end {
   right: -24px;
   bottom: -24px;
   cursor: nwse-resize;

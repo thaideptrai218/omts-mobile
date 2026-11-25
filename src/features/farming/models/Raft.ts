@@ -1,3 +1,4 @@
+import type { FarmingWarning } from "@/features/farming/models/FarmingWarning";
 import type { ZoneRef } from "@/features/farming/models/Zone";
 
 // Bè (FARM-04). Một bè chỉ còn số hàng: không lưu chiều dài, mốc hay sơ đồ từng hàng.
@@ -55,6 +56,8 @@ export type RaftSaved = {
   raft: RaftView;
   message: string;
   messageCode: string;
+  /** Lưu ý không chặn lưu, ví dụ bè xa vùng hơn 5 km hoặc nằm ngoài ranh giới vùng. */
+  warnings?: FarmingWarning[] | null;
 };
 
 /**

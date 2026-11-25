@@ -897,6 +897,19 @@ body:has(.page-footer) .zaui-snackbar-bottom {
   color: #fff;
 }
 
+/* Nhãn tên điểm góc của ranh giới vùng trên bản đồ (A1, B2…). Nền trắng viền xanh ngọc để đọc được trên ảnh biển. */
+.boundary-corner {
+  padding: 0 6px;
+  border: 1.5px solid #0a6f6c;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #074e4c;
+  font-size: 1rem;
+  line-height: 1.5rem;
+  font-weight: 700;
+  pointer-events: none;
+}
+
 /* ---------- Đầu trang ---------- */
 
 .page-header {
@@ -2125,6 +2138,13 @@ body:has(.page-footer) .zaui-snackbar-bottom {
 .form-error .zaui-icon {
   flex: none;
   margin-top: 2px;
+}
+
+/* Lưu ý không chặn lưu (ví dụ bè ngoài ranh giới vùng): cùng khuôn với dòng lỗi nhưng màu cảnh báo. */
+.form-error.form-warning {
+  border-color: var(--warn);
+  background: var(--warn-soft);
+  color: var(--warn);
 }
 
 /*

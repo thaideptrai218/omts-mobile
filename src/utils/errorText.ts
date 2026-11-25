@@ -97,6 +97,11 @@ const SERVER_FIELD: Record<string, string> = {
   Area: "Diện tích",
   Latitude: "Vĩ độ",
   Longitude: "Kinh độ",
+  // Ranh giới vùng theo sơ đồ cấp phép (PUT api/zones/{id}/boundary).
+  Boundary: "Ranh giới vùng (số khu, số điểm góc hoặc điểm trùng nhau)",
+  "Boundary coordinates": "Tọa độ điểm góc (phải nằm trong Việt Nam)",
+  "Boundary name": "Tên khu",
+  "Boundary corners": "Tên điểm góc",
   Lanes: "Các hàng của bè",
   Size: "Kích thước",
   Notes: "Ghi chú",

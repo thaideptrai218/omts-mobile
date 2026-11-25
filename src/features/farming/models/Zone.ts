@@ -1,3 +1,5 @@
+import type { FarmingWarning } from "@/features/farming/models/FarmingWarning";
+import type { ZoneBoundary } from "@/features/farming/models/ZoneBoundary";
 import type { LicenseState } from "@/features/farming/models/ZoneLicense";
 
 export type ZoneRef = {
@@ -22,6 +24,8 @@ export type ZoneListItem = {
 export type ZoneView = ZoneListItem & {
   latitude: number | null;
   longitude: number | null;
+  /** Ranh giới vùng theo sơ đồ cấp phép; null khi chưa nhập. */
+  boundary: ZoneBoundary | null;
   rowVersion: string | null;
 };
 
@@ -30,6 +34,8 @@ export type ZoneSaved = {
   zone: ZoneView;
   message: string;
   messageCode: string;
+  /** Lưu ý không chặn lưu, ví dụ ghim ngoài Việt Nam hoặc bè nằm ngoài ranh giới mới. */
+  warnings?: FarmingWarning[] | null;
 };
 
 export type ZoneLookupItem = {
