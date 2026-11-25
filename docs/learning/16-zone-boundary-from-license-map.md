@@ -73,6 +73,20 @@ Ranh giới là `FeatureCollection` (RFC 7946): mỗi khu một `Feature` có `P
 - **Lookbehind regex** chạy được trên máy tính nhưng làm WebView iOS trước 16.4 báo lỗi cú pháp khi tải file; bộ đọc chỉ dùng
   lookahead.
 - `GeoJSON.FeatureCollection` báo TS2503 vì dự án không có `@types/geojson`; kiểu `ZoneBoundary` tự khai báo là đủ cho Vietmap.
+- **Bảng chỉ có X, Y viết kiểu Việt Nam không ra điểm nào** (người dùng thử ngày 25/11/2026). Sơ đồ ghi `2.315.876,23`; bước
+  đổi dấu phẩy thành dấu chấm biến nó thành `2.315.876.23` và không nhóm số nào lọt vào khoảng X, Y. Ảnh người dùng gửi vẫn ra
+  7/8 điểm chỉ vì OCR làm rơi hết dấu ngăn (`231587623`), riêng dòng còn giữ dấu (`437.532,19`) bị bỏ. Sửa: `thousands` trong
+  `normalize` gộp số có dấu ngăn hàng nghìn (phần nguyên từ 6 chữ số) trước khi đổi dấu phẩy. Cùng ảnh đó còn hai lỗi tên
+  điểm: đường kẻ ô thành chữ số rác ("7 K2", "1 K3") và hai dòng mất tên liền nhau thì dòng sau không nối được tên; `label`
+  bỏ qua một chữ số rác đứng riêng, `ordered` lấy tên vừa đặt của dòng trước.
+- **Trong Zalo trên iPhone, bộ đọc chữ không chạy** (người dùng thử ngày 25/11/2026), dù cùng mã chạy được trên Chrome máy
+  tính. Màn hình lúc đầu chỉ báo "Chưa đọc được ảnh": tesseract.js trả chuỗi hoặc undefined chứ không phải `Error`, nên rơi vào
+  câu mặc định. Đọc mã tesseract.js 7 (`createWorker.js`, `worker-script/index.js`): lỗi trong lúc tải lõi, tải dữ liệu chữ hay
+  đọc ảnh đều được worker bắt và gửi về dạng `reject` (đi qua `errorHandler`, ra câu "Không đọc được ảnh. Vui lòng thử ảnh rõ
+  hơn…"); chỉ khi chính tệp worker không tải hoặc không chạy được thì `worker.onerror` mới trả chuỗi. Vậy lỗi nằm ở bước
+  `new Worker(<tệp worker của app>)`. Sửa: `loadWorkerSource` nạp mã worker bằng `fetch` ở luồng chính rồi chạy từ Blob URL.
+  Mọi câu lỗi của bộ đọc giờ kèm "(chi tiết: …)" để biết chính xác nguyên nhân nếu còn gặp; câu chung chung chỉ còn cho
+  trường hợp không ai ngờ tới.
 
 ## 6. Kiểm chứng
 
@@ -81,6 +95,10 @@ Ranh giới là `FeatureCollection` (RFC 7946): mỗi khu một `Feature` có `P
   tesseract.js 7 thật rồi qua bộ đọc: 69 điểm trên 8 ảnh khó, 43 điểm khớp X, Y, 4 điểm báo lệch, 4 điểm đọc sai nằm trong nhóm
   "chưa đối chiếu" (nhãn cảnh báo, hỏi lại khi lưu), các điểm còn lại đọc đúng.
 - Một chữ số X sai 50 m bị báo "Lệch X, Y 50 m"; ranh giới lưu rồi mở lại vẫn ra đúng số trên giấy và vẫn khớp.
+- Ảnh bảng "Tọa độ các điểm góc khu 1" người dùng chụp (311×371, chỉ có X, Y, số kiểu Việt Nam), chạy trong Chrome qua đúng
+  `readCornerTable`: 8/8 điểm, đúng tên K1 đến K8. Hai điểm sai một chữ số do ảnh quá nhỏ: K1 lệch 100 km (màn hình báo
+  "Xa các điểm khác"), K6 lệch 10 m (không phát hiện được vì bảng không có vĩ/kinh độ để đối chiếu; mọi điểm của bảng này đều
+  mang nhãn "Chưa có vĩ/kinh độ để đối chiếu"). Bảng chỉ có X, Y thì người dùng phải dò từng số với giấy.
 - `npm run lint`, `npm run typecheck`, `npm run build` đạt.
 - **Chưa thử**: ảnh chụp thật của sơ đồ trên điện thoại trong Zalo. Ảnh mẫu người dùng gửi chỉ 960×1280, chữ trong bảng cao
   khoảng 4 px nên không OCR được; cần chụp gần bảng (chữ cao ít nhất khoảng 15 px trong ảnh).

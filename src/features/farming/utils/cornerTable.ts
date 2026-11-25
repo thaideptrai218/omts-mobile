@@ -4,7 +4,8 @@ import { DEFAULT_CENTRAL_MERIDIAN, vn2000ToGrid } from "@/features/farming/utils
 
 /**
  * Đọc chữ OCR của bảng "Tọa độ các điểm góc khu N" trên sơ đồ cấp phép khu vực biển. Mỗi dòng có tên điểm (A1, B12…),
- * vĩ độ và kinh độ dạng độ-phút-giây, rồi X, Y (m) hệ VN-2000. Lỗi đã gặp khi thử tesseract trên bảng in (25/11/2026):
+ * vĩ độ và kinh độ dạng độ-phút-giây, rồi X, Y (m) hệ VN-2000; có sơ đồ chỉ ghi X, Y kiểu "2.315.876,23". Lỗi đã gặp khi thử
+ * tesseract trên bảng in (25/11/2026):
  * - ° thành 5, 7, 8, 9, 2 hoặc mất: "107830'41.04"", "21907'05.16"", "2150654 00";
  * - ' mất hoặc thành dấu khác: "21°0706.60"", "107°30:52.56"";
  * - dấu chấm thập phân thành khoảng trắng hoặc mất: "21°07'06 60"", "2335593 87", "47521472";
@@ -42,7 +43,17 @@ function normalize(line: string): string {
     .replace(/[º˚]/g, "°")
     .replace(/(\d)[IL|](?=[\d°'".\s]|$)/g, (_, digit: string) => `${digit}1`)
     .replace(/(\d)O(?=[\d°'".])/g, (_, digit: string) => `${digit}0`)
+    .replace(/(^|[^\d.,])(\d{1,3}(?:[.,]\d{3})+)(?:[.,](\d{1,2}))?(?!\d)/g, thousands)
     .replace(/(\d),(?=\d)/g, (_, digit: string) => `${digit}.`);
+}
+
+/**
+ * Số viết kiểu Việt Nam, dấu chấm ngăn hàng nghìn và dấu phẩy thập phân: "2.315.876,23" → "2315876.23" (OCR có thể đọc dấu
+ * phẩy thành dấu chấm và ngược lại). Chỉ áp cho số từ 6 chữ số phần nguyên (X, Y) để không đụng giây "06.660".
+ */
+function thousands(text: string, before: string, whole: string, fraction: string | undefined): string {
+  const digits = whole.replace(/[.,]/g, "");
+  return digits.length >= 6 ? `${before}${digits}${fraction ? `.${fraction}` : ""}` : text;
 }
 
 function tokens(text: string): Token[] {
@@ -194,9 +205,12 @@ function gridGap(point: { latitude: number; longitude: number }, grid: Grid, cen
   return Math.hypot(dx, dy);
 }
 
-/** Tên điểm ở đầu dòng: một chữ cái rồi số, ví dụ A1, B12 ("AI", "Al", "|B4", "lA2" là đọc nhầm). */
+/**
+ * Tên điểm ở đầu dòng: một chữ cái rồi số, ví dụ A1, B12 ("AI", "Al", "|B4", "lA2" là đọc nhầm). Đường kẻ ô bên trái đôi khi
+ * thành một chữ số rác đứng riêng trước tên ("7 K2", "1 K3").
+ */
 function label(line: string): { label: string; rest: string } {
-  const match = line.match(/^[^A-Z0-9]*[|IL[\]()]?([A-Z])\s?([0-9IL|]{1,3})(?![\d.°'"A-Z])/);
+  const match = line.match(/^[^A-Z0-9]*(?:\d\s+)?[|IL[\]()]?([A-Z])\s?([0-9IL|]{1,3})(?![\d.°'"A-Z])/);
   if (!match || !/^[0-9IL|]*\d|^[IL|]$/.test(match[2])) return { label: "", rest: line };
   return { label: `${match[1]}${match[2].replace(/[IL|]/g, "1")}`, rest: line.slice((match.index ?? 0) + match[0].length) };
 }
@@ -265,11 +279,12 @@ function heading(line: string): string | null {
  * cùng một chữ cái; tên lạ thì giữ thứ tự dòng trên giấy.
  */
 function ordered(corners: CornerReading[]): CornerReading[] {
-  const named = corners.map((corner, index) => {
-    if (corner.label) return corner;
-    const before = corners[index - 1]?.label.match(/^([A-Z])(\d+)$/);
-    return before ? { ...corner, label: `${before[1]}${Number(before[2]) + 1}` } : corner;
-  });
+  // Lấy tên vừa đặt của dòng trước, nên hai dòng mất tên liền nhau vẫn nối được (K1, ?, ? → K2, K3).
+  const named = corners.reduce<CornerReading[]>((result, corner) => {
+    const before = result[result.length - 1]?.label.match(/^([A-Z])(\d+)$/);
+    result.push(corner.label || !before ? corner : { ...corner, label: `${before[1]}${Number(before[2]) + 1}` });
+    return result;
+  }, []);
   const parts = named.map((corner) => corner.label.match(/^([A-Z])(\d+)$/));
   if (parts.some((part) => !part) || new Set(parts.map((part) => part?.[1])).size > 1) return named;
   return named.map((corner, index) => ({ corner, number: Number(parts[index]?.[2]) })).sort((a, b) => a.number - b.number).map(({ corner }) => corner);
