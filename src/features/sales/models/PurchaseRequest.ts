@@ -52,8 +52,6 @@ type PurchaseRequestBase = {
   cancelReason: string | null;
   cancelledAt: string | null;
   rowVersion: string;
-  /** Lúc Chủ HTX đánh dấu đã thu xong (chốt 11/11/2026); thương lái cũng thấy. */
-  harvestCompletedAt: string | null;
 };
 
 /** Yêu cầu mua như nhân viên thấy (SCR-SALE-02). */
@@ -62,8 +60,6 @@ export type PurchaseRequest = PurchaseRequestBase & {
   sendings: PurchaseRequestSending[];
   /** Kế hoạch nhân lực Chủ HTX gửi trước khi nhận đơn; null khi chưa gửi. */
   staffing: PurchaseStaffing | null;
-  /** Các lô và nút thu xong, chỉ có ở màn chi tiết của đơn đã chấp nhận. */
-  harvest: PurchaseHarvest | null;
 };
 
 /** Yêu cầu mua như chính thương lái thấy (SCR-SALE-01): không có dữ liệu của khách khác hay trường nội bộ. */
@@ -87,32 +83,6 @@ export type PurchaseRequestSaved = {
   message: string;
   messageCode: string;
   replayed: boolean;
-};
-
-/** Một lô thu hoạch đã ghi cho đơn: bè nào, bao nhiêu lồng, ai ghi, lúc nào. */
-export type PurchaseHarvestLot = {
-  id: string;
-  lotCode: string;
-  zoneCode: string;
-  raftCode: string;
-  cageCount: number;
-  estimatedKg: number;
-  harvestedAt: string;
-  recordedByName: string | null;
-};
-
-/** Thu hoạch của một đơn, ở màn chi tiết của nhân viên (chốt 11/11/2026). */
-export type PurchaseHarvest = {
-  /** Tổng lồng của các lô, để so với số lồng đã nhận đơn; thiếu hay dư vẫn đánh dấu được. */
-  harvestedCages: number;
-  /** Lô thu sớm nhất trước. */
-  lots: PurchaseHarvestLot[];
-  completedAt: string | null;
-  completedByName: string | null;
-  /** Hiện nút "Đã thu xong": Chủ HTX, đơn đã nhận, chưa đánh dấu, có ít nhất một lô. */
-  canMarkDone: boolean;
-  /** Chủ HTX bỏ đánh dấu được khi đơn chưa cân lần nào. */
-  canUnmarkDone: boolean;
 };
 
 export type PurchaseDraft = {

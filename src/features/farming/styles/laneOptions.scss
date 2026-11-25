@@ -17,21 +17,3 @@
   gap: 8px;
   margin-bottom: 12px;
 }
-
-.harvest-notice {
-  margin-bottom: 12px;
-}
-
-/* Một đơn trong phiếu ghi lô: dòng tên thương lái và sản phẩm, dòng mã đơn và số lồng đã thu. */
-.harvest-order {
-  display: grid;
-  gap: 4px;
-}
-
-.harvest-order__title {
-  font-weight: 700;
-}
-
-.harvest-order__meta {
-  color: var(--ink-2);
-}

@@ -23,7 +23,7 @@ import {
 import { useAction } from "@/hooks/useAction";
 import { useLoad } from "@/hooks/useLoad";
 import { date, num, todayIso } from "@/utils/format";
-import "@/features/farming/pages/RaftHarvestPage.scss";
+import "@/features/farming/styles/laneOptions.scss";
 
 const LANE_STATE: Record<LaneState, [string, Tone]> = {
   NotSeeded: ["Chưa thả giống", "warning"],

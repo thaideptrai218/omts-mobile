@@ -28,19 +28,3 @@ export type RaftRef = {
   id: string;
   code: string | null;
 };
-
-/* Danh mục để chọn trong form phiếu nhập */
-export type ZoneLookup = {
-  id: string;
-  code: string | null;
-  name: string | null;
-  statusId: number;
-};
-
-/** Bè chọn được cho dòng hàng của phiếu nhập: bè đang dùng trong các vùng của người dùng (Chủ HTX: mọi bè). */
-export type RaftLookup = {
-  id: string;
-  code: string;
-  zoneCode: string;
-  zoneId: string;
-};

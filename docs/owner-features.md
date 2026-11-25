@@ -82,7 +82,6 @@ với backend thật, chưa thử trong Zalo**.
 | | Khiếu nại: thương lái gửi từ hóa đơn (kèm ảnh) và theo dõi; Chủ HTX chấp nhận hoặc từ chối | `/account/claims…`, `/manage/quality-claims…` | `api/me/quality-claims`, `api/me/sales-invoices/{id}/quality-claims`, `api/quality-claims` |
 | Lương | Bảng lương: tạo, tính lại, chốt, hủy, trả lương và tạm ứng, phiếu lương từng người | `/manage/payrolls…`, `/manage/payroll-slips/:id`, `/manage/payroll-employees/:id`, `/manage/payroll-payments` | `api/payrolls`, `api/payroll-payments`, `api/payroll-slips/{id}`, `api/employees/{id}/payslips` |
 | | Bảng giá công: lịch sử giá, đổi giá từ ngày áp dụng, thêm, đổi tên, ngừng/dùng lại loại việc | `/manage/pay-rates…` | `api/job-types` |
-| | Cài đặt lương | `/manage/payroll-settings` | `api/payroll-settings` |
 | Tổ chức | Báo cáo sản lượng thu hoạch | `/manage/reports` | `api/harvest-yield` |
 | | Lịch sử thao tác: lọc, xem trước/sau | `/manage/audit-log…` | `api/audit-events` |
 

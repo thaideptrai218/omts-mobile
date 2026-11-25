@@ -10,6 +10,7 @@ import PageHeader from "@/components/PageHeader/PageHeader";
 import TestRoleSwitcher from "@/features/development/components/TestRoleSwitcher/TestRoleSwitcher";
 import TraceLookup from "@/features/traceability/components/TraceLookup/TraceLookup";
 import { COOPERATIVE } from "@/constants/cooperative";
+import { EMPLOYEE_WORK_ENABLED } from "@/constants/features";
 import { describeGrants, roleKeyFor } from "@/utils/featureAccess";
 import { ROLES } from "@/constants/roles";
 import { permissionsAtom, sessionAtom } from "@/features/auth/state/authAtoms";
@@ -104,7 +105,7 @@ function HomePage() {
           </>
         ) : (
           <>
-            {role.key !== "accountant" && (
+            {EMPLOYEE_WORK_ENABLED && role.key !== "accountant" && (
               <AreaCard area="people" title="Công việc của tôi" hint="Phân công, chấm công" onClick={() => navigate("/account/work")} />
             )}
             <HomeMenu role={role} permissions={permissions} exclude={role.key !== "accountant" ? "myWork" : undefined} />

@@ -1,10 +1,11 @@
 import type { ManageRoute } from "@/models/Navigation";
+import { EMPLOYEE_WORK_ENABLED } from "@/constants/features";
 import { lazyPage } from "@/routes/lazyPage";
 
 /** Nhân công: kế hoạch ngày làm, phân công, chấm công, nghỉ phép, bảng lương và giá công. */
 export const ROUTES: ManageRoute[] = [
   { path: "/manage/work-plans", element: lazyPage(() => import("@/features/workforce/pages/WorkDayPlansPage")) },
-  { path: "/account/work", element: lazyPage(() => import("@/features/workforce/pages/MyWorkPage")) },
+  ...(EMPLOYEE_WORK_ENABLED ? [{ path: "/account/work", element: lazyPage(() => import("@/features/workforce/pages/MyWorkPage")) }] : []),
   { path: "/manage/workforce", element: lazyPage(() => import("@/features/workforce/pages/WorkforcePage")) },
   { path: "/manage/leave-requests", element: lazyPage(() => import("@/features/workforce/pages/LeaveRequestsPage")) },
   { path: "/manage/attendance-settings", element: lazyPage(() => import("@/features/workforce/pages/AttendanceSettingsPage")) },
@@ -16,5 +17,4 @@ export const ROUTES: ManageRoute[] = [
   { path: "/manage/payroll-payments", element: lazyPage(() => import("@/features/payroll/pages/PayrollPaymentsPage")) },
   { path: "/manage/pay-rates", element: lazyPage(() => import("@/features/payroll/pages/PayRatesPage")) },
   { path: "/manage/pay-rates/:id", element: lazyPage(() => import("@/features/payroll/pages/PayRateDetailPage")) },
-  { path: "/manage/payroll-settings", element: lazyPage(() => import("@/features/payroll/pages/PayrollSettingsPage")) },
 ];

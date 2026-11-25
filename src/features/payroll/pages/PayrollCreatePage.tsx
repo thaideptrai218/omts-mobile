@@ -1,5 +1,5 @@
 import type { CreatePayrollRequest, PayrollScope } from "@/features/payroll/models/Payroll";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Button, useNavigate } from "zmp-ui";
 import { Chips } from "@/components/Chips/Chips";
 import DateField from "@/components/DateField/DateField";
@@ -9,8 +9,8 @@ import { ManagePage } from "@/components/ManagePage/ManagePage";
 import { SearchBox } from "@/components/SearchBox/SearchBox";
 import { Section } from "@/components/Section/Section";
 import PayrollGate from "@/features/payroll/components/PayrollGate/PayrollGate";
-import { createPayroll, getPayrollSettings, payableEmployees } from "@/features/payroll/services/payrollService";
-import { daySpan, monthRange, payPeriodText, periodText, periodTypeOf } from "@/features/payroll/utils/payText";
+import { createPayroll, payableEmployees } from "@/features/payroll/services/payrollService";
+import { daySpan, monthRange, periodText, periodTypeOf } from "@/features/payroll/utils/payText";
 import NativePicker from "@/features/workforce/components/NativePicker/NativePicker";
 import { useLoad } from "@/hooks/useLoad";
 import { isApiError } from "@/services/errors";
@@ -18,7 +18,7 @@ import { errorText } from "@/utils/errorText";
 import { todayIso } from "@/utils/format";
 import "@/features/payroll/styles/payroll.scss";
 
-type PeriodMode = "next" | "month" | "range";
+type PeriodMode = "month" | "range";
 
 const MAX_EMPLOYEES = 500;
 const MAX_DAYS = 366;
@@ -34,15 +34,12 @@ export default function PayrollCreatePage() {
 }
 
 /**
- * Lập bảng lương (LABOR-12, chỉ Chủ HTX): chọn kỳ (kỳ lương kế tiếp theo cài đặt LABOR-16, trọn một tháng, hoặc khoảng ngày
+ * Lập bảng lương (LABOR-12, chỉ Chủ HTX): chọn kỳ (trọn một tháng, hoặc khoảng ngày
  * tối đa 366 ngày, không bắt đầu sau hôm nay) và người được tính. Server tính ngay theo giờ công đã chấm và tiền công mỗi giờ
  * đang áp dụng từng ngày (BR-LABOR-05, BR-LABOR-12); bảng lương ở trạng thái Tạm tính cho tới khi chốt.
  */
 function CreateContent() {
   const navigate = useNavigate();
-  const settings = useLoad(getPayrollSettings, []);
-  const next = settings.data?.nextPeriods[0] ?? null;
-  const nextUsable = !!next && next.start <= todayIso();
   const [mode, setMode] = useState<PeriodMode>("month");
   const [month, setMonth] = useState(lastMonth);
   const [from, setFrom] = useState(todayIso);
@@ -55,15 +52,11 @@ function CreateContent() {
   const [existingId, setExistingId] = useState<string | null>(null);
   const people = useLoad(async () => (scope === "Selected" ? (await payableEmployees(search, true)).items : []), [scope, search]);
 
-  // Kỳ lương kế tiếp dùng được (đã bắt đầu) thì chọn sẵn, vì thường là kỳ cần lập.
-  useEffect(() => { if (nextUsable) setMode("next"); }, [nextUsable]);
-
   const periodOptions: [PeriodMode, string][] = [
-    ...(nextUsable ? [["next", "Kỳ lương kế tiếp"] as [PeriodMode, string]] : []),
     ["month", "Trọn một tháng"],
     ["range", "Khoảng ngày khác"],
   ];
-  const period = mode === "next" && next ? { from: next.start, to: next.end } : mode === "month" ? (month ? monthRange(month) : { from: "", to: "" }) : { from, to };
+  const period = mode === "month" ? (month ? monthRange(month) : { from: "", to: "" }) : { from, to };
 
   const fail = (text: string) => { setExistingId(null); setError(text); };
 
@@ -115,7 +108,6 @@ function CreateContent() {
       <Section step={1} title="Kỳ lương">
         <div className="payroll-stack">
           <Chips options={periodOptions} value={mode} onChange={(v) => { setMode(v); setError(""); }} />
-          {mode === "next" && next && <p className="card form">Kỳ {payPeriodText(next)}, theo ngày bắt đầu kỳ lương trong Cài đặt lương.</p>}
           {mode === "month" && (
             <div className="card form">
               <NativePicker label="Tháng (bắt buộc)" type="month" value={month} hint="Bấm vào ô để chọn tháng. Tính từ ngày 1 đến ngày cuối tháng." disabled={busy} onChange={setMonth} />
@@ -128,7 +120,6 @@ function CreateContent() {
             </div>
           )}
           {period.from && period.to && <p className="form__hint">Tính lương cho {periodText(period.from, period.to)}.</p>}
-          {settings.error && <p className="form__hint">Chưa đọc được cài đặt kỳ lương; vẫn chọn được theo tháng hoặc khoảng ngày.</p>}
         </div>
       </Section>
       <Section step={2} title="Nhân viên được tính lương">

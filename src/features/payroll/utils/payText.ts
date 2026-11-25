@@ -1,6 +1,5 @@
 import type { PayrollPeriodType, PayrollScope, PayrollSheetStatus } from "@/features/payroll/models/Payroll";
 import type { WagePaymentKind, WagePaymentMethod, WagePaymentStatus } from "@/features/payroll/models/PayrollPayment";
-import type { PayPeriod } from "@/features/payroll/models/PayrollSettings";
 import type { PayRate } from "@/features/workforce/models/Job";
 import type { Label } from "@/models/UI";
 import { date, num, todayIso } from "@/utils/format";
@@ -42,11 +41,6 @@ export function jobStatus(statusId: number): Label {
 /** "01/10/2026 – 31/10/2026". */
 export function periodText(from: string, to: string) {
   return from === to ? date(from) : `${date(from)} – ${date(to)}`;
-}
-
-/** Kỳ lương như trong MSG-LABOR-36: "11/2026 (26/10/2026 đến 25/11/2026)". */
-export function payPeriodText(period: PayPeriod) {
-  return `${period.name} (${date(period.start)} đến ${date(period.end)})`;
 }
 
 /** "YYYY-MM" → "10/2026". */

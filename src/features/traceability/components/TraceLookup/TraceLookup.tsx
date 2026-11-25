@@ -1,8 +1,8 @@
-import type { TraceLot } from "@/features/traceability/models/TraceLot";
+import type { TraceLookupResult, TraceLot } from "@/features/traceability/models/TraceLot";
 import { FormEvent, useEffect, useRef, useState } from "react";
 import { Button, Icon, Input, useSnackbar } from "zmp-ui";
 
-import { publicOrigin, toTraceLots } from "@/features/traceability/services/originService";
+import { publicOrigin, toTraceResult } from "@/features/traceability/services/originService";
 import { ApiError } from "@/services/errors";
 import { scanQr, ScanUnavailable } from "@/services/zaloService";
 import { errorText } from "@/utils/errorText";
@@ -11,7 +11,7 @@ import { originTokenFrom } from "@/utils/scanTargets";
 /** Ô dán mã truy xuất, nút quét QR và kết quả truy xuất. Không cần đăng nhập. `initialToken`: tra ngay khi mở. */
 function TraceLookup({ initialToken }: { initialToken?: string }) {
   const [text, setText] = useState(initialToken ?? "");
-  const [lots, setLots] = useState<TraceLot[] | null>(null);
+  const [result, setResult] = useState<TraceLookupResult | null>(null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const latest = useRef(0);
@@ -21,18 +21,18 @@ function TraceLookup({ initialToken }: { initialToken?: string }) {
     const token = originTokenFrom(raw);
     if (!token) {
       setError("Mã chưa đúng. Hãy quét mã QR trên bao bì, hoặc dán nguyên đường link truy xuất.");
-      setLots(null);
+      setResult(null);
       return;
     }
     const id = ++latest.current;
     setBusy(true);
     setError("");
     try {
-      const found = toTraceLots(await publicOrigin(token));
-      if (id === latest.current) setLots(found);
+      const found = toTraceResult(await publicOrigin(token));
+      if (id === latest.current) setResult(found);
     } catch (err) {
       if (id !== latest.current) return;
-      setLots(null);
+      setResult(null);
       setError(err instanceof ApiError && err.status === 404
         ? "Không tìm thấy thông tin truy xuất của mã này. Mã có thể chưa được HTX công bố."
         : errorText(err));
@@ -87,12 +87,13 @@ function TraceLookup({ initialToken }: { initialToken?: string }) {
         </Button>
       </form>
 
-      {busy && !lots && (
+      {busy && !result && (
         <div className="loading" role="status" aria-busy>
           <p className="loading__text">Đang tải...</p>
         </div>
       )}
-      {lots?.map((lot) => (lot.withdrawn ? <WithdrawnLot key={lot.code} lot={lot} /> : <TraceResult key={lot.code} lot={lot} />))}
+      {result?.message && <p className="trace__or" role="status">{result.message}</p>}
+      {result?.lots.map((lot) => (lot.withdrawn ? <WithdrawnLot key={lot.code} lot={lot} /> : <TraceResult key={lot.code} lot={lot} />))}
     </div>
   );
 }
@@ -132,19 +133,17 @@ function TraceResult({ lot }: { lot: TraceLot }) {
           <dt>Ngày thu hoạch</dt>
           <dd>{lot.harvestDate}</dd>
         </div>
-        <div>
-          <dt>Khối lượng bán ra</dt>
-          <dd>{lot.weight}</dd>
-        </div>
-        <div>
-          <dt>Môi trường nước</dt>
-          <dd>{lot.water}</dd>
-        </div>
+        {lot.farmingTime && (
+          <div>
+            <dt>Thời gian nuôi</dt>
+            <dd>{lot.farmingTime}</dd>
+          </div>
+        )}
       </dl>
       <h3 className="lot__journey-title">Hành trình của lô hàu</h3>
       <ol className="journey">
-        {lot.steps.map((s) => (
-          <li key={s.title} className="journey__step">
+        {lot.steps.map((s, i) => (
+          <li key={`${s.title}-${i}`} className="journey__step">
             <p className="journey__title">{s.title}</p>
             <p className="journey__date">{s.date}</p>
             <p className="journey__detail">{s.detail}</p>

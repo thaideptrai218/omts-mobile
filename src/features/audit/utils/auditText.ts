@@ -471,7 +471,6 @@ export function recordPath(recordType: string, recordId: string, action: string)
     case "CustomerPayment": return `/manage/customer-payments/${recordId}`;
     case "QualityClaim": return `/manage/quality-claims/${recordId}`;
     case "Payroll": return `/manage/payrolls/${recordId}`;
-    case "PayrollSettings": return "/manage/payroll-settings";
     case "JobType": return `/manage/pay-rates/${recordId}`;
     default: return null;
   }

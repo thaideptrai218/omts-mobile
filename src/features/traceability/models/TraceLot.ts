@@ -12,7 +12,13 @@ export type TraceLot = {
   product: string;
   zone: string;
   harvestDate: string;
-  weight: string;
-  water: string;
+  /** "98 ngày"; rỗng khi máy chủ không tính được. */
+  farmingTime: string;
   steps: TraceStep[];
+};
+
+/** Kết quả một lần tra cứu: các lô để hiện, hoặc thông báo của máy chủ khi hóa đơn không có lô nào. */
+export type TraceLookupResult = {
+  lots: TraceLot[];
+  message: string | null;
 };

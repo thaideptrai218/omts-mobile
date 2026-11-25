@@ -35,13 +35,6 @@ export const acceptPurchaseRequest = (row: PurchaseRequest, body: AcceptPurchase
 /** Chủ HTX từ chối đơn: lý do (ghi chú) bắt buộc. */
 export const declinePurchaseRequest = (row: PurchaseRequest, note: string) =>
   api<PurchaseRequest>(`${staff}/${row.id}/decline`, { method: "POST", body: { note, rowVersion: row.rowVersion } });
-/** Chủ HTX đánh dấu đơn đã thu xong: không ghi thêm lô, bắt đầu cân được. */
-export const markHarvestDone = (row: PurchaseRequest) =>
-  api<PurchaseRequest>(`${staff}/${row.id}/harvest-done`, { method: "POST", body: { rowVersion: row.rowVersion } });
-/** Bỏ đánh dấu thu xong khi đơn chưa cân lần nào. */
-export const clearHarvestDone = (row: PurchaseRequest) =>
-  api<PurchaseRequest>(`${staff}/${row.id}/harvest-done/clear`, { method: "POST", body: { rowVersion: row.rowVersion } });
-
 export const newPurchaseDraft = (): PurchaseDraft => ({ productId: "", cages: "", pickupDate: todayIso(), note: "", clientOperationId: newOperationId() });
 /** Số lồng là số nguyên; không dùng bộ đọc tiền hoặc làm tròn số thập phân. */
 export function wholeCages(text: string): number | null {
