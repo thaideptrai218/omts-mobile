@@ -1,13 +1,17 @@
 import type { RaftListItem } from "@/features/farming/models/Raft";
 import type { ZoneView } from "@/features/farming/models/Zone";
+import type { ZoneBoundary } from "@/features/farming/models/ZoneBoundary";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "zmp-ui";
 import vietmapgl from "@vietmap/vietmap-gl-js";
 import "@vietmap/vietmap-gl-js/dist/vietmap-gl.css";
 
+import { Badge } from "@/components/Badge/Badge";
 import { Empty } from "@/components/Empty/Empty";
 import { VIETMAP_API_KEY } from "@/constants/env";
 import { USAGE } from "@/features/farming/services/farmService";
+import { drawBoundary } from "@/features/farming/utils/boundaryLayers";
+import { placementOf } from "@/features/farming/utils/zoneBoundary";
 import { statusLabel } from "@/utils/labels";
 
 import "@/features/farming/components/RaftMap/RaftMap.scss";
@@ -32,22 +36,30 @@ function mapErrorText(cause: unknown): string {
   return "Không tải được bản đồ. Vui lòng kiểm tra kết nối hoặc cấu hình dịch vụ bản đồ rồi thử lại.";
 }
 
-export default function RaftMap({ zone, rafts, onOpenRaft }: {
+/** `boundary` mặc định là ranh giới đã lưu của vùng; màn nhập ranh giới truyền bản đang sửa để xem trước. */
+export default function RaftMap({ zone, rafts, onOpenRaft, boundary = zone.boundary }: {
   zone: ZoneView;
   rafts: RaftListItem[];
   onOpenRaft: (id: string) => void;
+  boundary?: ZoneBoundary | null;
 }) {
   const container = useRef<HTMLDivElement>(null);
   const [attempt, setAttempt] = useState(0);
   const [ready, setReady] = useState(false);
   const [error, setError] = useState("");
-  const points = useMemo(() => rafts.reduce<{ raft: RaftListItem; position: [number, number] }[]>((result, raft) => {
+  // Bè ngoài ranh giới vùng (sơ đồ cấp phép) được tô đỏ và ghi rõ chữ, không chỉ dựa vào màu.
+  const points = useMemo(() => rafts.reduce<{ raft: RaftListItem; position: [number, number]; outsideM: number | null }[]>((result, raft) => {
     const position = coordinate(raft);
-    if (position) result.push({ raft, position });
+    if (position) {
+      const placement = placementOf(boundary, { latitude: position[1], longitude: position[0] });
+      result.push({ raft, position, outsideM: placement && !placement.inside ? placement.distanceM : null });
+    }
     return result;
-  }, []), [rafts]);
+  }, []), [rafts, boundary]);
   const zonePosition = useMemo(() => coordinate(zone), [zone]);
-  const hasPosition = points.length > 0 || zonePosition !== null;
+  const hasBoundary = (boundary?.features.length ?? 0) > 0;
+  const hasPosition = points.length > 0 || zonePosition !== null || hasBoundary;
+  const outside = points.filter((point) => point.outsideM !== null).length;
 
   useEffect(() => {
     if (!VIETMAP_API_KEY || !hasPosition || !container.current) return;
@@ -70,7 +82,7 @@ export default function RaftMap({ zone, rafts, onOpenRaft }: {
       map = new vietmapgl.Map({
         container: container.current,
         style: `https://maps.vietmap.vn/maps/styles/hm/style.json?apikey=${encodeURIComponent(VIETMAP_API_KEY)}`,
-        center: points[0]?.position ?? zonePosition!,
+        center: points[0]?.position ?? zonePosition ?? boundary!.features[0].geometry.coordinates[0][0],
         zoom: 16,
         attributionControl: {},
       });
@@ -81,16 +93,17 @@ export default function RaftMap({ zone, rafts, onOpenRaft }: {
         window.clearTimeout(timeout);
         if (!resourceFailed) setError("");
         const bounds = new vietmapgl.LngLatBounds();
+        drawBoundary(map, boundary ?? null, bounds);
         if (zonePosition) {
           new vietmapgl.Marker({ color: "#0050C8" }).setLngLat(zonePosition)
             .setPopup(new vietmapgl.Popup().setText(`Vùng ${zone.name ?? zone.code ?? "nuôi"}`)).addTo(map);
           bounds.extend(zonePosition);
         }
-        points.forEach(({ raft, position }) => {
+        points.forEach(({ raft, position, outsideM }) => {
           const button = document.createElement("button");
           button.type = "button";
-          button.className = `raft-map__pin${raft.statusId === USAGE.inUse ? "" : " raft-map__pin--inactive"}`;
-          button.textContent = `Bè ${raft.code ?? "chưa có mã"}${raft.statusId === USAGE.inUse ? "" : ` · ${statusLabel(raft.status).text}`}`;
+          button.className = `raft-map__pin${raft.statusId === USAGE.inUse ? "" : " raft-map__pin--inactive"}${outsideM === null ? "" : " raft-map__pin--outside"}`;
+          button.textContent = `Bè ${raft.code ?? "chưa có mã"}${raft.statusId === USAGE.inUse ? "" : ` · ${statusLabel(raft.status).text}`}${outsideM === null ? "" : " · Ngoài ranh giới"}`;
           button.setAttribute("aria-label", `Mở bè ${raft.code ?? "chưa có mã"}, ${statusLabel(raft.status).text}`);
           button.addEventListener("click", () => onOpenRaft(raft.id));
           new vietmapgl.Marker({ element: button, anchor: "bottom" }).setLngLat(position).addTo(map!);
@@ -113,14 +126,15 @@ export default function RaftMap({ zone, rafts, onOpenRaft }: {
       observer?.disconnect();
       map?.remove();
     };
-  }, [attempt, hasPosition, onOpenRaft, points, zone, zonePosition]);
+  }, [attempt, boundary, hasPosition, onOpenRaft, points, zone, zonePosition]);
 
   if (!VIETMAP_API_KEY) return <Empty icon="zi-location" title="Bản đồ chưa được cấu hình" text="Vui lòng liên hệ người quản trị để bật dịch vụ bản đồ." />;
   if (!hasPosition) return <Empty icon="zi-location" title="Chưa có tọa độ để hiển thị" text="Cập nhật tọa độ vùng nuôi hoặc bè rồi mở lại bản đồ." />;
 
   return (
     <div className="raft-map">
-      <p className="form__hint">Ghim xanh dương là vùng nuôi. Chạm nhãn bè để mở chi tiết; bè ngừng dùng có nhãn “Ngừng dùng” trong danh sách bên dưới.</p>
+      <p className="form__hint">Ghim xanh dương là vùng nuôi{hasBoundary ? ", vùng tô xanh ngọc là ranh giới theo sơ đồ cấp phép" : ""}. Chạm nhãn bè để mở chi tiết; bè ngừng dùng có nhãn “Ngừng dùng” trong danh sách bên dưới.</p>
+      {outside > 0 && <p className="form__hint" role="alert"><Badge text="Cần kiểm tra" tone="warning" /> {outside} bè có ghim nằm ngoài ranh giới vùng.</p>}
       <div className="raft-map__frame">
         <div className="raft-map__canvas" ref={container} role="region" aria-label="Bản đồ vị trí vùng nuôi và bè" />
         {!ready && !error && <div className="raft-map__loading skeleton" role="status">Đang tải bản đồ…</div>}
@@ -128,7 +142,7 @@ export default function RaftMap({ zone, rafts, onOpenRaft }: {
       {error && <div role="alert"><p className="form__hint">{error}</p><Button variant="secondary" onClick={() => setAttempt((value) => value + 1)}>Thử lại bản đồ</Button></div>}
       <p className="form__hint">Đã ghim {points.length}/{rafts.length} bè. {rafts.length > points.length ? "Bè thiếu tọa độ hoặc có tọa độ không hợp lệ chưa được ghim." : ""}</p>
       <ul className="rows">
-        {points.map(({ raft }) => <li key={raft.id}><button className="row" type="button" onClick={() => onOpenRaft(raft.id)}><span>Bè {raft.code} · {statusLabel(raft.status).text}</span></button></li>)}
+        {points.map(({ raft, outsideM }) => <li key={raft.id}><button className="row" type="button" onClick={() => onOpenRaft(raft.id)}><span>Bè {raft.code} · {statusLabel(raft.status).text}{outsideM === null ? "" : ` · ngoài ranh giới khoảng ${Math.round(outsideM)} m`}</span></button></li>)}
       </ul>
     </div>
   );

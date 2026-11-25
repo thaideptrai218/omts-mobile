@@ -41,6 +41,7 @@ function ZoneDetailPage() {
     ...(zone.data
       ? [
           { key: "map", title: "Bản đồ bè", hint: "Xem vị trí các bè trên bản đồ", icon: "zi-location" as const, onClick: () => navigate(`/manage/zones/${id}/map`) },
+          { key: "boundary", title: "Ranh giới vùng", hint: "Đọc tọa độ góc từ ảnh sơ đồ cấp phép", icon: "zi-photo-search" as const, onClick: () => navigate(`/manage/zones/${id}/boundary`) },
           { key: "edit", title: "Sửa thông tin vùng", hint: "Đổi tên, vị trí, diện tích", icon: "zi-edit" as const, onClick: () => navigate(`/manage/zones/${id}/edit`) },
         ]
       : []),
@@ -68,6 +69,7 @@ function ZoneDetailPage() {
                 ["Vị trí", z.location],
                 ["Diện tích", z.area !== null ? num(z.area, "ha") : null],
                 ["Tọa độ", z.latitude !== null && z.longitude !== null ? `${z.latitude}, ${z.longitude}` : null],
+                ["Ranh giới", z.boundary?.features.length ? `Theo sơ đồ cấp phép, ${z.boundary.features.length} khu` : "Chưa có"],
                 ["Bè đang dùng", `${num(z.inUseRaftCount)} bè`],
               ]}
             />

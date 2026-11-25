@@ -4,6 +4,7 @@ import { lazyPage } from "@/routes/lazyPage";
 /** Vùng nuôi, bè, giấy tờ, chu kỳ nuôi (thả giống, nhật ký), vật tư sửa bè, thu hoạch và chỉ số nước. */
 export const ROUTES: ManageRoute[] = [
   { path: "/manage/zones/:id/map", element: lazyPage(() => import("@/features/farming/pages/ZoneMapPage")) },
+  { path: "/manage/zones/:id/boundary", element: lazyPage(() => import("@/features/farming/pages/ZoneBoundaryPage")) },
   { path: "/manage/zones", element: lazyPage(() => import("@/features/farming/pages/ZonesPage")) },
   { path: "/manage/zones/new", element: lazyPage(() => import("@/features/farming/pages/ZoneFormPage")) },
   { path: "/manage/zones/:id", element: lazyPage(() => import("@/features/farming/pages/ZoneDetailPage")) },

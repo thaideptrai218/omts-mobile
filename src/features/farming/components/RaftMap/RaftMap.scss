@@ -4,6 +4,7 @@
   &__loading { position: absolute; inset: 0; display: grid; place-items: center; color: var(--ink-2); }
   &__pin { min-height: 48px; min-width: 48px; padding: .6rem .8rem; border: 2px solid var(--surface); border-radius: var(--radius-sm); background: var(--ok); color: var(--surface); font-size: 1rem; font-weight: 700; }
   &__pin--inactive { background: var(--ink-2); }
+  &__pin--outside { background: var(--danger); border-style: dashed; }
   &__pin:focus-visible { outline: 3px solid var(--brand); outline-offset: 3px; }
   // Giữ nguyên dòng ghi nguồn bản đồ của nhà cung cấp, chỉ tăng cỡ chữ cho đủ đọc.
   .vietmapgl-ctrl-attrib { font-size: .9375rem; line-height: 1.5rem; }

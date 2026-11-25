@@ -16,6 +16,7 @@ import type {
   ZoneWaterThresholds,
 } from "@/features/farming/models/WaterMeasurement";
 import type { SaveZone, ZoneListItem, ZoneLookupItem, ZoneSaved, ZoneSearchParams, ZoneView } from "@/features/farming/models/Zone";
+import type { SaveZoneBoundary } from "@/features/farming/models/ZoneBoundary";
 import type { SaveLicense, ZoneLicenses, ZoneLicenseView } from "@/features/farming/models/ZoneLicense";
 import type { Paged } from "@/models/Pagination";
 
@@ -48,6 +49,14 @@ export function updateZone(id: string, body: SaveZone) {
 
 export function setZoneInUse(id: string, inUse: boolean, reason: string, rowVersion: string | null) {
   return api<ZoneView>(`/api/zones/${id}/${inUse ? "reactivate" : "discontinue"}`, { method: "POST", body: { reason: reason || null, rowVersion } });
+}
+
+/**
+ * Lưu ranh giới vùng (GeoJSON WGS84) đọc từ bảng tọa độ góc của sơ đồ cấp phép; `boundary: null` xóa ranh giới. Bè đang dùng
+ * nằm ngoài ranh giới mới được báo trong `warnings` (RAFTS_OUTSIDE_ZONE_BOUNDARY), không chặn lưu.
+ */
+export function saveZoneBoundary(id: string, body: SaveZoneBoundary) {
+  return api<ZoneSaved>(`/api/zones/${id}/boundary`, { method: "PUT", body });
 }
 
 export function listRafts(zoneId: string, statusId?: number) {
