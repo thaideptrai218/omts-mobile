@@ -35,6 +35,8 @@ const recordPage = (base: string, fallback: string | null) => (n: N) => (n.relat
 const page = (path: string) => () => path;
 /** Màn "Công việc của tôi" đang ẩn thì thông báo không mở màn nào. */
 const myWorkPage = EMPLOYEE_WORK_ENABLED ? page("/account/work") : undefined;
+/** Lời mời ca của đơn đặt mua: màn riêng, dùng phiên tài khoản nên luôn mở được. */
+const myShiftsPage = page("/account/shifts");
 const purchaseRequestPage = (base: string) => (n: N) =>
   n.relatedRecordType === "PurchaseRequest" && n.relatedRecordId ? `${base}?open=${encodeURIComponent(n.relatedRecordId)}` : base;
 
@@ -201,10 +203,12 @@ export const KINDS: Record<string, Kind> = {
     to: page("/manage/cooperative"),
   },
   WORK_ASSIGNMENT: { title: "Cập nhật phân công", body: () => "Công việc của bạn vừa được cập nhật. Bấm để xem phân công mới nhất.", icon: "zi-list-1", tone: "neutral", to: myWorkPage },
-  PURCHASE_SHIFT_INVITED: { title: "Mời xác nhận ca làm", body: (n) => `Người phụ trách mời bạn tham gia ca cho ${n.relatedRecordCode ?? "đơn hàng"}. Bấm để đồng ý hoặc từ chối.`, icon: "zi-calendar", tone: "warning", to: myWorkPage },
+  PURCHASE_SHIFT_INVITED: { title: "Mời xác nhận ca làm", body: (n) => `Người phụ trách mời bạn tham gia ca cho ${n.relatedRecordCode ?? "đơn hàng"}. Bấm để đồng ý hoặc từ chối.`, icon: "zi-calendar", tone: "warning", to: myShiftsPage },
+  // Chỉ còn ở đơn mời trong 24-25/11/2026: ca đã thành phân công ngay, không cần trả lời.
+  PURCHASE_SHIFT_ASSIGNED: { title: "Bạn được phân công ca làm", body: (n) => `Bạn được phân công ca cho ${n.relatedRecordCode ?? "đơn hàng"}.`, icon: "zi-calendar", tone: "neutral", to: myShiftsPage },
   PURCHASE_SHIFT_RESPONDED: { title: "Nhân viên phản hồi ca", body: (n) => `Có phản hồi ca cho ${n.relatedRecordCode ?? "đơn hàng"}. Kiểm tra số người đồng ý trước khi nhận đơn.`, icon: "zi-user-check", tone: "neutral", to: purchaseRequestPage("/manage/purchase-requests") },
-  PURCHASE_SHIFT_CLOSED: { title: "Ca làm đã đóng", body: (n) => `${n.relatedRecordCode ?? "Đơn hàng"} đã hủy hoặc bị từ chối. Ca này không còn giữ lịch làm việc.`, icon: "zi-recall", tone: "warning", to: myWorkPage },
-  PURCHASE_SHIFT_CONFIRMED: { title: "HTX đã nhận đơn", body: (n) => `Chủ HTX đã nhận ${n.relatedRecordCode ?? "đơn hàng"}. Bấm để xem trạng thái ca của bạn.`, icon: "zi-check-circle", tone: "success", to: myWorkPage },
+  PURCHASE_SHIFT_CLOSED: { title: "Ca làm đã đóng", body: (n) => `Lời mời ca cho ${n.relatedRecordCode ?? "đơn hàng"} đã đóng: đơn đã đủ người, bị từ chối hoặc đã hủy. Bạn không cần trả lời nữa.`, icon: "zi-recall", tone: "warning", to: myShiftsPage },
+  PURCHASE_SHIFT_CONFIRMED: { title: "HTX đã nhận đơn", body: (n) => `Chủ HTX đã nhận ${n.relatedRecordCode ?? "đơn hàng"}. Bấm để xem trạng thái ca của bạn.`, icon: "zi-check-circle", tone: "success", to: myShiftsPage },
   EMPLOYEE_LEAVE_REQUESTED: { title: "Yêu cầu nghỉ phép", body: () => "Có nhân viên gửi yêu cầu nghỉ phép. Bấm để xem và phản hồi.", icon: "zi-calendar", tone: "warning", to: page("/manage/leave-requests") },
   EMPLOYEE_LEAVE_REVIEWED: { title: "Phản hồi nghỉ phép", body: () => "Chủ HTX đã phản hồi yêu cầu nghỉ phép của bạn. Bấm để xem kết quả.", icon: "zi-user-check", tone: "neutral", to: myWorkPage },
   // OMTS-132: chỉ gửi Chủ HTX, mở màn duyệt yêu cầu (LABOR-05.1).

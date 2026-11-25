@@ -12,7 +12,7 @@ import { date } from "@/utils/format";
 import { errorText } from "@/utils/errorText";
 import "@/features/workforce/styles/workforce.scss";
 
-export default function MyPurchaseShifts({ from, to }: { from: string; to: string }) {
+export default function MyPurchaseShifts({ from, to, emptyTitle = "Chưa có lời mời ca trong tháng này" }: { from: string; to: string; emptyTitle?: string }) {
   const data = useLoad(() => myPurchaseShifts(from, to), [from, to]);
   const [choice, setChoice] = useState<{ row: MyPurchaseShift; approved: boolean } | null>(null);
   const [reason, setReason] = useState(""); const [error, setError] = useState(""); const [notice, setNotice] = useState("");
@@ -43,7 +43,7 @@ export default function MyPurchaseShifts({ from, to }: { from: string; to: strin
         {row.canRespond && <div className="action-row"><Button size="large" disabled={busy} onClick={() => choose(row, true)}>Đồng ý ca</Button>
           <Button size="large" variant="secondary" disabled={busy} onClick={() => choose(row, false)}>Từ chối ca</Button></div>}
       </div>;
-    })}</div> : <Empty title="Chưa có lời mời ca trong tháng này" />}</Loadable>
+    })}</div> : <Empty title={emptyTitle} />}</Loadable>
     <FormError text={choice ? "" : error || (data.data ? data.error : "")} />
     <div className="button-stack"><Button fullWidth size="large" variant="secondary" disabled={busy} onClick={() => void data.reload()}>Cập nhật lời mời ca</Button></div>
     <Sheet visible={choice !== null} onClose={() => { if (!busy) setChoice(null); }} autoHeight mask handler title={choice?.approved ? "Đồng ý tham gia ca" : "Từ chối tham gia ca"}>
