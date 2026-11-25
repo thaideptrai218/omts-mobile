@@ -53,7 +53,7 @@ Ranh giới là `FeatureCollection` (RFC 7946): mỗi khu một `Feature` có `P
 4. `recognizeText(layout: "table")`: tesseract PSM 4 (một cột nhiều dòng) để giữ nguyên từng hàng của bảng.
 5. `extractCornerTable`: tách khu theo dòng "Tọa độ các điểm góc khu N", đọc kinh tuyến trục ở đầu bảng, mỗi dòng sinh nhiều
    cách hiểu rồi chọn cặp vĩ/kinh độ và X, Y khớp nhau.
-6. Màn hình hiện từng điểm với nhãn: Khớp X, Y / Lệch X, Y n m / Chưa có X, Y để đối chiếu / Xa các điểm khác. Chạm điểm để sửa.
+6. Màn hình hiện từng điểm với nhãn: Khớp X, Y / Lệch X, Y n m / Chỉ có vĩ/kinh độ (hoặc X, Y), dò lại với giấy / Xa các điểm khác. Chạm điểm để sửa.
 7. **Xem ranh giới trên bản đồ** vẽ bản nháp cùng các bè; **Lưu ranh giới** gửi GeoJSON WGS84. Điểm lệch, chưa đối chiếu,
    điểm lạc, đường tự cắt hoặc bè hiện có nằm ngoài đều được hỏi lại trước khi lưu.
 8. Thêm hoặc sửa bè: ghim ngoài ranh giới hiện cảnh báo ngay dưới ô tọa độ (mọi cách nhập: GPS, bản đồ, OCR, gõ tay), bản đồ
@@ -88,6 +88,23 @@ Ranh giới là `FeatureCollection` (RFC 7946): mỗi khu một `Feature` có `P
   Mọi câu lỗi của bộ đọc giờ kèm "(chi tiết: …)" để biết chính xác nguyên nhân nếu còn gặp; câu chung chung chỉ còn cho
   trường hợp không ai ngờ tới.
 
+- **Ảnh chụp thật trên iPhone: chỉ ra dòng đầu, không thấy vĩ/kinh độ** (người dùng thử lại ngày 25/11/2026, sau khi bộ đọc chữ
+  đã chạy). Tạo ảnh giống ảnh điện thoại từ ảnh bảng người dùng gửi (phóng 6 đến 8 lần, làm mờ, nén JPEG, nghiêng 0 đến 3°) rồi
+  chạy qua đúng `readCornerTable` trong Chrome, đọc chữ OCR thô:
+  - Dòng đầu dính rác của đường kẻ ô trước tên ("LÍ. K1", "e L K8") nên mất tên. Không có dòng tiêu đề khu thì bộ đọc gom theo
+    chữ cái của tên, và dòng mất tên đứng trước mọi dòng có tên bị tách thành một khu riêng: "Khu 1" chỉ còn dòng đầu, các dòng
+    sau thành "Khu 2". Sửa: `label` tìm tên có chữ số thật nằm trước số dài đầu tiên; dòng mất tên ở đầu chờ nhóm của dòng có
+    tên kế tiếp.
+  - Dấu phẩy thập phân đọc thành chữ số ("437927415" là 437.927,15) và dấu chấm nằm sai chỗ ("2315.6038") thì thêm cách hiểu
+    tương ứng. Cách hiểu mới làm một dòng thử cũ sai: kinh độ dính chữ số ("1075305400"") bị coi là X. Sửa: số đứng ngay trước
+    dấu độ, phút, giây không phải X, Y; khi không cặp nào khớp thì chọn cách hiểu ít phải đoán nhất (ô thiếu tính như phải đoán)
+    thay cho cách hiểu đầu tiên. Trên 8 bảng thử cũ: điểm đọc sai mà không bị báo giảm từ 4 còn 3, điểm bị báo lệch tăng từ 4
+    lên 5.
+  - "Chưa quét được vĩ/kinh độ": sơ đồ này chỉ ghi X, Y. App vẫn tính vị trí từ X, Y nhưng chỉ hiện X, Y kèm nhãn "Chưa có vĩ/kinh
+    độ để đối chiếu", nên đọc như là đọc thiếu. Giờ dòng của điểm hiện cả vĩ/kinh độ tính từ X, Y (hệ VN-2000, cùng hệ với giấy),
+    nhãn đổi thành "Chỉ có X, Y, dò lại với giấy". Số tính ra không điền vào ô vĩ/kinh độ: điền vào thì điểm tự "khớp X, Y" dù X, Y
+    đọc sai.
+
 ## 6. Kiểm chứng
 
 - Phép đổi hệ so với pyproj 3.8 (EPSG:4756 → EPSG:4326 và phép chiếu tmerc 107°45'): sai khác dưới 1e-7 độ (dưới 1 cm).
@@ -98,7 +115,7 @@ Ranh giới là `FeatureCollection` (RFC 7946): mỗi khu một `Feature` có `P
 - Ảnh bảng "Tọa độ các điểm góc khu 1" người dùng chụp (311×371, chỉ có X, Y, số kiểu Việt Nam), chạy trong Chrome qua đúng
   `readCornerTable`: 8/8 điểm, đúng tên K1 đến K8. Hai điểm sai một chữ số do ảnh quá nhỏ: K1 lệch 100 km (màn hình báo
   "Xa các điểm khác"), K6 lệch 10 m (không phát hiện được vì bảng không có vĩ/kinh độ để đối chiếu; mọi điểm của bảng này đều
-  mang nhãn "Chưa có vĩ/kinh độ để đối chiếu"). Bảng chỉ có X, Y thì người dùng phải dò từng số với giấy.
+  mang nhãn "Chỉ có X, Y, dò lại với giấy"). Bảng chỉ có X, Y thì người dùng phải dò từng số với giấy.
 - `npm run lint`, `npm run typecheck`, `npm run build` đạt.
 - **Chưa thử**: ảnh chụp thật của sơ đồ trên điện thoại trong Zalo. Ảnh mẫu người dùng gửi chỉ 960×1280, chữ trong bảng cao
   khoảng 4 px nên không OCR được; cần chụp gần bảng (chữ cao ít nhất khoảng 15 px trong ảnh).

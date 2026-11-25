@@ -57,6 +57,18 @@ export function checkCorner(corner: CornerDraft, centralMeridian: number): Corne
   return { state: gapM <= MATCH_TOLERANCE_M ? "match" : "mismatch", position, gapM };
 }
 
+/**
+ * Vĩ/kinh độ VN-2000 (độ-phút-giây, cùng hệ với giấy) tính từ X, Y, cho điểm mà sơ đồ chỉ ghi X, Y. Chỉ để hiện cho người dùng xem,
+ * không điền vào ô vĩ/kinh độ: điền vào thì điểm sẽ tự "khớp X, Y" dù số X, Y đọc sai.
+ */
+export function dmsFromGrid(corner: CornerDraft, centralMeridian: number): { latitude: string; longitude: string } | null {
+  const x = readNumber(corner.x);
+  const y = readNumber(corner.y);
+  if (x === null || y === null) return null;
+  const point = gridToVn2000(x, y, centralMeridian);
+  return { latitude: dmsText(point.latitude), longitude: dmsText(point.longitude) };
+}
+
 /** Các điểm WGS84 đã dùng được của một khu, theo thứ tự trên giấy. */
 export function areaPositions(area: AreaDraft, centralMeridian: number): { label: string; position: Coordinates }[] {
   return area.corners.reduce<{ label: string; position: Coordinates }[]>((result, corner) => {
