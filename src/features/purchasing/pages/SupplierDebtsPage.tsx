@@ -12,6 +12,7 @@ import { date, money } from "@/utils/format";
 import { MetaLines } from "@/features/purchasing/components/MetaLines/MetaLines";
 import { listSupplierDebts, STATUS_DISCONTINUED } from "@/features/purchasing/services/purchasingService";
 import { supplierDebtLabel } from "@/features/purchasing/utils/paymentText";
+import "@/features/purchasing/styles/purchasing.scss";
 
 /**
  * Công nợ nhà cung cấp (PURCHASE-04 bước 1), cho Chủ HTX và Kế toán: các nhà cung cấp có công nợ khác 0 hôm nay, theo
@@ -34,7 +35,7 @@ function SupplierDebtsPage() {
   return (
     <ManagePage title="Công nợ nhà cung cấp">
       {totals && (
-        <div className="summary">
+        <div className="summary summary--money">
           <div className={`summary__cell${totals.totalOwed > 0 ? " tone-danger" : ""}`}>
             <span className="summary__label">HTX còn nợ</span>
             <span className="summary__value">{money(totals.totalOwed)}</span>

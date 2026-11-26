@@ -7,6 +7,7 @@ import { ManagePage } from "@/components/ManagePage/ManagePage";
 import PagedList from "@/components/PagedList/PagedList";
 import { Row } from "@/components/Row/Row";
 import { myWeighingLots } from "@/features/sales/services/lotWeighingService";
+import { lotStatusLabel } from "@/features/sales/utils/lotStatus";
 import { usePaged } from "@/hooks/usePaged";
 import { dateTime, num } from "@/utils/format";
 
@@ -15,7 +16,7 @@ function rowBadge(row: TraderWeighingRow) {
   if (row.agreed) return <Badge text="Đã đồng ý" tone="success" />;
   if (row.weighedKg === null) return <Badge text="Chờ HTX hoàn tất" tone="neutral" />;
   if (row.needsAgreement) return <Badge text="Cần bạn đồng ý" tone="warning" />;
-  return <Badge text={row.status} tone="neutral" />;
+  return <Badge text={lotStatusLabel(row.statusId, row.status).text} tone="neutral" />;
 }
 
 /**
