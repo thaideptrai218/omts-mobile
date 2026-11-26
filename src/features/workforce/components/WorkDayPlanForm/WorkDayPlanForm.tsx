@@ -67,9 +67,9 @@ export default function WorkDayPlanForm({ purchase, existing, onSaved }: { purch
       </Select>}</Loadable>
     </div></Section>
     <Section step={2} title="Người phụ trách"><div className="card form">
-      {raft ? <Loadable data={leads.data} error={leads.error} reload={() => void leads.reload()}>{items => <Select label="Người phụ trách phân công (bắt buộc)" placeholder="Chọn người phụ trách" value={responsible} disabled={busy} closeOnSelect onChange={v => setResponsible(String(v))}>
+      {raft ? <Loadable data={leads.data} error={leads.error} reload={() => void leads.reload()}>{items => items.length ? <Select label="Người phụ trách phân công (bắt buộc)" placeholder="Chọn người phụ trách" value={responsible} disabled={busy} closeOnSelect onChange={v => setResponsible(String(v))}>
         {items.map(p => <Select.Option key={p.id} value={p.id} title={p.isSelf ? `Tôi tự phụ trách · ${p.name}` : `Giao quản lý · ${p.name}`} />)}
-      </Select>}</Loadable> : <p className="form__hint">Chọn bè ở mục 1 để xem người phụ trách.</p>}
+      </Select> : <p className="form__hint">Bè này chưa có người phụ trách nào. Chọn bè khác.</p>}</Loadable> : <p className="form__hint">Chọn bè ở mục 1 để xem người phụ trách.</p>}
       <p className="form__hint">Tự phụ trách: bạn phân công nhân viên. Giao quản lý: chờ người đó nhận kế hoạch rồi họ mới phân công.</p>
     </div></Section>
     {purchase && <Section step={3} title="Số lồng và ngày nhận hàng"><div className="card form">
