@@ -26,7 +26,7 @@ import "@/features/reports/pages/ReportsPage.scss";
  * tính lúc xem; lô còn đang bán thì số còn đổi (MSG-HARVEST-04). Chủ HTX xem mọi vùng, Quản lý vùng xem vùng của mình.
  */
 export default function ReportsPage() {
-  const zones = useLoad(() => zoneLookup(true), []);
+  const zones = useLoad(() => zoneLookup(), []);
   const [period, setPeriod] = useState<YieldPeriod>("thisMonth");
   const [custom, setCustom] = useState<YieldRange>({ from: null, to: null });
   const [zoneId, setZoneId] = useState("");

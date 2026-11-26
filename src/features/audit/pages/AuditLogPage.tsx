@@ -27,7 +27,7 @@ export default function AuditLogPage() {
   const [period, setPeriod] = useState<AuditPeriod | null>(null);
   const [editing, setEditing] = useState(false);
   const facets = useLoad(auditFacets, []);
-  const zones = useLoad(() => zoneLookup(true), []);
+  const zones = useLoad(() => zoneLookup(), []);
 
   const fetchPage = useCallback(
     async (page: number) => {

@@ -49,7 +49,7 @@ function WaterPage() {
   const initialZone = new URLSearchParams(useLocation().search).get("zone");
   const zones = useLoad(() => zoneLookup(), []);
   // Tổng quan chỉ Chủ HTX và Quản lý vùng đọc được; người khác nhận 403 thì bỏ qua, không báo lỗi.
-  const overview = useLoad(() => waterOverview().catch(() => null), []);
+  const overview = useLoad(() => waterOverview(true).catch(() => null), []);
   const [zoneId, setZoneId] = useState(initialZone ?? "");
   const [filter, setFilter] = useState<WaterFilter>("All");
   const [range, setRange] = useState<WaterDateRange | null>(null);

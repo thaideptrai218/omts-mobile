@@ -31,8 +31,9 @@ export function listZones(params: ZoneSearchParams) {
   return api<Paged<ZoneListItem>>(`/api/zones${query(params)}`);
 }
 
-export function zoneLookup(includeDiscontinued = false) {
-  return api<ZoneLookupItem[]>(`/api/zones/lookup${includeDiscontinued ? "?includeDiscontinued=true" : ""}`);
+/** Vùng đang dùng, để chọn ở mọi màn ngoài danh sách vùng: vùng ngừng dùng chỉ hiện ở màn Vùng nuôi. */
+export function zoneLookup() {
+  return api<ZoneLookupItem[]>("/api/zones/lookup");
 }
 
 export function getZone(id: string) {

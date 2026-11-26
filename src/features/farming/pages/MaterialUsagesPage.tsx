@@ -30,9 +30,9 @@ export default function MaterialUsagesPage() {
   const [zoneId, setZoneId] = useState("");
   const rafts = useLoad(() => (zoneId ? zoneCycles(zoneId) : Promise.resolve<ZoneCycleItem[]>([])), [zoneId]);
 
-  // Mở sẵn vùng đầu tiên đang dùng để người dùng chỉ còn chọn bè.
+  // Mở sẵn vùng đầu tiên để người dùng chỉ còn chọn bè.
   useEffect(() => {
-    if (!zoneId && zones.data?.length) setZoneId(zones.data.find((z) => z.statusId === USAGE.inUse)?.id ?? zones.data[0].id);
+    if (!zoneId && zones.data?.length) setZoneId(zones.data[0].id);
   }, [zones.data, zoneId]);
 
   return (
