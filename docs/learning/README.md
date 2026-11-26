@@ -25,3 +25,4 @@ Do not record a Jira item as complete until its done criteria and quality checks
 | [13](13-pr-integration.md) | Develop integration, legacy error codes and backend schema conflict | Mobile verified; backend PR remains draft |
 | [16](16-zone-boundary-from-license-map.md) | Zone boundary read from the licensed sea-area map: VN-2000 to WGS84, table OCR, rafts outside the boundary | Verified with synthetic tables; not yet on a real phone photo |
 | [17](17-mobile-layout-review.md) | Layout review of the whole app at phone width: numbers broken mid-digit, squeezed sheet lists, stuck cards, footers, dark mode | Verified in headless Chrome at 360 and 320 px |
+| [19](19-harvest-plan-execution.md) | Harvest plan (KHT) execution on mobile: receive, record each raft as a lot awaiting weighing, hand over, finish; why staff seemed to agree by themselves | Verified in headless Chrome against backend develop |
