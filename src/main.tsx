@@ -13,6 +13,7 @@ import { createRoot } from "react-dom/client";
 import App from "@/App.tsx";
 import { startConnectivityWatch } from "@/services/connectivityService";
 import { restoreSession } from "@/features/auth/services/sessionService";
+import { applyAppView } from "@/services/zaloService";
 
 // Expose app configuration
 import appConfig from "../app-config.json";
@@ -24,6 +25,8 @@ if (!window.APP_CONFIG) {
 // Phiên đã lưu được đọc trước khi render để màn đầu tiên đã đúng trạng thái đăng nhập, không nháy.
 restoreSession();
 startConnectivityWatch();
+// Để Zalo báo chiều cao thật của thanh trạng thái Android cho đầu trang tự vẽ (xem applyAppView).
+applyAppView();
 
 const root = createRoot(document.getElementById("app")!);
 root.render(React.createElement(App));
