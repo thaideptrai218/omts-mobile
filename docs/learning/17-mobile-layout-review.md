@@ -139,8 +139,8 @@ mục, không áp trong cột `.form`, vì ở đó `gap` đã lo khoảng cách
 | Màn ranh giới vùng, bản đồ: `Invalid hook call`, sau đó cả app trắng | Vite gặp thư viện mới (vietmap, tesseract.js, qrcode) lúc chạy nên đóng gói lại và tải lại, hai bản React lẫn vào nhau. Đây không phải lỗi của app. | Tải lại trang sau khi Vite báo "optimized dependencies changed"; script soát tự đăng nhập lại khi gặp trang trắng. |
 | Script trả về rỗng khi lọc `'^/account$'` | Git Bash đổi đối số bắt đầu bằng `/` thành đường dẫn Windows. | Thêm `MSYS_NO_PATHCONV=1`. |
 
-App chưa có error boundary, nên một lỗi render ở bất kỳ màn nào cũng làm trắng cả app. Đợt này chưa thêm error boundary vì
-cần thống nhất màn lỗi hiện gì. Mục này nên làm tiếp.
+Lúc soát, app chưa có error boundary, nên một lỗi render ở bất kỳ màn nào cũng làm trắng cả app. Đợt này chưa thêm, vì cần
+thống nhất màn lỗi hiện gì. Việc này đã làm ở bài [18](18-error-boundary-and-status-bar.md).
 
 ## 5. Kiểm tra
 
