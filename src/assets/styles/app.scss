@@ -225,6 +225,9 @@ $areas: (
 
 body {
   background: var(--page);
+  /* Lưới an toàn: chuỗi dài không có khoảng trắng (mã, đường link, ghi chú gõ liền) xuống dòng thay vì đẩy trang tràn ngang.
+     Chỉ bẻ khi chuỗi không vừa một dòng, nên số tiền và mã ngắn vẫn giữ nguyên. */
+  overflow-wrap: break-word;
 }
 
 button:focus-visible {
@@ -644,6 +647,7 @@ button:focus-visible {
 }
 
 .tabbar__icon {
+  flex: none;
   display: grid;
   place-items: center;
   width: 64px;
@@ -669,6 +673,13 @@ button:focus-visible {
 .tabbar__item.is-active .tabbar__label,
 .tabbar__scan .tabbar__label {
   font-weight: 700;
+}
+
+/* "Chữ rất lớn" trên máy 320px: nhãn đậm "Tổng quan" không vừa cột, xuống dòng và tràn khỏi thanh. Giữ một dòng ở
+   cỡ tối thiểu 0,9375rem (vẫn lớn hơn chữ thường vì gốc 21px). */
+html[data-text-size="xlarge"] .tabbar__label {
+  font-size: 0.9375rem;
+  white-space: nowrap;
 }
 
 .tabbar__scan {
@@ -708,12 +719,14 @@ button:focus-visible {
 }
 
 /* Snackbar không đè lên thanh dưới (trình duyệt không hỗ trợ :has thì giữ vị trí mặc định). */
+/* Nút Quét mã nhô lên 26px trên thanh: snackbar nằm trên đỉnh phao. */
 body:has(.tabbar) .zaui-snackbar-bottom {
-  bottom: calc(var(--nav-height) + var(--bottom-safe) + 12px);
+  bottom: calc(var(--nav-height) + var(--bottom-safe) + 38px);
 }
 
+/* Chân trang cao bao nhiêu (ManagePage đo và gán --page-footer-height) thì snackbar nổi trên bấy nhiêu. */
 body:has(.page-footer) .zaui-snackbar-bottom {
-  bottom: calc(var(--bottom-safe) + 92px);
+  bottom: calc(var(--page-footer-height, calc(var(--bottom-safe) + 80px)) + 12px);
 }
 
 /* Snackbar chỉ để đọc: không chặn lần bấm vào nút nằm dưới nó. */
@@ -748,6 +761,30 @@ body:has(.page-footer) .zaui-snackbar-bottom {
 .bell::after {
   content: "Thông báo";
   order: 1;
+  white-space: nowrap;
+}
+
+/* Chỗ hẹp (máy dưới 375px hoặc "Chữ rất lớn"): số chưa đọc nổi ở góc trên bên phải nút, để chữ "Thông báo" giữ một dòng. */
+@mixin bell-badge-corner {
+  .bell,
+  .page-header > .bell:first-child {
+    position: relative;
+    padding-right: 1.5rem;
+  }
+
+  .bell__badge {
+    position: absolute;
+    top: -10px;
+    right: -12px;
+  }
+}
+
+@media (max-width: 374px) {
+  @include bell-badge-corner;
+}
+
+html[data-text-size="xlarge"] {
+  @include bell-badge-corner;
 }
 
 .bell:active {
@@ -1197,6 +1234,21 @@ body:has(.page-footer) .zaui-snackbar-bottom {
   margin-top: 28px;
 }
 
+/*
+ * Khối có viền nối tiếp nhau ngay trong trang hoặc trong một mục (không nằm trong cột .form đã có khoảng cách): chừa 12px,
+ * để hai thẻ không dính thành một khối và bóng dưới của thẻ trên không đè lên viền thẻ dưới. Dòng chú thích sát một khối
+ * cũng có khoảng thở. Độ ưu tiên đúng bằng một class (phần :where không tính, :is tính một class): thắng reset margin của
+ * Tailwind trên p, dl, ul, còn mọi quy tắc lề theo class viết sau vẫn thắng nó.
+ */
+:where(.screen__body, .block) > :where(.card, .rows) + :is(.card, .rows) {
+  margin-top: 12px;
+}
+
+:where(.screen__body, .block) > :where(.form__hint) + :is(.card, .rows),
+:where(.screen__body, .block) > :where(.card, .rows) + :is(.form__hint) {
+  margin-top: 8px;
+}
+
 .block__title {
   margin-bottom: 12px;
   font-size: 1.25rem;
@@ -1320,6 +1372,27 @@ body:has(.page-footer) .zaui-snackbar-bottom {
   bottom: 0;
   width: 6px;
   background: var(--brand);
+}
+
+/*
+ * Nền tối: --brand-soft gần trùng màu thẻ (1,07:1) nên ô tab đang chọn, dòng đang bấm, thông báo chưa đọc trông như
+ * không có trạng thái, còn --brand của vạch việc cần xử lý chỉ 1,7:1. Chỉ đổi nền của các trạng thái này sang màu sáng
+ * hơn (#164a5c: chữ thường 9:1, chữ phụ 6,3:1), giữ --brand-soft cho các chỗ đặt chữ phụ lâu dài.
+ */
+body[zaui-theme="dark"] {
+  .tabbar__item.is-active .tabbar__icon,
+  .task:active,
+  .actions__item:active,
+  .menu-row:active,
+  button.row:active,
+  .notice.is-unread {
+    background: #164a5c;
+  }
+
+  /* Chỉ vạch màu mặc định (việc không gấp); vạch thành công, cảnh báo, gấp giữ màu riêng. */
+  .task:not(.tone-bar-success):not(.tone-bar-warning):not(.tone-bar-danger)::before {
+    background: var(--brand-text);
+  }
 }
 
 .tone-bar-success::before {
@@ -1590,16 +1663,19 @@ body:has(.page-footer) .zaui-snackbar-bottom {
   padding: 16px;
 }
 
+/* Tên hiển thị, tên đăng nhập gõ liền không khoảng trắng vẫn xuống dòng trong thẻ (ô lưới không tự co). */
 .request__name {
   font-size: 1.125rem;
   line-height: 1.625rem;
   font-weight: 700;
+  overflow-wrap: anywhere;
 }
 
 .request__meta {
   font-size: 1rem;
   line-height: 1.5rem;
   color: var(--ink-2);
+  overflow-wrap: anywhere;
 }
 
 .request__note {
@@ -1670,6 +1746,11 @@ body:has(.page-footer) .zaui-snackbar-bottom {
   padding: 48px 16px;
   text-align: center;
   color: var(--ink-2);
+}
+
+/* Khối giải thích ngắn trong màn có nhiều nội dung (Liên kết tài khoản): bớt khoảng trống trên dưới. */
+.empty--compact {
+  padding: 16px 0;
 }
 
 .empty__badge {
@@ -1795,8 +1876,10 @@ body:has(.page-footer) .zaui-snackbar-bottom {
   color: var(--ok);
 }
 
+/* Chỗ hẹp thì giá trị bên phải ("Chữ rất lớn") xuống dòng dưới, không bóp nhãn còn một chữ mỗi dòng. */
 .menu-row {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 12px;
   width: 100%;
@@ -1824,15 +1907,18 @@ body:has(.page-footer) .zaui-snackbar-bottom {
 }
 
 .menu-row__label {
-  flex: 1;
+  flex: 1 1 6rem;
   min-width: 0;
   font-weight: 700;
 }
 
 .menu-row__value {
-  flex: none;
+  flex: 0 1 auto;
+  min-width: 0;
+  margin-left: auto;
   font-size: 1rem;
   color: var(--ink-2);
+  text-align: right;
 }
 
 .menu-row--danger,
@@ -2080,6 +2166,11 @@ body:has(.page-footer) .zaui-snackbar-bottom {
   margin: 0;
 }
 
+/* Nhãn trạng thái đặt thẳng trong cột form giữ cỡ của nó, không bị kéo dài hết chiều ngang thẻ. */
+.form > .badge {
+  align-self: flex-start;
+}
+
 .form__intro {
   font-size: 1rem;
   line-height: 1.5rem;
@@ -2138,6 +2229,12 @@ body:has(.page-footer) .zaui-snackbar-bottom {
 .form-error .zaui-icon {
   flex: none;
   margin-top: 2px;
+}
+
+/* Chữ lỗi là một chuỗi liền (mã, JSON) vẫn xuống dòng trong khung, không đẩy trang tràn ngang. */
+.form-error > :not(.zaui-icon) {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 /* Lưu ý không chặn lưu (ví dụ bè ngoài ranh giới vùng): cùng khuôn với dòng lỗi nhưng màu cảnh báo. */
@@ -2271,6 +2368,12 @@ body:has(.page-footer) .zaui-snackbar-bottom {
   padding: 8px 16px 24px;
 }
 
+/* Sheet vừa là cột flex (.form) vừa giới hạn chiều cao: không cho khối con co lại, để phần thừa cuộn chứ không bị
+   ép mỏng. Danh sách (.rows có overflow hidden) trước đây co còn một vệt trong sheet các lô của Báo cáo. */
+.sheet-form > * {
+  flex-shrink: 0;
+}
+
 /* Hai nút xếp chồng trong sheet: nút xác nhận và nút quay lại. */
 .sheet-actions {
   display: grid;
@@ -2333,6 +2436,14 @@ body:has(.page-footer) .zaui-snackbar-bottom {
   padding: 4px 16px;
 }
 
+/* Bảng thông tin đặt trong một thẻ khác: bỏ khung thứ hai để không thành hai viền, hai bóng lồng nhau. */
+.card .info.card {
+  padding: 0;
+  border: 0;
+  background: none;
+  box-shadow: none;
+}
+
 .block__head {
   display: flex;
   align-items: center;
@@ -2358,8 +2469,10 @@ body:has(.page-footer) .zaui-snackbar-bottom {
   border-top: 1.5px solid var(--line-soft);
 }
 
+/* Hàng hẹp (máy 320px, "Chữ rất lớn") thì số bên phải xuống dòng dưới, canh phải, thay vì bẻ đôi số tiền. */
 .row {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 12px;
   width: 100%;
@@ -2374,7 +2487,7 @@ button.row:active {
 }
 
 .row__text {
-  flex: 1;
+  flex: 1 1 7rem;
   min-width: 0;
   display: flex;
   flex-direction: column;
@@ -2404,12 +2517,12 @@ button.row:active {
 
 .row__value {
   flex: none;
-  max-width: 40%;
+  max-width: 100%;
+  margin-left: auto;
   font-size: 1rem;
   line-height: 1.5rem;
   font-weight: 700;
   text-align: right;
-  overflow-wrap: anywhere;
 }
 
 /* Chip lọc xuống dòng thay vì cuộn ngang, để thấy hết các lựa chọn. */
@@ -2493,6 +2606,12 @@ button.row:active {
   margin: 0;
 }
 
+/* Nhóm nút trong chân trang đã có lề của chân trang, không cộng thêm lề trên của nhóm. */
+.page-footer .action-row,
+.page-footer .button-stack {
+  margin: 0;
+}
+
 .form__group {
   margin: 0;
   padding: 0;
@@ -2565,7 +2684,6 @@ button.row:active {
   font-size: 1.25rem;
   line-height: 1.75rem;
   font-weight: 700;
-  overflow-wrap: anywhere;
 }
 
 .summary__cell.tone-danger .summary__value {
@@ -2636,7 +2754,6 @@ button.row:active {
   font-size: 1rem;
   input { width: 1.5rem; height: 1.5rem; flex-shrink: 0; }
 }
-.workforce-sheet { max-height: 75vh; overflow-y: auto; }
 .attendance-qr {
   text-align: center;
   img { display: block; width: min(100%, 20rem); height: auto; margin: 0 auto; background: white; }

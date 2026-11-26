@@ -21,6 +21,7 @@ const STATUS: Record<string, Label> = {
   Superseded: { text: "Đã thay thế", tone: "neutral" },
   Voided: { text: "Đã hủy", tone: "neutral" },
   Open: { text: "Đang mở", tone: "success" },
+  Reopened: { text: "Mở lại", tone: "warning" },
   Closed: { text: "Đã đóng", tone: "neutral" },
 };
 
