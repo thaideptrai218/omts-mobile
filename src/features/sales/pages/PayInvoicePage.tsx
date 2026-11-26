@@ -11,6 +11,7 @@ import { Loadable } from "@/components/Loadable/Loadable";
 import { ManagePage } from "@/components/ManagePage/ManagePage";
 import { Section } from "@/components/Section/Section";
 import { bankName } from "@/constants/banks";
+import { useQrImage } from "@/features/sales/hooks/useQrImage";
 import { getCheckout, linkZaloOrder, startCheckout } from "@/features/sales/services/checkoutService";
 import { createCheckoutOrder, onAppResumed, onCustomPaymentSelected, saveImage } from "@/services/zaloService";
 import { copyText } from "@/utils/clipboard";
@@ -55,7 +56,6 @@ export default function PayInvoicePage() {
   const [error, setError] = useState("");
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
-  const [qrImage, setQrImage] = useState<string | null>(null);
   // Sự kiện của Zalo đến lúc nào cũng được, nên mã lần thanh toán hiện tại nằm trong ref.
   const current = useRef<string | null>(null);
   const started = useRef(false);
@@ -135,22 +135,8 @@ export default function PayInvoicePage() {
   }, [stage]);
 
   const qrContent = stage === "transfer" ? checkout?.qr.content : undefined;
-  useEffect(() => {
-    setQrImage(null);
-    if (!qrContent) return;
-    let active = true;
-    void import("qrcode")
-      .then((QRCode) => QRCode.toDataURL(qrContent, { width: 320, margin: 4 }))
-      .then((image) => {
-        if (active) setQrImage(image);
-      })
-      .catch(() => {
-        if (active) setError("Chưa vẽ được mã QR. Bạn vẫn có thể chép số tài khoản, số tiền và nội dung bên dưới.");
-      });
-    return () => {
-      active = false;
-    };
-  }, [qrContent]);
+  // Vẽ lỗi là trạng thái riêng: lần hỏi server mỗi 4 giây xóa `error`, trước đây làm khung chờ ảnh quay mãi.
+  const qr = useQrImage(qrContent);
 
   const checkNow = async () => {
     setBusy(true);
@@ -170,9 +156,9 @@ export default function PayInvoicePage() {
   };
 
   const save = async () => {
-    if (!qrImage) return;
+    if (!qr.image) return;
     try {
-      await saveImage(qrImage);
+      await saveImage(qr.image);
       openSnackbar({ text: "Đã lưu mã QR vào thư viện ảnh.", type: "success", duration: 1500 });
     } catch (err) {
       openSnackbar({ text: err instanceof Error ? err.message : "Chưa lưu được ảnh vào máy.", type: "error", duration: 5000 });
@@ -213,8 +199,17 @@ export default function PayInvoicePage() {
               Quét mã bằng app ngân hàng; số tiền và nội dung đã có sẵn trong mã. Điện thoại này không quét được mã trên chính màn hình của nó: hãy lưu ảnh
               mã rồi chọn ảnh trong app ngân hàng, hoặc chép số tài khoản.
             </p>
-            {qrImage ? (
-              <img className="checkout-qr" src={qrImage} alt={`Mã QR chuyển khoản hóa đơn ${shown.invoiceCode}`} />
+            {qr.image ? (
+              <img className="checkout-qr" src={qr.image} alt={`Mã QR chuyển khoản hóa đơn ${shown.invoiceCode}`} />
+            ) : qr.failed ? (
+              <div className="form checkout-qr-failed">
+                <p className="form__hint" role="alert">
+                  Chưa vẽ được mã QR. Bạn vẫn chuyển khoản được: chép số tài khoản, số tiền và nội dung chuyển khoản bên dưới vào app ngân hàng.
+                </p>
+                <Button fullWidth variant="secondary" size="large" onClick={qr.redraw}>
+                  Vẽ lại mã QR
+                </Button>
+              </div>
             ) : (
               <div className="skeleton checkout-qr" aria-hidden />
             )}
@@ -233,7 +228,7 @@ export default function PayInvoicePage() {
               <Button fullWidth size="large" loading={busy} disabled={busy} onClick={() => void checkNow()}>
                 Tôi đã chuyển khoản
               </Button>
-              <Button fullWidth variant="secondary" disabled={!qrImage} onClick={() => void save()}>
+              <Button fullWidth variant="secondary" disabled={!qr.image} onClick={() => void save()}>
                 Lưu ảnh mã QR
               </Button>
               <Button fullWidth variant="secondary" onClick={() => void copy(shown.qr.accountNumber, "số tài khoản")}>

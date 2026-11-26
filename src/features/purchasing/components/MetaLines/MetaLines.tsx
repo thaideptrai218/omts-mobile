@@ -10,8 +10,9 @@ export function MetaLines({ items }: { items: [string, ReactNode][] }) {
   const shown = items.filter(([, v]) => v !== null && v !== undefined && v !== "");
   return (
     <span className="meta-lines">
-      {shown.map(([label, value]) => (
-        <span key={label} className="meta-lines__item">
+      {/* Nhãn có thể lặp lại (ví dụ ngày của các lần dùng vật tư), nên khóa ghép thêm thứ tự dòng. */}
+      {shown.map(([label, value], index) => (
+        <span key={`${index}-${label}`} className="meta-lines__item">
           {label}: <span className="meta-lines__value">{value}</span>
         </span>
       ))}

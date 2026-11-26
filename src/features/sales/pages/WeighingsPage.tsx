@@ -7,6 +7,7 @@ import { ManagePage } from "@/components/ManagePage/ManagePage";
 import PagedList from "@/components/PagedList/PagedList";
 import { Row } from "@/components/Row/Row";
 import { listWeighingLots } from "@/features/sales/services/lotWeighingService";
+import { lotStatusLabel } from "@/features/sales/utils/lotStatus";
 import { usePaged } from "@/hooks/usePaged";
 import { dateTime, num } from "@/utils/format";
 
@@ -49,7 +50,7 @@ export default function WeighingsPage() {
               lot.weighedKg !== null ? `cân ${num(lot.weighedKg, "kg")}` : `ước ${num(lot.estimatedKg, "kg")}`,
               `thu lúc ${dateTime(lot.harvestedAt)}`,
             ].filter(Boolean).join(" · ")}
-            badge={lot.weighedKg === null ? <Badge text="Chờ cân" tone="warning" /> : <Badge text={lot.status} tone="neutral" />}
+            badge={lot.weighedKg === null ? <Badge text="Chờ cân" tone="warning" /> : <Badge text={lotStatusLabel(lot.statusId, lot.status).text} tone="neutral" />}
             onClick={() => navigate(`/manage/weighings/${lot.id}`)}
           />
         )}

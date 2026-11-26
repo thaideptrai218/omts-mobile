@@ -20,7 +20,8 @@ export function kgGap(cooperative: number, trader: number): string {
 /**
  * Bảng đối chiếu số cân (chốt 24/11/2026, OMTS-227): HTX và thương lái cùng cân từng lồng, lồng thứ i của HTX đặt cạnh lồng thứ i của
  * thương lái (theo thứ tự cân, không theo số lồng đã cấp). Dòng lệch có nhãn chữ "lệch … kg", không chỉ dựa vào màu. Số của HTX là số
- * chính thức. `onPick` mở sửa một lồng của bên `editable`.
+ * chính thức. `onPick` mở sửa một lồng của bên `editable`. Đơn vị "kg" nằm ở tiêu đề cột để ô chỉ còn con số, vừa cột ở máy 320px
+ * và cỡ chữ rất lớn; hai số tổng có thể dài ("1.234,567 kg") nên mỗi số một dòng trọn chiều ngang.
  */
 export function WeighingCompare({ cages, traderCages, cagesKg, traderCagesKg, editable, onPick }: {
   cages: CompareCage[];
@@ -39,10 +40,10 @@ export function WeighingCompare({ cages, traderCages, cagesKg, traderCagesKg, ed
 
   return (
     <div className="weighing-compare">
-      <div className="weighing-compare__row weighing-compare__row--head" aria-hidden="true">
+      <div className="weighing-compare__row weighing-compare__row--head">
         <span>Lồng</span>
-        <span>HTX</span>
-        <span>Thương lái</span>
+        <span>HTX (kg)</span>
+        <span>Thương lái (kg)</span>
       </div>
       {Array.from({ length: count }, (_, index) => {
         const cooperative = ours[index];
@@ -53,8 +54,8 @@ export function WeighingCompare({ cages, traderCages, cagesKg, traderCagesKg, ed
         const cells = (
           <>
             <span className="weighing-compare__cage">{position}</span>
-            <span>{cooperative ? num(cooperative.kg, "kg") : "—"}</span>
-            <span>{trader ? num(trader.kg, "kg") : "—"}</span>
+            <span className="weighing-compare__kg">{cooperative ? num(cooperative.kg) : "—"}</span>
+            <span className="weighing-compare__kg">{trader ? num(trader.kg) : "—"}</span>
             {note && <span className="weighing-compare__note">Lồng {position}: {note}</span>}
           </>
         );
@@ -69,9 +70,8 @@ export function WeighingCompare({ cages, traderCages, cagesKg, traderCagesKg, ed
         );
       })}
       <div className="weighing-compare__row weighing-compare__row--total">
-        <span>Tổng</span>
-        <span>{num(cagesKg, "kg")}</span>
-        <span>{num(traderCagesKg, "kg")}</span>
+        <span className="weighing-compare__total">Tổng HTX: <span className="nowrap">{num(cagesKg, "kg")}</span></span>
+        <span className="weighing-compare__total">Tổng thương lái: <span className="nowrap">{num(traderCagesKg, "kg")}</span></span>
         <span className={`weighing-compare__note${totalGap ? "" : " weighing-compare__note--ok"}`}>
           {totalGap
             ? `Tổng hai bên ${totalGap} (${num(ours.length, "lồng")} HTX, ${num(theirs.length, "lồng")} thương lái).`

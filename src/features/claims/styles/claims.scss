@@ -116,6 +116,11 @@
   font-weight: 700;
 }
 
+/* Nền tối: --brand gần trùng màu thẻ, viền lựa chọn đang chọn dùng màu chữ thương hiệu cho nổi. */
+body[zaui-theme="dark"] .claim-offer.is-active {
+  border-color: var(--brand-text);
+}
+
 .claim-offer:disabled {
   opacity: 0.6;
 }

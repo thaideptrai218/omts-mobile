@@ -16,6 +16,7 @@ import { kgGap, WeighingCompare } from "@/features/sales/components/WeighingComp
 import {
   addCage, cageKg, completeWeighing, newOperationId, removeCage, updateCage, weighingSheet,
 } from "@/features/sales/services/lotWeighingService";
+import { lotStatusLabel } from "@/features/sales/utils/lotStatus";
 import { useAction } from "@/hooks/useAction";
 import { useLoad } from "@/hooks/useLoad";
 import { dateTime, num } from "@/utils/format";
@@ -113,7 +114,7 @@ export default function LotWeighingPage() {
                 ["Loại hàu", product?.productName],
                 ["Số lồng lúc thu", num(data.harvestedCages, "lồng")],
                 ["Ước tính lúc thu", num(data.estimatedKg, "kg")],
-                ["Trạng thái", data.status],
+                ["Trạng thái", lotStatusLabel(data.statusId, data.status).text],
                 ["Kg đã chốt", completed ? `${num(data.weighedKg, "kg")} (lúc ${dateTime(data.weighedAt)})` : null],
               ]} />
 
@@ -132,11 +133,13 @@ export default function LotWeighingPage() {
 
               {data.canEdit ? (
                 <Section title={`Cân lồng ${next}`}>
-                  <NumberInput label={`Số kg của lồng ${next}`} value={kg} onChange={setKg} decimal disabled={busy} />
-                  <FormError text={error} />
-                  <Button fullWidth size="large" loading={busy} disabled={busy || !kg.trim()} onClick={() => void saveCage()}>
-                    Lưu lồng {next}
-                  </Button>
+                  <div className="form">
+                    <NumberInput label={`Số kg của lồng ${next}`} value={kg} onChange={setKg} decimal disabled={busy} />
+                    <FormError text={error} />
+                    <Button fullWidth size="large" loading={busy} disabled={busy || !kg.trim()} onClick={() => void saveCage()}>
+                      Lưu lồng {next}
+                    </Button>
+                  </div>
                 </Section>
               ) : (
                 <p className="form__intro">Lô đã đóng nên không cân thêm hay sửa lồng được nữa.</p>

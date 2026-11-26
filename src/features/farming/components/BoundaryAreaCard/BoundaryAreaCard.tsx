@@ -41,7 +41,7 @@ export function BoundaryAreaCard({ area, centralMeridian, disabled, onRename, on
   const matched = checks.filter((check) => check.state === "match").length;
   const stray = strayCorners(area, centralMeridian);
   return (
-    <div className="form">
+    <div className="card form">
       <Input label="Tên khu" value={area.name} onChange={(event) => onRename(event.target.value)} maxLength={100} disabled={disabled} />
       <p className="form__hint">
         {area.corners.length} điểm góc · {matched} điểm khớp X, Y
@@ -100,8 +100,8 @@ function CornerForm({ corner, centralMeridian, onSave, onRemove }: {
     <div className="sheet-form form">
       <p className="form__intro">Gõ đúng như trên sơ đồ (hệ VN-2000). Có cả vĩ/kinh độ và X, Y thì app đối chiếu hai cột với nhau để bắt số đọc sai.</p>
       <Input label="Tên điểm" value={draft.label} onChange={set("label")} maxLength={20} />
-      <Input label="Vĩ độ" placeholder={`Ví dụ: 21°07'06.66" hoặc 21 07 06.66`} value={draft.latitude} onChange={set("latitude")} />
-      <Input label="Kinh độ" placeholder={`Ví dụ: 107°30'41.08" hoặc 107 30 41.08`} value={draft.longitude} onChange={set("longitude")} />
+      <Input label="Vĩ độ" placeholder={`21°07'06.66"`} helperText={`Ví dụ: 21°07'06.66" hoặc 21 07 06.66`} value={draft.latitude} onChange={set("latitude")} />
+      <Input label="Kinh độ" placeholder={`107°30'41.08"`} helperText={`Ví dụ: 107°30'41.08" hoặc 107 30 41.08`} value={draft.longitude} onChange={set("longitude")} />
       <Input label="X (m)" placeholder="Ví dụ: 2336990.46" value={draft.x} onChange={set("x")} inputMode="decimal" />
       <Input label="Y (m)" placeholder="Ví dụ: 474920.21" value={draft.y} onChange={set("y")} inputMode="decimal" />
       <p><Badge text={badge.text} tone={badge.tone} /></p>

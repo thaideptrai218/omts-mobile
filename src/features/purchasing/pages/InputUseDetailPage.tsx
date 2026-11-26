@@ -106,28 +106,30 @@ function InputUseDetailPage() {
               )}
 
               <Section title={`Vật tư xuất (${r.lines.length})`}>
-                <Rows>
-                  {r.lines.map((l) => (
-                    <Row
-                      key={l.id}
-                      title={l.itemName}
-                      meta={
-                        <MetaLines
-                          items={[
-                            ["Mã hàng", l.itemCode],
-                            ["Số lượng", num(l.quantity, l.unit)],
-                            ["Trừ kho", l.unitFactor !== 1 ? num(l.baseQuantity, l.baseUnit) : null],
-                            ["Lô giống", l.group === "Seed" ? (l.seedLotCode ?? "Chưa gắn lô") : null],
-                            ["Giá vốn", `${money(l.unitCost)} mỗi ${l.unit}`],
-                            ["Giá trị", money(l.value)],
-                            ["Ghi chú", l.note],
-                          ]}
-                        />
-                      }
-                    />
-                  ))}
-                </Rows>
-                <Facts items={[["Tổng giá trị", money(r.totalValue)]]} />
+                <div className="form">
+                  <Rows>
+                    {r.lines.map((l) => (
+                      <Row
+                        key={l.id}
+                        title={l.itemName}
+                        meta={
+                          <MetaLines
+                            items={[
+                              ["Mã hàng", l.itemCode],
+                              ["Số lượng", num(l.quantity, l.unit)],
+                              ["Trừ kho", l.unitFactor !== 1 ? num(l.baseQuantity, l.baseUnit) : null],
+                              ["Lô giống", l.group === "Seed" ? (l.seedLotCode ?? "Chưa gắn lô") : null],
+                              ["Giá vốn", `${money(l.unitCost)} mỗi ${l.unit}`],
+                              ["Giá trị", money(l.value)],
+                              ["Ghi chú", l.note],
+                            ]}
+                          />
+                        }
+                      />
+                    ))}
+                  </Rows>
+                  <Facts items={[["Tổng giá trị", money(r.totalValue)]]} />
+                </div>
               </Section>
 
               <ConfirmSheet

@@ -2,3 +2,13 @@
 .water-field {
   margin-bottom: 16px;
 }
+
+/* Cuộn tới ô chọn vùng thì chừa thanh "Quay lại" dính ở đầu trang (cao 56px dưới vùng thanh trạng thái). */
+.water-field--zone {
+  scroll-margin-top: calc(var(--top-clear) + 56px + 12px);
+}
+
+/* Ba ô ngưỡng xếp hai cột: ô cuối chiếm trọn hàng để không lộ khoảng trống cạnh nó. */
+.water-thresholds .summary__cell:last-child:nth-child(odd) {
+  grid-column: 1 / -1;
+}

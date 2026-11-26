@@ -9,6 +9,8 @@ import { readCornerTable } from "@/features/farming/services/zoneMapOcrService";
 import { choosePhoto, zaloAvailable } from "@/services/zaloService";
 import { rotatedPreview } from "@/utils/imageFile";
 
+import "@/features/farming/styles/frameSheet.scss";
+
 const START: FrameRect = { left: 0.05, top: 0.05, right: 0.95, bottom: 0.95 };
 
 /**
@@ -79,15 +81,17 @@ export default function CornerTableScan({ disabled, onRead, onBusyChange }: {
     </>}
     <FormError text={error} />
     <Sheet visible={!!photo} onClose={() => setPhoto(null)} height="92vh" mask handler swipeToClose={false} title="Chọn bảng tọa độ">
-      <div className="sheet-form form">
+      <div className="sheet-form form frame-sheet">
         <p className="form__intro">
           Bấm Xoay ảnh cho tới khi chữ trong bảng nằm ngang. Sau đó kéo khung trắng bao quanh bảng tọa độ (bao được nhiều bảng một
           lúc); khung càng sát bảng thì đọc càng nhanh và đúng.
         </p>
         {preview ? <ImageFrame src={preview} alt="Ảnh sơ đồ vừa chọn" frame={frame} onChange={setFrame} /> : <div className="skeleton skeleton--form" aria-busy />}
-        <div className="sheet-actions">
+        <div className="sheet-actions frame-sheet__actions">
           <Button fullWidth size="large" disabled={!preview} onClick={() => void read()}>Đọc tọa độ trong khung</Button>
           <Button fullWidth size="large" variant="secondary" disabled={!preview} onClick={() => setTurns((value) => ((value + 1) % 4) as QuarterTurns)}>Xoay ảnh 90°</Button>
+          {/* Sheet không vuốt xuống để đóng (tránh đóng nhầm khi kéo khung), nên cần nút thoát riêng. */}
+          <Button fullWidth size="large" variant="secondary" onClick={() => setPhoto(null)}>Hủy</Button>
         </div>
       </div>
     </Sheet>

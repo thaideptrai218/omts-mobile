@@ -35,6 +35,16 @@ const MAX_REASON = 1000;
 const correctionLines = (marks: TraceCorrectionMark[]) =>
   marks.map((m) => `Đã sửa ${dateTime(m.correctedAt)}${m.actorName ? ` bởi ${m.actorName}` : ""}${m.reason ? `: ${m.reason}` : ""}`);
 
+/** Nhãn lặp lại (nhiều lần sửa dữ liệu) được đánh số "Sửa dữ liệu thu hoạch (2)", vì `Facts` dùng nhãn làm key của dòng. */
+const numberedLabels = <T,>(items: [string, T][]): [string, T][] => {
+  const seen = new Map<string, number>();
+  return items.map(([label, value]) => {
+    const count = (seen.get(label) ?? 0) + 1;
+    seen.set(label, count);
+    return [count === 1 ? label : `${label} (${count})`, value];
+  });
+};
+
 /**
  * Truy vết một lô hàu (SCR-TRACE-01): truy ngược về bè, vùng, chu kỳ, từng luống và lô giống, phiếu nhập, nhà cung cấp; truy
  * xuôi tới các hóa đơn bán và thương lái. Từ đây công bố thông tin nguồn gốc (TRACE-01.2) và, với Chủ HTX, thu hồi (TRACE-04).
@@ -131,7 +141,8 @@ function LotTracePage() {
                       ? [<Row key={`lane-${lane.laneNumber}`} title={`Luống ${lane.laneNumber}`} meta="Chưa có phiên thả giống" badge={<Badge text="Thiếu giống" tone="warning" />} />]
                       : lane.seedings.map((s) => (
                           <Row
-                            key={s.seedingRecordId}
+                            // Một phiên thả giống có thể treo trên nhiều luống, nên key gồm cả số luống.
+                            key={`${lane.laneNumber}-${s.seedingRecordId}`}
                             title={`Luống ${lane.laneNumber} · lô giống ${s.seedLot.code}`}
                             meta={
                               <MetaLines
@@ -226,9 +237,11 @@ function LotSummary({ trace: t }: { trace: LotTrace }) {
   const origin = ORIGIN_STATE[t.originState];
   return (
     <Section title={`Lô ${t.lotCode}`}>
-      <Badge text={origin.text} tone={origin.tone} />
+      <p className="trace-state">
+        <Badge text={origin.text} tone={origin.tone} />
+      </p>
       <Facts
-        items={[
+        items={numberedLabels([
           ["Thu hoạch", dateTime(t.harvestedAt)],
           ["Số lồng", num(t.cageCount, "lồng")],
           ["Khối lượng ước tính", num(t.estimatedKg, "kg")],
@@ -238,7 +251,7 @@ function LotSummary({ trace: t }: { trace: LotTrace }) {
           ["Công bố lúc", t.publishedAt ? dateTime(t.publishedAt) : null],
           ["Thu hồi lúc", t.withdrawnAt ? dateTime(t.withdrawnAt) : null],
           ...correctionLines(t.corrections).map((c): [string, string] => ["Sửa dữ liệu thu hoạch", c]),
-        ]}
+        ])}
       />
     </Section>
   );

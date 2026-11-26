@@ -25,6 +25,7 @@ import { MetaLines } from "@/features/purchasing/components/MetaLines/MetaLines"
 import { SupplierPaymentSheet } from "@/features/purchasing/components/SupplierPaymentSheet/SupplierPaymentSheet";
 import { getSupplierDebt, getSupplierStatement, STATUS_DISCONTINUED } from "@/features/purchasing/services/purchasingService";
 import { STATEMENT_KIND_TEXT, supplierDebtLabel, supplierDebtText } from "@/features/purchasing/utils/paymentText";
+import "@/features/purchasing/styles/purchasing.scss";
 
 /**
  * Công nợ một nhà cung cấp: nợ hôm nay và các phiếu nhập còn phải trả, cũ nhất trước (PURCHASE-05 bước 1), cùng sao kê
@@ -93,19 +94,21 @@ function SupplierDebtPage() {
           return (
             <>
               <Section title={d.supplier.name}>
-                {d.supplier.phoneNumber && <p className="form__hint">{d.supplier.phoneNumber}</p>}
-                {d.supplier.statusId === STATUS_DISCONTINUED && <Badge text="Ngừng dùng" tone="neutral" />}
-                <div className="summary">
-                  <div className={`summary__cell tone-${today.tone}`}>
-                    <span className="summary__label">{today.text}</span>
-                    <span className="summary__value">{money(Math.abs(d.debtToday))}</span>
-                  </div>
-                  {d.debtAgeDays !== null && (
-                    <div className="summary__cell">
-                      <span className="summary__label">Tuổi nợ</span>
-                      <span className="summary__value">{d.debtAgeDays} ngày</span>
+                <div className="form">
+                  {d.supplier.phoneNumber && <p className="form__hint">{d.supplier.phoneNumber}</p>}
+                  {d.supplier.statusId === STATUS_DISCONTINUED && <Badge text="Ngừng dùng" tone="neutral" />}
+                  <div className="summary summary--money">
+                    <div className={`summary__cell tone-${today.tone}`}>
+                      <span className="summary__label">{today.text}</span>
+                      <span className="summary__value">{money(Math.abs(d.debtToday))}</span>
                     </div>
-                  )}
+                    {d.debtAgeDays !== null && (
+                      <div className="summary__cell">
+                        <span className="summary__label">Tuổi nợ</span>
+                        <span className="summary__value">{d.debtAgeDays} ngày</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
                 {allowed("SUPPLIERS", "View") && (
                   <Actions>

@@ -3,10 +3,11 @@ import { Fragment, type ReactNode } from "react";
 
 import { Empty } from "@/components/Empty/Empty";
 import { ManagePage } from "@/components/ManagePage/ManagePage";
+import { PermissionsPending } from "@/features/auth/components/PermissionsPending/PermissionsPending";
 import { hasFunction } from "@/features/auth/services/permissionsService";
 import { permissionsAtom, sessionAtom } from "@/features/auth/state/authAtoms";
 
-/** Khung chờ trong lúc tải quyền của phiên. */
+/** Khung chờ trong lúc chuyển sang màn khiếu nại của HTX. */
 export function ClaimsLoading() {
   return (
     <ManagePage title="Khiếu nại">
@@ -32,7 +33,13 @@ export function ClaimsGate({ mode, children }: { mode: "trader" | "staff"; child
       </ManagePage>
     );
   }
-  if (!p || p.accountId !== session.accountId) return <ClaimsLoading />;
+  if (!p || p.accountId !== session.accountId) {
+    return (
+      <ManagePage title="Khiếu nại">
+        <PermissionsPending />
+      </ManagePage>
+    );
+  }
   const allowed = mode === "trader" ? p.subjectType === "Trader" : p.subjectType !== "Trader" && (p.isCooperativeOwner || hasFunction(p, "QUALITY_CLAIMS"));
   if (!allowed) {
     return (

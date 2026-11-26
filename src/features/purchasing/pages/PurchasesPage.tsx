@@ -16,6 +16,7 @@ import { statusLabel } from "@/utils/labels";
 import { MetaLines } from "@/features/purchasing/components/MetaLines/MetaLines";
 import { RECEIPT_CANCELLED, RECEIPT_COMPLETED, RECEIPT_DRAFT, searchReceipts } from "@/features/purchasing/services/purchasingService";
 import { receiptRemaining } from "@/features/purchasing/utils/receiptMoney";
+import "@/features/purchasing/styles/purchasing.scss";
 
 const STATUS_OF: Record<Filter, number | null> = {
   all: null,
@@ -73,11 +74,11 @@ function PurchasesPage() {
         {(result) => {
           const rows = [...result.page.items, ...extra];
           return (
-            <>
+            <div className="form">
               <p className="form__hint">
                 Từ {date(result.from)} đến {date(result.to)} · {result.totals.count} phiếu
               </p>
-              <div className="summary">
+              <div className="summary summary--money">
                 <div className="summary__cell">
                   <span className="summary__label">Tiền hàng đã nhập</span>
                   <span className="summary__value">{money(result.totals.receiptsTotal)}</span>
@@ -127,11 +128,11 @@ function PurchasesPage() {
                 </Rows>
               )}
               {rows.length < result.page.total && (
-                <Button fullWidth variant="secondary" size="large" className="more" loading={busy} disabled={busy} onClick={() => void loadMore()}>
+                <Button fullWidth variant="secondary" size="large" loading={busy} disabled={busy} onClick={() => void loadMore()}>
                   Tải thêm
                 </Button>
               )}
-            </>
+            </div>
           );
         }}
       </Loadable>

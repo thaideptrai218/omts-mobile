@@ -79,7 +79,7 @@ function Inbox() {
       <div className="button-stack"><Button fullWidth size="large" variant="secondary" disabled={busy} onClick={() => void list.reload()}>Tải lại</Button></div>
     </>}
     <Sheet visible={decision !== null} onClose={() => { if (!busy) setDecision(null); }} autoHeight mask handler title={decision ? "Chấp nhận yêu cầu mua" : "Từ chối yêu cầu mua"}>
-      <div className="sheet-form form workforce-sheet"><p>{selected?.customer.name} · {selected?.productName}</p>
+      <div className="sheet-form form"><p>{selected?.customer.name} · {selected?.productName}</p>
         {decision && <><p>Nhận {num(Number(cages), "lồng")} · giao ngày {date(pickup)} theo ca đã xác nhận.</p>
           <Checkbox className="sales-option" value="pay-later" checked={payLater} disabled={busy} onChange={e => setPayLater(e.target.checked)}>Cho phép thương lái trả sau</Checkbox></>}
         <Input.TextArea label={decision ? "Phản hồi (không bắt buộc)" : "Lý do từ chối (bắt buộc)"} value={note} maxLength={500} showCount disabled={busy} onChange={e => setNote(e.target.value)} />

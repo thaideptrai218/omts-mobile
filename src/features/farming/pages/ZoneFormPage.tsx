@@ -3,6 +3,7 @@ import { Button, Input, useNavigate, useParams } from "zmp-ui";
 
 import FormError from "@/components/FormError/FormError";
 import LocationInput from "@/features/farming/components/LocationInput/LocationInput";
+import { Loadable } from "@/components/Loadable/Loadable";
 import { ManagePage } from "@/components/ManagePage/ManagePage";
 import { NumberInput } from "@/components/NumberInput/NumberInput";
 import { Section } from "@/components/Section/Section";
@@ -27,6 +28,9 @@ function ZoneFormPage() {
   const [lat, setLat] = useState("");
   const [lng, setLng] = useState("");
   const [error, setError] = useState("");
+  // Lỗi tải vùng đang sửa (thay cả form, có nút Thử lại); `error` là lỗi nhập và lưu.
+  const [loadError, setLoadError] = useState("");
+  const [attempt, setAttempt] = useState(0);
   const [saveTries, setSaveTries] = useState(0);
   const [busy, setBusy] = useState(false);
 
@@ -43,8 +47,8 @@ function ZoneFormPage() {
         setLng(text(z.longitude));
         setLoaded(true);
       })
-      .catch((err) => setError(errorText(err)));
-  }, [id]);
+      .catch((err) => setLoadError(errorText(err)));
+  }, [id, attempt]);
 
   const save = async () => {
     if (busy || !loaded) return;
@@ -96,8 +100,9 @@ function ZoneFormPage() {
         </Button>
       }
     >
-      {!loaded && !error ? (
-        <div className="skeleton skeleton--form" aria-busy />
+      {/* Chưa tải xong vùng thì chưa hiện form: đang tải là khung chờ, lỗi thì có nút Thử lại. */}
+      {!loaded ? (
+        <Loadable data={null} error={loadError} reload={() => { setLoadError(""); setAttempt((n) => n + 1); }}>{() => null}</Loadable>
       ) : (
         <>
           <Section step={1} title="Thông tin vùng">
@@ -111,10 +116,10 @@ function ZoneFormPage() {
             <div className="form">
               <Input label="Vị trí (bắt buộc)" helperText="Ví dụ: Bắc đảo Cái Bầu, Vân Đồn" value={location} onChange={(e) => setLocation(e.target.value)} maxLength={500} disabled={busy} />
               <LocationInput required latitude={lat} longitude={lng} onChange={(latitude, longitude) => { setLat(latitude); setLng(longitude); }} disabled={busy || !loaded} />
+              {/* Nằm trong khung form để cách ô cuối 16px. Bấm Lưu lại mà vẫn cùng một lỗi thì key đổi để FormError cuộn tới lần nữa. */}
+              <FormError key={saveTries} text={error} />
             </div>
           </Section>
-          {/* Bấm Lưu lại mà vẫn cùng một lỗi thì key đổi để FormError cuộn tới lần nữa. */}
-          <FormError key={saveTries} text={error} />
         </>
       )}
     </ManagePage>

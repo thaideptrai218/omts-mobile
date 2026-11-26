@@ -79,6 +79,27 @@
   fill: var(--danger);
 }
 
+// Bản tối: màu biển đậm gần trùng nền thẻ (khoảng 1,7:1), nên đường và điểm dùng màu chữ biển; dải ngưỡng tô nhạt màu đó.
+// Viết lại cả điểm vượt ngưỡng vì quy tắc bản tối mạnh hơn `.water-chart__dot--alert` ở trên.
+body[zaui-theme="dark"] {
+  .water-chart__band {
+    fill: var(--brand-text);
+    fill-opacity: 0.16;
+  }
+
+  .water-chart__line {
+    stroke: var(--brand-text);
+  }
+
+  .water-chart__dot {
+    fill: var(--brand-text);
+  }
+
+  .water-chart__dot--alert {
+    fill: var(--danger);
+  }
+}
+
 // Mỗi chỉ số một dòng trong danh sách số dưới biểu đồ.
 .water-chart__stat {
   display: block;

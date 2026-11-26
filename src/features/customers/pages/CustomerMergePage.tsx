@@ -81,14 +81,21 @@ function MergeFlow({ id }: { id: string }) {
 /** Danh sách hồ sơ để chọn hồ sơ trùng, kể cả hồ sơ ngừng dùng; bỏ hồ sơ đang giữ lại. */
 function Candidates({ keptId, busy, onChoose }: { keptId: string; busy: boolean; onChoose: (id: string) => void }) {
   const [search, setSearch] = useState("");
-  const fetchPage = useCallback((page: number) => listCustomers({ search, status: "All", page }), [search]);
+  // Bỏ hồ sơ đang giữ lại ngay khi tải, để số hồ sơ và "Tải thêm" đúng, không còn khung trống khi chỉ tìm thấy chính nó.
+  const fetchPage = useCallback(
+    async (page: number) => {
+      const result = await listCustomers({ search, status: "All", page });
+      const items = result.items.filter((c) => c.id !== keptId);
+      return { ...result, items, total: result.total - (result.items.length - items.length) };
+    },
+    [search, keptId],
+  );
   const list = usePaged(fetchPage);
   return (
     <Section title="Chọn hồ sơ trùng">
       <SearchBox label="Tìm hồ sơ" placeholder="Tên, mã hoặc số điện thoại" onSearch={setSearch} />
       <PagedList list={list} unit="hồ sơ" emptyIcon="zi-user-circle" emptyTitle="Không tìm thấy hồ sơ nào" emptyText="Thử tìm bằng tên hoặc số điện thoại khác.">
         {(c) => {
-          if (c.id === keptId) return null;
           const st = customerStatus(c);
           return (
             <Row
