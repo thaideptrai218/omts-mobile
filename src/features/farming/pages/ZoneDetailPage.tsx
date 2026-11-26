@@ -99,7 +99,7 @@ function ZoneDetailPage() {
                   const state = LICENSE_STATE[l.state] ?? { text: l.state, tone: "neutral" as const };
                   return (
                     <Row
-                      key={l.documentType ?? l.documentId ?? l.documentNumber}
+                      key={l.documentId ?? `thieu-${l.documentType ?? l.documentTypeName ?? ""}`}
                       title={DOCUMENT_TYPE[l.documentType ?? ""] ?? l.documentTypeName}
                       meta={l.documentNumber ? `Số ${l.documentNumber}${l.expiryDate ? ` · hết hạn ${date(l.expiryDate)}` : ""}` : "Chưa có giấy tờ này"}
                       badge={<Badge text={state.text} tone={state.tone} />}

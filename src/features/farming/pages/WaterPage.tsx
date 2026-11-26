@@ -1,5 +1,5 @@
 import type { WaterCrop, WaterDateRange, WaterDraft, WaterFilter, WaterListItem, WaterPhotoAttempt, WaterView } from "@/features/farming/models/WaterMeasurement";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button, Icon, Select, useLocation, useNavigate, useSnackbar } from "zmp-ui";
 
 import { Badge } from "@/components/Badge/Badge";
@@ -55,7 +55,11 @@ function WaterPage() {
   const [range, setRange] = useState<WaterDateRange | null>(null);
   const [page, setPage] = useState(1);
   const [items, setItems] = useState<WaterListItem[]>([]);
+  // Tổng số đo của bộ lọc, giữ lại trong lúc tải trang sau để nút "Xem thêm" không biến mất.
+  const [total, setTotal] = useState(0);
   const [view, setView] = useState<WaterView>("list");
+  // Ô chọn vùng: chọn một vùng ở "Các vùng nuôi" thì cuộn tới đây để thấy ngay số đo của vùng đó.
+  const zoneField = useRef<HTMLDivElement>(null);
   const [reading, setReading] = useState(false);
   const [attempt, setAttempt] = useState<WaterPhotoAttempt | null>(null);
   // Ảnh vừa chụp, đang chờ người đo kéo khung vào màn hình số.
@@ -75,7 +79,11 @@ function WaterPage() {
   useEffect(() => {
     if (!list.data) return;
     setItems((current) => (list.data!.page === 1 ? list.data!.items : [...current, ...list.data!.items]));
+    setTotal(list.data.total);
   }, [list.data]);
+  // Đang tải hoặc tải lỗi một trang sau trang 1: các dòng đã hiện vẫn giữ nguyên, chỉ nút "Xem thêm" đổi trạng thái.
+  const loadingMore = page > 1 && !list.data && !list.error;
+  const moreError = page > 1 && !list.data ? list.error : "";
 
   const send = async (next: WaterPhotoAttempt) => {
     setAttempt(null);
@@ -113,6 +121,11 @@ function WaterPage() {
     setZoneId(id);
   };
 
+  const viewZone = (id: string) => {
+    changeZone(id);
+    zoneField.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
   const changeFilter = (f: WaterFilter) => {
     setPage(1);
     setFilter(f);
@@ -143,8 +156,15 @@ function WaterPage() {
                 key={z.zoneId}
                 title={`${z.zoneCode} · ${z.zoneName}`}
                 meta={z.latestMeasuredAt ? `Đo gần nhất ${dateTime(z.latestMeasuredAt)}` : "Chưa có lần đo nào"}
-                badge={z.hasWaterAlert ? <Badge text={z.valuesOutside.map(outsideText).join("; ") || "Vượt ngưỡng"} tone="danger" /> : undefined}
-                onClick={() => changeZone(z.zoneId)}
+                badge={
+                  z.zoneId === zoneId || z.hasWaterAlert ? (
+                    <>
+                      {z.zoneId === zoneId && <Badge text="Đang xem" tone="neutral" />}
+                      {z.hasWaterAlert && <Badge text={z.valuesOutside.map(outsideText).join("; ") || "Vượt ngưỡng"} tone="danger" />}
+                    </>
+                  ) : undefined
+                }
+                onClick={() => viewZone(z.zoneId)}
               />
             ))}
           </Rows>
@@ -156,7 +176,7 @@ function WaterPage() {
           list.length === 0 ? (
             <Empty icon="zi-location" title="Chưa có vùng nuôi nào" />
           ) : (
-            <div className="form water-field">
+            <div className="form water-field water-field--zone" ref={zoneField}>
               <Select label="Vùng nuôi" value={zoneId} onChange={(v) => changeZone(String(v))} closeOnSelect>
                 {list.map((z) => (
                   <Select.Option key={z.id} value={z.id} title={z.name ?? z.code ?? ""} />
@@ -168,7 +188,7 @@ function WaterPage() {
       </Loadable>
 
       {t && (
-        <div className="summary">
+        <div className="summary water-thresholds">
           <div className="summary__cell">
             <span className="summary__label">Ngưỡng pH</span>
             <span className="summary__value">{rangeText(t.phMin, t.phMax)}</span>
@@ -201,7 +221,8 @@ function WaterPage() {
       {zoneId && view === "list" && <DateRangeFilter value={range} onChange={changeRange} />}
 
       {zoneId && view === "list" && (
-        <Loadable data={list.data && items} error={list.error} reload={() => void list.reload()}>
+        // Khung chờ chỉ hiện khi tải trang 1; trang sau thì danh sách đã tải vẫn giữ nguyên.
+        <Loadable data={page === 1 ? list.data && items : items} error={list.error} reload={() => void list.reload()}>
           {(rows) =>
             rows.length === 0 ? (
               range ? (
@@ -231,9 +252,22 @@ function WaterPage() {
                     );
                   })}
                 </Rows>
-                {list.data && rows.length < list.data.total && (
-                  <Button className="more" fullWidth variant="secondary" size="large" onClick={() => setPage((p) => p + 1)}>
-                    Xem thêm
+                {moreError && (
+                  <div className="more">
+                    <FormError text={moreError} />
+                  </div>
+                )}
+                {rows.length < total && (
+                  <Button
+                    className="more"
+                    fullWidth
+                    variant="secondary"
+                    size="large"
+                    loading={loadingMore}
+                    disabled={loadingMore}
+                    onClick={() => (moreError ? void list.reload() : setPage((p) => p + 1))}
+                  >
+                    {loadingMore ? "Đang tải thêm" : moreError ? "Thử tải thêm" : "Xem thêm"}
                   </Button>
                 )}
               </>
@@ -328,6 +362,10 @@ function DateRangeFilter({ value, onChange }: { value: WaterDateRange | null; on
           }}
         >
           Bỏ lọc
+        </Button>
+        {/* Đóng khung chọn ngày, giữ nguyên khoảng ngày đang lọc. */}
+        <Button fullWidth variant="secondary" size="large" onClick={() => setOpen(false)}>
+          Quay lại
         </Button>
       </div>
     </div>

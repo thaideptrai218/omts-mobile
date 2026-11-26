@@ -4,6 +4,8 @@ import { Button, Sheet } from "zmp-ui";
 
 import { ImageFrame } from "@/components/ImageFrame/ImageFrame";
 
+import "@/features/farming/styles/frameSheet.scss";
+
 const START: WaterCrop = { left: 0.2, top: 0.3, right: 0.8, bottom: 0.7 };
 
 /**
@@ -29,18 +31,22 @@ export function DisplayFrameSheet({ photo, onRead, onCancel }: {
 
   return (
     <Sheet visible={!!photo} onClose={onCancel} height="92vh" mask handler swipeToClose={false} title="Chọn màn hình số">
-      <div className="sheet-form form">
+      <div className="sheet-form form frame-sheet">
         <p className="form__intro">
           Kéo khung trắng cho vừa phần màn hình số của máy đo: chạm giữa khung để di chuyển, kéo hai nút tròn ở góc để đổi cỡ.
           App chỉ đọc số trong khung, cả ảnh vẫn được lưu.
         </p>
         <ImageFrame src={url} alt="Ảnh máy đo vừa chụp" frame={frame} onChange={setFrame} />
-        <div className="sheet-actions">
+        <div className="sheet-actions frame-sheet__actions">
           <Button fullWidth size="large" onClick={() => onRead(frame)}>
             Đọc số trong khung
           </Button>
           <Button fullWidth variant="secondary" size="large" onClick={() => onRead(null)}>
             Gửi cả ảnh, không chọn khung
+          </Button>
+          {/* Sheet không vuốt xuống để đóng (tránh đóng nhầm khi kéo khung), nên cần nút thoát riêng. */}
+          <Button fullWidth variant="secondary" size="large" onClick={onCancel}>
+            Hủy
           </Button>
         </div>
       </div>

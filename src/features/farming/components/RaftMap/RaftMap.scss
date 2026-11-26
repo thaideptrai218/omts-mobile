@@ -2,10 +2,18 @@
   &__frame { position: relative; overflow: hidden; border-radius: var(--radius); }
   &__canvas { width: 100%; height: 60vh; min-height: 20rem; background: var(--page); }
   &__loading { position: absolute; inset: 0; display: grid; place-items: center; color: var(--ink-2); }
-  &__pin { min-height: 48px; min-width: 48px; padding: .6rem .8rem; border: 2px solid var(--surface); border-radius: var(--radius-sm); background: var(--ok); color: var(--surface); font-size: 1rem; font-weight: 700; }
-  &__pin--inactive { background: var(--ink-2); }
-  &__pin--outside { background: var(--danger); border-style: dashed; }
+  // Bản đồ tự đặt chữ 12px/20px Helvetica cho mọi thứ bên trong; nhãn bè và hộp tên vùng dùng font của app.
+  .vietmapgl-map { font-family: inherit; }
+  &__pin {
+    min-height: 48px; min-width: 48px; padding: .5rem; border: 2px solid var(--surface); border-radius: var(--radius-sm);
+    background: var(--ok); color: var(--surface); font-family: inherit; font-size: 1rem; line-height: 1.375rem; font-weight: 700;
+  }
+  // Ngừng dùng: nhãn rỗng viền xám, khác nhãn đặc của bè đang dùng cả về hình chứ không chỉ về màu.
+  &__pin--inactive { background: var(--surface); color: var(--ink-2); border-color: var(--ink-2); }
+  &__pin--outside { background: var(--danger); color: var(--surface); border-color: var(--surface); border-style: dashed; }
   &__pin:focus-visible { outline: 3px solid var(--brand); outline-offset: 3px; }
+  // Hộp tên vùng của SDK luôn nền trắng, nên chữ giữ màu tối cố định (ở chế độ tối, màu chữ chung là màu sáng).
+  .vietmapgl-popup-content { padding: .75rem 1rem; color: #102a38; font-size: 1rem; line-height: 1.5rem; font-weight: 700; }
   // Giữ nguyên dòng ghi nguồn bản đồ của nhà cung cấp, chỉ tăng cỡ chữ cho đủ đọc.
   .vietmapgl-ctrl-attrib { font-size: .9375rem; line-height: 1.5rem; }
 }

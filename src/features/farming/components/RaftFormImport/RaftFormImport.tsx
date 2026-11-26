@@ -64,7 +64,7 @@ export default function RaftFormImport({ editing, disabled, onApply, onBusyChang
         <Input.TextArea label="Ghi chú tình trạng" value={result.fields.notes} onChange={(e) => edit("notes", e.target.value)} maxLength={1000} />
         <Input label="Vĩ độ (nếu giấy có ghi)" value={result.fields.latitude} onChange={(e) => edit("latitude", e.target.value)} inputMode="decimal" />
         <Input label="Kinh độ (nếu giấy có ghi)" value={result.fields.longitude} onChange={(e) => edit("longitude", e.target.value)} inputMode="decimal" />
-        <details><summary>Chữ đọc được từ ảnh</summary><pre style={{ whiteSpace: "pre-wrap", fontSize: "1rem" }}>{result.text || "Không đọc được chữ."}</pre></details>
+        <details><summary style={{ minHeight: 48, padding: "12px 0" }}>Chữ đọc được từ ảnh</summary><pre style={{ whiteSpace: "pre-wrap", overflowWrap: "anywhere", fontSize: "1rem" }}>{result.text || "Không đọc được chữ."}</pre></details>
         <FormError text={error} />
         <Button fullWidth size="large" disabled={!Object.values(result.fields).some((value) => value.trim())} onClick={apply}>Dùng các thông tin này</Button>
       </div>}

@@ -180,7 +180,7 @@ function BoundaryEditor({ zone, rafts }: { zone: ZoneView; rafts: RaftListItem[]
           {reading && (
             <>
               {reading.confidence < 70 && <p className="form-error form-warning" role="alert"><span>Ảnh khó đọc. Vui lòng đối chiếu từng điểm với giấy gốc.</span></p>}
-              <details><summary>Chữ đọc được từ ảnh</summary><pre style={{ whiteSpace: "pre-wrap", fontSize: "1rem" }}>{reading.text || "Không đọc được chữ."}</pre></details>
+              <details><summary style={{ minHeight: 48, padding: "12px 0" }}>Chữ đọc được từ ảnh</summary><pre style={{ whiteSpace: "pre-wrap", overflowWrap: "anywhere", fontSize: "1rem" }}>{reading.text || "Không đọc được chữ."}</pre></details>
             </>
           )}
           <Input
@@ -194,23 +194,23 @@ function BoundaryEditor({ zone, rafts }: { zone: ZoneView; rafts: RaftListItem[]
       </Section>
 
       <Section step={2} title="Các khu và điểm góc">
-        {areas.length === 0 ? (
-          <Empty icon="zi-location" title="Chưa có điểm góc" text="Đọc ảnh sơ đồ ở bước 1, hoặc nhập bằng tay." />
-        ) : (
-          areas.map((area) => (
-            <BoundaryAreaCard
-              key={area.key}
-              area={area}
-              centralMeridian={meridian}
-              disabled={locked}
-              onRename={(name) => updateArea(area.key, (current) => ({ ...current, name }))}
-              onEditCorner={(corner) => setEditing({ area: area.key, corner })}
-              onAddCorner={() => addCorner(area)}
-              onRemove={() => setAreas((current) => current.filter((item) => item.key !== area.key))}
-            />
-          ))
-        )}
         <div className="form">
+          {areas.length === 0 ? (
+            <Empty icon="zi-location" title="Chưa có điểm góc" text="Đọc ảnh sơ đồ ở bước 1, hoặc nhập bằng tay." />
+          ) : (
+            areas.map((area) => (
+              <BoundaryAreaCard
+                key={area.key}
+                area={area}
+                centralMeridian={meridian}
+                disabled={locked}
+                onRename={(name) => updateArea(area.key, (current) => ({ ...current, name }))}
+                onEditCorner={(corner) => setEditing({ area: area.key, corner })}
+                onAddCorner={() => addCorner(area)}
+                onRemove={() => setAreas((current) => current.filter((item) => item.key !== area.key))}
+              />
+            ))
+          )}
           <Button fullWidth size="large" variant="secondary" disabled={locked} onClick={addArea}>Nhập một khu bằng tay</Button>
         </div>
       </Section>
@@ -250,7 +250,7 @@ function BoundaryEditor({ zone, rafts }: { zone: ZoneView; rafts: RaftListItem[]
         {mapOpen && (
           <div className="sheet-form form">
             <Suspense fallback={<div className="skeleton skeleton--form" aria-busy />}>
-              <RaftMap zone={zone} rafts={rafts} boundary={boundary} onOpenRaft={() => undefined} />
+              <RaftMap zone={zone} rafts={rafts} boundary={boundary} />
             </Suspense>
           </div>
         )}
