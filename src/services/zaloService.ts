@@ -1,4 +1,4 @@
-import type { CheckoutOrderParams, CustomPaymentEvent, CustomPaymentSelection, FakeZalo, FakeZaloWindow } from "@/models/Zalo";
+import type { CheckoutOrderParams, CustomPaymentEvent, CustomPaymentSelection, FakeZalo, FakeZaloWindow, PhotoSource } from "@/models/Zalo";
 import { CheckoutSDK, chooseImage, EventName, events, getAccessToken, getLocation, getPhoneNumber, openDocument, openPermissionSetting, saveImageToGallery, scanQRCode } from "zmp-sdk/apis";
 
 /** Chỉ gọi sau khi người dùng bấm nút và đã được giải thích mục đích lấy vị trí. */
@@ -13,20 +13,14 @@ export async function zaloLocationToken(): Promise<string> {
   }
 }
 
-/** Ảnh biểu mẫu do người dùng chủ động chọn; không tải lên server. */
-export async function chooseRaftFormImage(): Promise<string | null> {
-  if (fake()?.image) return fake()!.image!;
-  const { filePaths } = await chooseImage({ count: 1, sourceType: ["album", "camera"], cameraType: "back" });
-  return filePaths?.[0] ?? null;
-}
-
 /**
  * Ảnh do người dùng chủ động chụp hoặc chọn, dạng Blob để tải lên server. `chooseImage` trả blob URL. Khi người dùng
  * đóng bộ chọn, SDK không báo gì và promise không bao giờ xong, nên nút gọi hàm này không được khóa lúc đang chọn.
+ * Mặc định cho cả thư viện lẫn camera; quét giấy tờ chỉ truyền `["camera"]` để mở thẳng camera sau.
  */
-export async function choosePhoto(): Promise<Blob | null> {
+export async function choosePhoto(sources: PhotoSource[] = ["album", "camera"]): Promise<Blob | null> {
   try {
-    const path = fake()?.image ?? (await chooseImage({ count: 1, sourceType: ["album", "camera"], cameraType: "back" })).filePaths?.[0];
+    const path = fake()?.image ?? (await chooseImage({ count: 1, sourceType: sources, cameraType: "back" })).filePaths?.[0];
     if (!path) return null;
     return await (await fetch(path)).blob();
   } catch {

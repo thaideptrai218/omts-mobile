@@ -32,7 +32,7 @@ export function DisplayFrameSheet({ photo, onRead, onCancel }: {
       <div className="sheet-form form">
         <p className="form__intro">
           Kéo khung trắng cho vừa phần màn hình số của máy đo: chạm giữa khung để di chuyển, kéo hai nút tròn ở góc để đổi cỡ.
-          App chỉ đọc số trong khung, cả ảnh vẫn được lưu.
+          Ảnh được gửi lên máy chủ và đọc bằng Google Gemini; chỉ đọc số trong khung, cả ảnh vẫn được lưu.
         </p>
         <ImageFrame src={url} alt="Ảnh máy đo vừa chụp" frame={frame} onChange={setFrame} />
         <div className="sheet-actions">

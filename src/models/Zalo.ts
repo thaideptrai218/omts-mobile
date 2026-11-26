@@ -15,6 +15,9 @@ export type FakeZalo = {
   checkoutOrderId?: string;
 };
 
+/** Nguồn ảnh của bộ chọn ảnh Zalo: chụp ngay bằng camera hoặc chọn từ thư viện. */
+export type PhotoSource = "camera" | "album";
+
 /** Tham số của CheckoutSDK.createOrder; server tạo và ký, app truyền nguyên vẹn. */
 export type CheckoutOrderParams = {
   amount: number;

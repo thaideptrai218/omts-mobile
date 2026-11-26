@@ -1,4 +1,5 @@
 import type { WaterCrop, WaterDateRange, WaterDraft, WaterFilter, WaterListItem, WaterPhotoAttempt, WaterView } from "@/features/farming/models/WaterMeasurement";
+import type { PhotoSource } from "@/models/Zalo";
 import { useEffect, useState } from "react";
 import { Button, Icon, Select, useLocation, useNavigate, useSnackbar } from "zmp-ui";
 
@@ -18,6 +19,7 @@ import { choosePhoto } from "@/services/zaloService";
 import { errorText } from "@/utils/errorText";
 import { date, dateTime, num } from "@/utils/format";
 import { violatedText, WATER_ALERT, waterStatusLabel } from "@/utils/labels";
+import { evidencePhoto } from "@/utils/imageFile";
 import { newOperationId } from "@/utils/operationId";
 import { DisplayFrameSheet } from "@/features/farming/components/DisplayFrameSheet/DisplayFrameSheet";
 import { WaterChart } from "@/features/farming/components/WaterChart/WaterChart";
@@ -92,10 +94,11 @@ function WaterPage() {
     }
   };
 
-  const takePhoto = async () => {
+  // Chạm một lần mở thẳng camera sau; "Chọn ảnh có sẵn" mở thư viện. Ảnh gốc giữ làm bằng chứng, chỉ thu nhỏ khi quá 10 MB.
+  const takePhoto = async (source: PhotoSource = "camera") => {
     try {
-      const photo = await choosePhoto();
-      if (photo) setFraming(photo);
+      const photo = await choosePhoto([source]);
+      if (photo) setFraming(await evidencePhoto(photo));
     } catch (err) {
       openSnackbar({ text: err instanceof Error ? err.message : errorText(err), type: "error", duration: 6000 });
     }
@@ -130,9 +133,12 @@ function WaterPage() {
     <ManagePage
       title="Chỉ số nước"
       footer={
-        <Button fullWidth size="large" prefixIcon={<Icon icon="zi-camera" />} disabled={!zoneId || reading} loading={reading} onClick={() => void (attempt ? send(attempt) : takePhoto())}>
-          {reading ? "Đang đọc ảnh" : attempt ? "Gửi lại ảnh" : "Chụp máy đo để ghi số đo"}
-        </Button>
+        <div className="sheet-actions">
+          <Button fullWidth size="large" prefixIcon={<Icon icon="zi-camera" />} disabled={!zoneId || reading} loading={reading} onClick={() => void (attempt ? send(attempt) : takePhoto())}>
+            {reading ? "Đang đọc ảnh" : attempt ? "Gửi lại ảnh" : "Chụp máy đo để ghi số đo"}
+          </Button>
+          {!attempt && <Button fullWidth variant="tertiary" disabled={!zoneId || reading} onClick={() => void takePhoto("album")}>Chọn ảnh có sẵn</Button>}
+        </div>
       }
     >
       {overview.data && overview.data.length > 0 && (

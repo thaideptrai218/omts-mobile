@@ -36,19 +36,50 @@ export type CornerReading = {
   y: number | null;
 };
 
-/** Một khu đọc được: tên lấy từ dòng "Tọa độ các điểm góc khu 1" nếu có. */
+/** Một khu đọc được: tên khu, các điểm góc và diện tích giấy ghi trong tiêu đề bảng (ha). */
 export type AreaReading = {
   name: string;
   corners: CornerReading[];
+  writtenAreaHa: number | null;
 };
 
-/** Kết quả đọc ảnh bảng tọa độ góc. */
+/** Kết quả đọc ảnh bảng tọa độ góc, đã đổi về dạng màn hình dùng. */
 export type CornerTableReading = {
-  text: string;
-  confidence: number;
   areas: AreaReading[];
-  /** Kinh tuyến trục đọc được ở đầu bảng (độ thập phân), null khi ảnh không có. */
+  /** Kinh tuyến trục đọc được (độ thập phân), null khi ảnh không có. */
   centralMeridian: number | null;
+};
+
+/** Một điểm góc máy chủ đọc từ ảnh. `x` là hướng bắc, `y` hướng đông (mét VN-2000); `lat`, `lon` chép nguyên như trên giấy. */
+export type BoundaryScanCorner = {
+  label: string;
+  x: number | null;
+  y: number | null;
+  lat: string | null;
+  lon: string | null;
+};
+
+/** Một khu trong kết quả quét. `gridAreaHa` và `areaMatches` do máy chủ tính; màn hình tính lại theo các điểm góc đang hiển thị. */
+export type BoundaryScanZone = {
+  name: string;
+  writtenAreaHa: number | null;
+  gridAreaHa: number | null;
+  areaMatches: boolean | null;
+  corners: BoundaryScanCorner[];
+};
+
+/** `reading` của `GET api/zones/{id}/boundary-scans/{scanId}`. */
+export type BoundaryScanReading = {
+  centralMeridian: number | null;
+  coordinateSystem: string | null;
+  zones: BoundaryScanZone[];
+};
+
+/** Diện tích tính từ X, Y các điểm góc so với diện tích giấy ghi (ha). `matches` null khi thiếu một trong hai số. */
+export type AreaCheck = {
+  gridHa: number | null;
+  writtenHa: number | null;
+  matches: boolean | null;
 };
 
 /** Điểm góc đang sửa trên màn hình: giữ nguyên chữ người dùng gõ. */
@@ -66,6 +97,8 @@ export type AreaDraft = {
   key: string;
   name: string;
   corners: CornerDraft[];
+  /** Diện tích giấy ghi (ha) khi khu đọc từ ảnh; null với khu nhập tay hoặc khu đã lưu. */
+  writtenAreaHa: number | null;
 };
 
 /**

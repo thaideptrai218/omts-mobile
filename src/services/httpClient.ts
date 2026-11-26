@@ -3,7 +3,7 @@ import type { ProblemDetails } from "@/models/ProblemDetails";
 import { API_BASE_URL } from "@/constants/env";
 import { MESSAGES } from "@/constants/messages";
 
-import { ApiError, NetworkError } from "@/services/errors";
+import { ApiError, NetworkError, TimeoutError } from "@/services/errors";
 
 let authProvider: AuthProvider | null = null;
 
@@ -27,19 +27,33 @@ export async function rawRequest<T>(path: string, options: RequestOptions = {}):
   if (options.body !== undefined) headers["Content-Type"] = "application/json";
   if (options.token) headers.Authorization = `Bearer ${options.token}`;
 
+  // Chỉ tạo bộ hủy khi người gọi cần: request cũ chạy y như trước.
+  const controller = options.signal || options.timeoutMs ? new AbortController() : null;
+  let timedOut = false;
+  const onAbort = () => controller?.abort();
+  if (options.signal?.aborted) throw new DOMException("Đã hủy", "AbortError");
+  options.signal?.addEventListener("abort", onAbort, { once: true });
+  const timer = options.timeoutMs ? window.setTimeout(() => { timedOut = true; controller?.abort(); }, options.timeoutMs) : 0;
+  // Lỗi lúc đang chờ: hết giờ → TimeoutError, người dùng hủy → AbortError, còn lại là mất kết nối.
+  const failure = (): Error => (timedOut ? new TimeoutError() : options.signal?.aborted ? new DOMException("Đã hủy", "AbortError") : new NetworkError());
+
   let response: Response;
+  let text: string;
   try {
     response = await fetch(API_BASE_URL + path, {
       method: options.method ?? "GET",
       headers,
       body: options.form ?? (options.body === undefined ? undefined : JSON.stringify(options.body)),
+      signal: controller?.signal,
     });
+    if (response.status === 204) return undefined as T;
+    text = await response.text();
   } catch {
-    throw new NetworkError();
+    throw failure();
+  } finally {
+    window.clearTimeout(timer);
+    options.signal?.removeEventListener("abort", onAbort);
   }
-
-  if (response.status === 204) return undefined as T;
-  const text = await response.text();
   let data: unknown = null;
   if (text) {
     try {

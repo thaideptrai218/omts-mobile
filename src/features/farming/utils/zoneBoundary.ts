@@ -14,7 +14,7 @@ const key = () => `k${(nextKey += 1)}`;
 
 const inVietnam = (point: Coordinates) => point.latitude >= 8 && point.latitude <= 24.5 && point.longitude >= 102 && point.longitude <= 110;
 
-function readNumber(text: string): number | null {
+export function readNumber(text: string): number | null {
   const normalized = text.trim().replace(/\s/g, "").replace(",", ".");
   return /^\d+(?:\.\d+)?$/.test(normalized) ? Number(normalized) : null;
 }
@@ -35,8 +35,8 @@ export function cornerDraft(reading: CornerReading): CornerDraft {
   };
 }
 
-export function areaDraft(name: string, corners: CornerDraft[]): AreaDraft {
-  return { key: key(), name, corners };
+export function areaDraft(name: string, corners: CornerDraft[], writtenAreaHa: number | null = null): AreaDraft {
+  return { key: key(), name, corners, writtenAreaHa };
 }
 
 /** Đối chiếu một điểm: ưu tiên vĩ/kinh độ trên giấy, không có thì tính từ X, Y; rồi đổi sang WGS84 để vẽ. */

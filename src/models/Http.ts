@@ -20,4 +20,8 @@ export type RequestOptions = {
   auth?: boolean;
   /** Token dùng riêng cho request này (đăng xuất, xả hàng đợi thu hồi phiên). */
   token?: string;
+  /** Hủy request đang chờ (người dùng bấm Hủy, rời màn hình). Hủy thì ném `DOMException` AbortError. */
+  signal?: AbortSignal;
+  /** Quá thời gian (mili giây) thì ném `TimeoutError`. Mặc định không giới hạn, giữ nguyên với mọi nơi gọi cũ. */
+  timeoutMs?: number;
 };

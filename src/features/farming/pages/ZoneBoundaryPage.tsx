@@ -5,7 +5,7 @@ import { lazy, Suspense, useMemo, useState } from "react";
 import { Button, Input, Sheet, useNavigate, useParams, useSnackbar } from "zmp-ui";
 
 import FormError from "@/components/FormError/FormError";
-import CornerTableScan from "@/features/farming/components/CornerTableScan/CornerTableScan";
+import ZoneMapScan from "@/features/farming/components/ZoneMapScan/ZoneMapScan";
 import { BoundaryAreaCard, CornerSheet } from "@/features/farming/components/BoundaryAreaCard/BoundaryAreaCard";
 import { ConfirmSheet } from "@/components/ConfirmSheet/ConfirmSheet";
 import { Empty } from "@/components/Empty/Empty";
@@ -15,8 +15,9 @@ import { Section } from "@/components/Section/Section";
 import { useAction } from "@/hooks/useAction";
 import { useLoad } from "@/hooks/useLoad";
 import { getZone, listRafts, saveZoneBoundary, USAGE } from "@/features/farming/services/farmService";
+import { areaCheck, mergeReading } from "@/features/farming/utils/boundaryScan";
 import { DEFAULT_CENTRAL_MERIDIAN, dmsText, parseDms } from "@/features/farming/utils/vn2000";
-import { areaDraft, areaPositions, boundaryOf, checkCorner, cornerDraft, draftsOf, emptyCorner, placementOf, ringAreaHa, selfIntersects, strayCorners } from "@/features/farming/utils/zoneBoundary";
+import { areaDraft, areaPositions, boundaryOf, checkCorner, draftsOf, emptyCorner, placementOf, ringAreaHa, selfIntersects, strayCorners } from "@/features/farming/utils/zoneBoundary";
 import { num } from "@/utils/format";
 
 const RaftMap = lazy(() => import("@/features/farming/components/RaftMap/RaftMap"));
@@ -53,7 +54,6 @@ function BoundaryEditor({ zone, rafts }: { zone: ZoneView; rafts: RaftListItem[]
   const [meridianInput, setMeridianInput] = useState(meridianText(DEFAULT_CENTRAL_MERIDIAN));
   const [areas, setAreas] = useState<AreaDraft[]>(() => draftsOf(zone.boundary, DEFAULT_CENTRAL_MERIDIAN));
   const [editing, setEditing] = useState<{ area: string; corner: CornerDraft } | null>(null);
-  const [reading, setReading] = useState<CornerTableReading | null>(null);
   const [scanning, setScanning] = useState(false);
   const [mapOpen, setMapOpen] = useState(false);
   const [confirm, setConfirm] = useState<"save" | "remove" | null>(null);
@@ -74,24 +74,14 @@ function BoundaryEditor({ zone, rafts }: { zone: ZoneView; rafts: RaftListItem[]
   const updateArea = (key: string, change: (area: AreaDraft) => AreaDraft) => setAreas((current) => current.map((area) => (area.key === key ? change(area) : area)));
 
   const applyReading = (result: CornerTableReading) => {
-    setReading(result);
     if (result.centralMeridian !== null) { setMeridian(result.centralMeridian); setMeridianInput(meridianText(result.centralMeridian)); }
     const found = result.areas.filter((area) => area.corners.length > 0);
     if (found.length === 0) {
-      setError("Chưa nhận ra dòng tọa độ nào trong khung. Thử chụp thẳng, đủ sáng, kéo khung sát bảng hơn, hoặc nhập điểm góc bằng tay.");
+      setError("Chưa nhận ra bảng tọa độ nào trong ảnh. Thử chụp thẳng, đủ sáng, gần bảng hơn, hoặc nhập điểm góc bằng tay.");
       return;
     }
     setError("");
-    setAreas((current) => {
-      const next = [...current];
-      for (const area of found) {
-        const corners = area.corners.map(cornerDraft);
-        const same = next.findIndex((existing) => existing.name.trim().toLowerCase() === area.name.toLowerCase());
-        if (same >= 0) next[same] = { ...next[same], corners };
-        else next.push(areaDraft(area.name, corners));
-      }
-      return next;
-    });
+    setAreas((current) => mergeReading(current, result));
     const corners = found.reduce((sum, area) => sum + area.corners.length, 0);
     openSnackbar({ text: `Đã đọc ${corners} điểm góc của ${found.map((area) => area.name).join(", ")}. Vui lòng đối chiếu với giấy.`, type: "success", duration: 5000 });
   };
@@ -143,6 +133,7 @@ function BoundaryEditor({ zone, rafts }: { zone: ZoneView; rafts: RaftListItem[]
   const doubts = countCorners(["mismatch"]);
   const unchecked = countCorners(["dmsOnly", "gridOnly"]);
   const strays = areas.reduce((sum, area) => sum + strayCorners(area, meridian).size, 0);
+  const areaOff = areas.filter((area) => areaCheck(area).matches === false).map((area) => area.name.trim() || "Khu chưa đặt tên");
   const crossing = areas.filter((area) => selfIntersects(areaPositions(area, meridian).map(({ position }) => position))).map((area) => area.name.trim() || "Khu chưa đặt tên");
 
   const save = async (value = boundary) => {
@@ -161,11 +152,11 @@ function BoundaryEditor({ zone, rafts }: { zone: ZoneView; rafts: RaftListItem[]
 
   const trySave = () => {
     setSaveTries((count) => count + 1);
-    if (areas.length === 0) { setError("Chưa có khu nào. Đọc ảnh sơ đồ hoặc nhập điểm góc bằng tay."); return; }
+    if (areas.length === 0) { setError("Chưa có khu nào. Chụp bản đồ giấy phép hoặc nhập điểm góc bằng tay."); return; }
     const problem = blocking();
     if (problem) { setError(problem); return; }
     setError("");
-    if (doubts > 0 || unchecked > 0 || strays > 0 || crossing.length > 0 || outside.length > 0) setConfirm("save");
+    if (doubts > 0 || unchecked > 0 || strays > 0 || crossing.length > 0 || areaOff.length > 0 || outside.length > 0) setConfirm("save");
     else void save();
   };
 
@@ -174,15 +165,9 @@ function BoundaryEditor({ zone, rafts }: { zone: ZoneView; rafts: RaftListItem[]
       title={`Ranh giới ${zone.name ?? zone.code ?? "vùng"}`}
       footer={<Button fullWidth size="large" loading={busy} disabled={locked} onClick={trySave}>Lưu ranh giới</Button>}
     >
-      <Section step={1} title="Đọc từ ảnh sơ đồ cấp phép">
+      <Section step={1} title="Đọc từ ảnh bản đồ giấy phép">
         <div className="form">
-          <CornerTableScan disabled={busy} onRead={applyReading} onBusyChange={setScanning} />
-          {reading && (
-            <>
-              {reading.confidence < 70 && <p className="form-error form-warning" role="alert"><span>Ảnh khó đọc. Vui lòng đối chiếu từng điểm với giấy gốc.</span></p>}
-              <details><summary>Chữ đọc được từ ảnh</summary><pre style={{ whiteSpace: "pre-wrap", fontSize: "1rem" }}>{reading.text || "Không đọc được chữ."}</pre></details>
-            </>
-          )}
+          <ZoneMapScan zoneId={zone.id} disabled={busy} onRead={applyReading} onBusyChange={setScanning} />
           <Input
             label="Kinh tuyến trục (ghi ở đầu bảng tọa độ)"
             helperText="Dùng để đổi X, Y sang vĩ độ, kinh độ. Quảng Ninh: 107°45'."
@@ -195,7 +180,7 @@ function BoundaryEditor({ zone, rafts }: { zone: ZoneView; rafts: RaftListItem[]
 
       <Section step={2} title="Các khu và điểm góc">
         {areas.length === 0 ? (
-          <Empty icon="zi-location" title="Chưa có điểm góc" text="Đọc ảnh sơ đồ ở bước 1, hoặc nhập bằng tay." />
+          <Empty icon="zi-location" title="Chưa có điểm góc" text="Đọc ảnh bản đồ giấy phép ở bước 1, hoặc nhập bằng tay." />
         ) : (
           areas.map((area) => (
             <BoundaryAreaCard
@@ -264,6 +249,7 @@ function BoundaryEditor({ zone, rafts }: { zone: ZoneView; rafts: RaftListItem[]
             {doubts > 0 && <p>{doubts} điểm có vĩ/kinh độ chưa khớp X, Y.</p>}
             {unchecked > 0 && <p>{unchecked} điểm chưa đối chiếu được giữa vĩ/kinh độ và X, Y.</p>}
             {strays > 0 && <p>{strays} điểm nằm xa bất thường so với các điểm khác cùng khu.</p>}
+            {areaOff.length > 0 && <p>Diện tích tính từ tọa độ của {areaOff.join(", ")} lệch so với diện tích ghi trên giấy.</p>}
             {crossing.length > 0 && <p>Đường ranh giới của {crossing.join(", ")} tự cắt nhau.</p>}
             {outside.length > 0 && <p>{outside.length} bè đang dùng sẽ nằm ngoài ranh giới: {outside.map((raft) => raft.code).join(", ")}.</p>}
             <p>Bạn đã đối chiếu với sơ đồ giấy và vẫn muốn lưu?</p>

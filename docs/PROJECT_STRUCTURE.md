@@ -11,6 +11,8 @@ omts-mobile/
 │   ├── components/            Component dùng chung, mỗi component một folder
 │   │   ├── PageHeader/PageHeader.tsx
 │   │   ├── DateField/DateField.tsx
+│   │   ├── PhotoCapture/PhotoCapture.tsx   Chụp camera một chạm, kèm "Chọn ảnh có sẵn"
+│   │   ├── ScanProgress/ScanProgress.tsx   Đang đọc ảnh, Hủy, lỗi, Thử lại
 │   │   ├── BottomNav/BottomNav.tsx
 │   │   └── ...
 │   ├── features/
@@ -24,14 +26,14 @@ omts-mobile/
 │   │   ├── account/           Tài khoản và hồ sơ cá nhân
 │   │   ├── dashboard/         Component tổng quan và service số liệu
 │   │   ├── development/       Công cụ chuyển vai trò trong bản dev
-│   │   ├── farming/           Vùng nuôi, bè, bản đồ, OCR, chỉ số nước
+│   │   ├── farming/           Vùng nuôi, bè, bản đồ, đọc ảnh bằng Gemini (bản đồ giấy phép, giấy tờ bè), chỉ số nước
 │   │   ├── notifications/     Hộp thông báo, tùy chọn, chuông
 │   │   ├── organization/      Nhân viên, tài khoản, vai trò, hồ sơ HTX
 │   │   ├── purchasing/        Nhà cung cấp, vật tư, phiếu nhập
 │   │   ├── sales/             Yêu cầu mua theo lồng, sản phẩm bán
 │   │   ├── traceability/      Tra cứu nguồn gốc theo mã QR của hóa đơn
 │   │   └── workforce/         Phân công, chấm công, nghỉ phép
-│   ├── hooks/                 useLoad, useAction, usePaged, useScan, useOpenFeature
+│   ├── hooks/                 useLoad, useAction, usePaged, useScan, useScanJob (gửi ảnh, hỏi kết quả đọc), useOpenFeature
 │   ├── models/                Kiểu dùng chung: Pagination, Http, UI, Navigation, Coordinates
 │   ├── layouts/MainLayout.tsx Khung chung của Mini App
 │   ├── pages/                 HomePage.tsx, FeaturePage.tsx
