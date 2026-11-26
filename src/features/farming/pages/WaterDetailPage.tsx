@@ -13,20 +13,18 @@ import { useLoad } from "@/hooks/useLoad";
 import { absoluteUrl } from "@/services/httpClient";
 import { dateTime, num } from "@/utils/format";
 import { violatedText, WATER_ALERT, waterStatusLabel } from "@/utils/labels";
-import { WaterValuesSheet } from "@/features/farming/components/WaterValuesSheet/WaterValuesSheet";
-import { correctWater, getWater, voidWater } from "@/features/farming/services/farmService";
+import { getWater, voidWater } from "@/features/farming/services/farmService";
 import { rangeText } from "@/features/farming/utils/waterText";
 
 /**
  * Chi tiết một lần đo nước (WATER-03.2): ảnh máy đo, bè, ba chỉ số và ngưỡng đã lưu theo lần đo. Lần đo đang hiệu lực thì
- * người có quyền sửa tại chỗ (bắt ghi lý do, ngưỡng không đổi) hoặc hủy kèm lý do (WATER-02); hủy thì không hoàn tác.
+ * người có quyền hủy kèm lý do (WATER-02). Số đo đã ghi không sửa được; hủy thì không hoàn tác.
  */
 function WaterDetailPage() {
   const { id = "" } = useParams();
   const allowed = useBusinessPermission();
   const { data, error, reload, setData } = useLoad(() => getWater(id), [id]);
   const { busy, run } = useAction();
-  const [correcting, setCorrecting] = useState(false);
   const [voidOpen, setVoidOpen] = useState(false);
 
   const editable = data?.statusCode === "ACTIVE" && allowed("WATER_MEASUREMENTS", "Edit", data.zoneId);
@@ -66,32 +64,10 @@ function WaterDetailPage() {
               />
               {editable && (
                 <Actions>
-                  <Button variant="secondary" size="large" onClick={() => setCorrecting(true)}>
-                    Sửa số đo
-                  </Button>
                   <Button variant="secondary" type="danger" size="large" onClick={() => setVoidOpen(true)}>
                     Hủy số đo
                   </Button>
                 </Actions>
-              )}
-
-              {correcting && (
-                <WaterValuesSheet
-                  visible
-                  title="Sửa số đo nước"
-                  zoneId={m.zoneId}
-                  initial={{ raftId: m.raftId, raftCode: m.raftCode, measuredAt: m.measuredAt, ph: m.ph, salinity: m.salinity, temperature: m.temperature }}
-                  notice="Số đo được sửa tại chỗ và ghi lại lý do. Ngưỡng đã lưu theo lần đo này không đổi."
-                  thresholds={t}
-                  withReason
-                  saveText="Lưu số đã sửa"
-                  onClose={() => setCorrecting(false)}
-                  onSave={async (values, reason) => {
-                    const saved = await correctWater(id, { ...values, reason });
-                    setData(saved);
-                    setCorrecting(false);
-                  }}
-                />
               )}
             </>
           );

@@ -27,7 +27,7 @@ không lớn thêm theo số màn. Bản build 28/10: cả app 1,2 MB, file lớ
 | | Thả giống: các luống, tổng theo lô giống, ghi phiên, sửa hoặc xóa phiên có lý do, đánh dấu thả giống xong | `/manage/cycles/:cycleId/seeding` | `api/cultivation-cycles/{id}/seeding-records`, `…/seeding-complete`, `GET api/rafts/{id}/seed-lots`, `PUT api/seeding-records/{id}`, `…/remove` |
 | | Nhật ký nuôi: ngày đi bè, ghi chú, 1 đến 10 ảnh; sửa hoặc xóa có lý do | `/manage/cycles/:cycleId/logs` | `api/cultivation-cycles/{id}/cultivation-logs`, `PUT api/cultivation-logs/{id}`, `…/remove` |
 | Chỉ số nước | Số đo theo vùng, lọc trạng thái, cảnh báo vượt ngưỡng; nhập tay (nháp hoặc xác nhận ngay) | `/manage/water?zone=` | `GET/POST api/zones/{id}/water-measurements` |
-| | Chi tiết số đo: xác nhận bản nháp, sửa số đo (có lý do, báo người khác đang sửa), hủy, các phiên bản | `/manage/water/:id` | `GET api/water-measurements/{id}`, `…/confirm`, `…/corrections`, `…/void`, `…/editing` |
+| | Chi tiết số đo: xác nhận bản nháp, hủy kèm lý do (số đo đã ghi không sửa được), các phiên bản | `/manage/water/:id` | `GET api/water-measurements/{id}`, `…/confirm`, `…/void`, `…/editing` |
 | Mua hàng | Nhà cung cấp: danh sách, chi tiết, thêm/sửa, ngừng dùng/dùng lại | `/manage/suppliers…` | `api/suppliers` |
 | | Công nợ nhà cung cấp, chi tiết từng nhà: số tổng, phiếu hoàn tất, các lần trả tiền | `/manage/supplier-debts…` | `GET api/suppliers/debts`, `GET api/suppliers/{id}/debt` |
 | | Phiếu nhập: danh sách có tổng tiền, chi tiết, lập/sửa nháp, hoàn tất, hủy, ghi trả tiền | `/manage/purchases…` | `api/purchase-receipts`, `POST api/supplier-payments` |
