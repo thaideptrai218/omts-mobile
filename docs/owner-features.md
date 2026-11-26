@@ -17,7 +17,7 @@ không lớn thêm theo số màn. Bản build 28/10: cả app 1,2 MB, file lớ
 | | Sản phẩm bán: thêm, sửa, ngừng bán/dùng lại | `/manage/sales-products` | `api/sales-products` |
 | Vùng nuôi | Danh sách vùng (tìm, lọc trạng thái, tình trạng giấy tờ) | `/manage/zones` | `GET api/zones` |
 | | Chi tiết vùng: thông tin, giấy tờ, ngưỡng nước, bè; sửa; ngừng dùng/dùng lại | `/manage/zones/:id` | `GET/PUT api/zones/{id}`, `…/discontinue`, `…/reactivate`, `GET api/zones/{id}/licenses`, `GET/PUT api/zones/{id}/water-thresholds`, `GET api/zones/{id}/rafts` |
-| | Thêm/sửa vùng | `/manage/zones/new`, `/manage/zones/:id/edit` | `POST api/zones`, `PUT api/zones/{id}` |
+| | Thêm/sửa vùng: chỉ mã và tên bắt buộc; khi thêm có thể đọc sơ đồ cấp phép để điền sẵn diện tích, vị trí và lưu ranh giới (26/11/2026) | `/manage/zones/new`, `/manage/zones/:id/edit` | `POST api/zones`, `PUT api/zones/{id}`, `POST/GET api/zones/boundary-scans`, `PUT api/zones/{id}/boundary` |
 | | Chi tiết bè: các hàng, lịch sử bố trí, chi phí vật tư; ngừng dùng/dùng lại | `/manage/rafts/:raftId` | `GET api/rafts/{id}`, `…/discontinue`, `…/reactivate` |
 | | Thêm bè (số hàng, chiều dài), sửa thông tin bè | `/manage/zones/:id/rafts/new`, `/manage/rafts/:raftId/edit` | `POST api/zones/{id}/rafts`, `PUT api/rafts/{id}` |
 | | Xem giấy tờ pháp lý | `/manage/licenses/:id` | `GET api/zone-licenses/{id}` |

@@ -46,14 +46,15 @@ export type ZoneLookupItem = {
   status: string | null;
 };
 
-/** Thêm hoặc sửa vùng: mã, tên, vị trí, tọa độ và diện tích (lớn hơn 0) đều bắt buộc. */
+/**
+ * Thêm hoặc sửa vùng: chỉ mã và tên bắt buộc; vị trí (chữ) và diện tích (lớn hơn 0) có thể bỏ trống. Không gửi ghim: vùng có
+ * ranh giới thì máy chủ lấy tâm ranh giới làm ghim.
+ */
 export type SaveZone = {
   code: string;
   name: string;
-  location: string;
-  latitude: number;
-  longitude: number;
-  area: number;
+  location: string | null;
+  area: number | null;
   rowVersion?: string | null;
 };
 

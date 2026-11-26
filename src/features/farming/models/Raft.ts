@@ -28,6 +28,13 @@ export type RaftListItem = {
   laneCount: number;
   statusId: number;
   status: string | null;
+  /** Chu kỳ nuôi đang mở của bè (id và ngày bắt đầu), null khi bè chưa nuôi; máy chủ chưa trả trường này thì không có. */
+  currentCycle?: RaftCurrentCycle | null;
+};
+
+export type RaftCurrentCycle = {
+  id: string;
+  startDate: string;
 };
 
 export type RaftView = {

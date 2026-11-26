@@ -24,8 +24,9 @@ function query(params: Record<string, string | number | null | undefined>) {
   return parts.length ? `?${parts.join("&")}` : "";
 }
 
-export function lookupZones() {
-  return api<ZoneLookupItem[]>("/api/zones/lookup");
+/** Vùng đang dùng; `includeDiscontinued` thêm cả vùng ngừng dùng (chỉ form nhân viên cần, để bỏ vùng đã gán khỏi nhân viên). */
+export function lookupZones(includeDiscontinued = false) {
+  return api<ZoneLookupItem[]>(`/api/zones/lookup${includeDiscontinued ? "?includeDiscontinued=true" : ""}`);
 }
 
 // Nhân viên

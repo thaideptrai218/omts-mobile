@@ -66,9 +66,9 @@ function ZoneDetailPage() {
               items={[
                 ["Mã vùng", z.code],
                 ["Trạng thái", <Badge key="s" text={status.text} tone={status.tone} />],
-                ["Vị trí", z.location],
-                ["Diện tích", z.area !== null ? num(z.area, "ha") : null],
-                ["Tọa độ", z.latitude !== null && z.longitude !== null ? `${z.latitude}, ${z.longitude}` : null],
+                // Vị trí và diện tích không bắt buộc nên luôn hiện dòng, chưa có thì ghi "—".
+                ["Vị trí", z.location?.trim() || "—"],
+                ["Diện tích", z.area !== null ? num(z.area, "ha") : "—"],
                 ["Ranh giới", z.boundary?.features.length ? `Theo sơ đồ cấp phép, ${z.boundary.features.length} khu` : "Chưa có"],
                 ["Bè đang dùng", `${num(z.inUseRaftCount)} bè`],
               ]}
@@ -146,7 +146,7 @@ function ZoneDetailPage() {
                     <Row
                       key={r.id}
                       title={`Bè ${r.code}`}
-                      meta={[r.size, `${r.laneCount} hàng`].filter(Boolean).join(" · ")}
+                      meta={[r.size, `${r.laneCount} hàng`, r.currentCycle ? `đang nuôi từ ${date(r.currentCycle.startDate)}` : null].filter(Boolean).join(" · ")}
                       badge={r.statusId !== USAGE.inUse ? <Badge text={s.text} tone={s.tone} /> : undefined}
                       onClick={() => navigate(`/manage/rafts/${r.id}`)}
                     />
