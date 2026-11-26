@@ -22,6 +22,8 @@ export const FEATURE_ACCESS: Record<FeatureKey, Access> = {
   schedule: { functions: ["WORK_ASSIGNMENTS", "ATTENDANCE"] },
   // Cân từng lồng (`api/harvest-lots/{id}/cages`) cần quyền sửa lô thu hoạch trong vùng (HarvestLots Edit), như việc cân lô.
   portWeighing: { functions: ["HARVEST_LOTS"] },
+  // Kế hoạch thu hoạch: Chủ HTX và Quản lý vùng xem (HARVEST_PLANS View); ghi nhận thu cần thêm quyền ghi thu hoạch của vùng.
+  harvestPlans: { functions: ["HARVEST_PLANS"] },
   salesOrders: { functions: ["PURCHASE_REQUESTS"] },
   receivables: { functions: ["CUSTOMER_DEBTS"] },
   receipts: { functions: ["CUSTOMER_PAYMENTS"] },

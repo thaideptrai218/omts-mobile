@@ -5,6 +5,7 @@ import { Button, Checkbox, Input, Sheet, useLocation } from "zmp-ui";
 import FormError from "@/components/FormError/FormError";
 import { PurchaseBadge, PurchaseFacts, PurchasePager, PURCHASE_FILTERS } from "@/features/sales/components/PurchaseRequest/PurchaseRequest";
 import SalesGate from "@/features/sales/components/SalesGate/SalesGate";
+import OrderHarvestPlans from "@/features/sales/components/OrderHarvestPlans/OrderHarvestPlans";
 import PurchaseStaffing from "@/features/sales/components/PurchaseStaffing/PurchaseStaffing";
 import { Chips } from "@/components/Chips/Chips";
 import { Empty } from "@/components/Empty/Empty";
@@ -15,7 +16,7 @@ import { Rows } from "@/components/Rows/Rows";
 import { useLoad } from "@/hooks/useLoad";
 import { errorText } from "@/utils/errorText";
 import { date, num, todayIso } from "@/utils/format";
-import { getPurchaseRequest, listPurchaseRequests, pickupDateError, acceptPurchaseRequest, declinePurchaseRequest, isAwaitingAnswer, wholeCages } from "@/features/sales/services/salesService";
+import { getPurchaseRequest, listPurchaseRequests, pickupDateError, acceptPurchaseRequest, declinePurchaseRequest, isAwaitingAnswer, PURCHASE_STATUS, wholeCages } from "@/features/sales/services/salesService";
 import { permissionsAtom } from "@/features/auth/state/authAtoms";
 import "@/features/sales/styles/sales.scss";
 
@@ -67,6 +68,7 @@ function Inbox() {
     {selected ? <>
       <PurchaseFacts row={selected} />
       {owner && <PurchaseStaffing key={selected.id} row={selected} onUpdated={row => { setSelected(row); void list.reload(); }} />}
+      {owner && selected.statusId === PURCHASE_STATUS.accepted && selected.salesOrderId && <OrderHarvestPlans key={`plans-${selected.id}`} salesOrderId={selected.salesOrderId} salesOrderCode={selected.salesOrderCode ?? null} />}
       <div className="button-stack">{canDecide && !selected.staffing?.hasEnoughStaff && <p className="form__hint">Chưa đủ nhân viên đồng ý ca nên chưa thể chấp nhận đơn.</p>}<Button fullWidth size="large" variant="secondary" disabled={busy} onClick={() => void open(selected.id)}>Cập nhật yêu cầu</Button></div>
     </> : <>
       <p className="sales-filter-label">Lọc theo trạng thái</p>

@@ -29,4 +29,7 @@ export const ROUTES: ManageRoute[] = [
   { path: "/manage/lot-trace", element: lazyPage(() => import("@/features/traceability/pages/LotTraceSearchPage")) },
   { path: "/manage/lot-trace/:lotId", element: lazyPage(() => import("@/features/traceability/pages/LotTracePage")) },
   { path: "/manage/water/:id", element: lazyPage(() => import("@/features/farming/pages/WaterDetailPage")) },
+  { path: "/manage/harvest-plans", element: lazyPage(() => import("@/features/farming/pages/HarvestPlansPage")) },
+  { path: "/manage/harvest-plans/:id", element: lazyPage(() => import("@/features/farming/pages/HarvestPlanPage")) },
+  { path: "/manage/harvest-plans/:id/lines/:lineId", element: lazyPage(() => import("@/features/farming/pages/HarvestRecordPage")) },
 ];

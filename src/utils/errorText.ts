@@ -301,6 +301,10 @@ const SERVER_TEXT: Record<string, string | ((details: ProblemDetails) => string)
   },
   MSG68: "Mật khẩu tạm đã hết hạn. Vui lòng nhờ Chủ HTX cấp lại.",
   "MSG-CYCLE-03": "Chưa có lô giống để chọn: cần hoàn tất phiếu nhập hàng của giống trước.",
+  // Kế hoạch thu hoạch (UserMessages MSG-PLAN-xx của backend).
+  "MSG-PLAN-01": "Luống của lô phải là luống của bè trong kế hoạch thu hoạch.",
+  "MSG-PLAN-02": "Luống này đang chờ thu trong một kế hoạch thu hoạch khác.",
+  "MSG-PLAN-03": "Bè này đã có lô hoặc đã bỏ luống trong kế hoạch nên không ghi thêm hay sửa được nữa. Mở lại kế hoạch để xem.",
   "MSG-CYCLE-07": "Đây là đóng sớm nên cần Chủ HTX đồng ý. Đánh dấu ô xác nhận khi Chủ HTX đã đồng ý rồi đóng lại.",
   MSG69: MESSAGES.MSG69,
   // OMTS-132 (WorkMessages.cs, UserMessages.PayrollLocksDate): `lockedUntil`, `date` là trường mở rộng của lỗi.

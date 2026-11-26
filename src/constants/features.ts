@@ -50,6 +50,11 @@ export const FEATURES = {
     icon: "zi-calendar-solid",
     description: "Xem các việc được giao trong ngày và trong tuần.",
   },
+  harvestPlans: {
+    title: "Kế hoạch thu hoạch",
+    icon: "zi-calendar",
+    description: "Nhận kế hoạch thu hoạch của đơn, ghi nhận thu từng bè thành lô chờ cân, rồi bàn giao cho Chủ HTX.",
+  },
   portWeighing: {
     title: "Cân tại cảng",
     icon: "zi-inbox",
@@ -224,6 +229,7 @@ export const FEATURE_HINTS: Record<keyof typeof FEATURES, string> = {
   assignments: "Giao việc, ghi giờ làm",
   attendance: "Vào ca, ra ca",
   schedule: "Việc trong ngày, trong tuần",
+  harvestPlans: "Thu từng bè theo đơn",
   portWeighing: "Số cân khi giao hàu",
   salesOrders: "Thương lái đặt lồng",
   salesProducts: "Hàng đang bán",
@@ -293,6 +299,7 @@ export const FEATURE_ROUTES: Partial<Record<FeatureKey, string>> = {
   cycles: "/manage/cycles",
   seeding: "/manage/cycles?for=seeding",
   cultivationLog: "/manage/cycles?for=logs",
+  harvestPlans: "/manage/harvest-plans",
   portWeighing: "/manage/weighings",
   salesOrders: "/manage/purchase-requests",
   salesProducts: "/manage/sales-products",

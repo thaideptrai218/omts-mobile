@@ -6,6 +6,7 @@ import { statusLabel } from "@/utils/labels";
  * báo cáo sản lượng. Trường `status` của backend là tên tiếng Anh ("Open", "Reopened", "Closed"), không hiện thẳng lên màn.
  */
 const LOT_STATUS: Record<number, Label> = {
+  2904: { text: "Chờ cân", tone: "warning" },
   2901: { text: "Đang bán", tone: "success" },
   2902: { text: "Mở lại", tone: "warning" },
   2903: { text: "Đã đóng", tone: "neutral" },

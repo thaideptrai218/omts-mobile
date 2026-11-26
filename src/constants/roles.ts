@@ -13,7 +13,7 @@ export const ROLES: Record<RoleKey, Role> = {
     actionGroups: [
       { title: "Vùng nuôi", hint: "Bè, chu kỳ nuôi, nước biển", area: "farm", actions: ["zones", "cycles", "seeding", "cultivationLog", "water", "raftMaterials", "materialUsage", "harvestSettings", "lotTrace", "trace"] },
       { title: "Mua hàng", hint: "Phiếu nhập, vật tư", area: "buy", actions: ["purchases", "suppliers", "supplierPayments", "inputItems", "inputUses"] },
-      { title: "Bán hàng", hint: "Thương lái đặt mua", area: "sell", actions: ["salesOrders", "portWeighing", "salesProducts", "customers", "claims"] },
+      { title: "Bán hàng", hint: "Thương lái đặt mua", area: "sell", actions: ["salesOrders", "harvestPlans", "portWeighing", "salesProducts", "customers", "claims"] },
       { title: "Thu tiền", hint: "Công nợ, phiếu thu", area: "sell", actions: ["receivables", "receipts", "reconcile", "refunds", "bankAccount"] },
       { title: "Nhân công", hint: "Chấm công, nghỉ phép", area: "people", actions: ["workPlans", "assignments", "attendance", "leaveRequests", "attendanceSettings", "myWork"] },
       { title: "Lương", hint: "Bảng lương, giá công", area: "people", actions: ["payroll", "payRates"] },
@@ -26,7 +26,7 @@ export const ROLES: Record<RoleKey, Role> = {
   zoneManager: {
     key: "zoneManager",
     label: "Quản lý vùng",
-    actions: ["water", "purchases", "suppliers", "workPlans", "assignments", "attendance", "myWork", "cycles", "seeding", "cultivationLog", "portWeighing", "materialUsage", "inputUses", "customers", "claims", "lotTrace", "trace"],
+    actions: ["water", "purchases", "suppliers", "workPlans", "assignments", "attendance", "myWork", "cycles", "seeding", "cultivationLog", "harvestPlans", "portWeighing", "materialUsage", "inputUses", "customers", "claims", "lotTrace", "trace"],
   },
   staff: {
     key: "staff",
