@@ -1,6 +1,5 @@
 import type { RaftListItem, RaftSaved, RaftView, SaveRaft } from "@/features/farming/models/Raft";
 import type {
-  CorrectWater,
   RecordWater,
   WaterChartData,
   WaterChartResponse,
@@ -173,11 +172,6 @@ export function recognizeWater(zoneId: string, photo: Blob, crop: WaterCrop | nu
 /** Ghi lần đo người đo đã kiểm tra. Gửi lại cùng `clientOperationId` thì backend trả bản đã lưu, không ghi trùng. */
 export function recordWater(zoneId: string, body: RecordWater) {
   return api<WaterDetail>(`/api/zones/${zoneId}/water-measurements`, { method: "POST", body });
-}
-
-/** Sửa tại chỗ một lần đo đang hiệu lực, kèm lý do; ngưỡng đã lưu theo lần đo không đổi. */
-export function correctWater(id: string, body: CorrectWater) {
-  return api<WaterDetail>(`/api/water-measurements/${id}/corrections`, { method: "POST", body });
 }
 
 /** Hủy một lần đo đang hiệu lực, kèm lý do. Không hoàn tác được. */
