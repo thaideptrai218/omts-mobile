@@ -14,8 +14,6 @@ export const MESSAGES = {
   MSG19: "Phiên đăng nhập đã hết hạn. Vui lòng liên kết lại tài khoản.",
   MSG20: "Bạn không thể tự đổi tên đăng nhập. Vui lòng liên hệ Chủ HTX hoặc kênh hỗ trợ.",
   MSG21: (channel: string) => `Kênh ${channel} chưa được cấu hình hoặc chưa đủ điều kiện nên chưa bật được.`,
-  MSG22: "Thiết bị đã từ chối nhận thông báo đẩy. Các kênh hợp lệ khác vẫn được lưu.",
-  MSG23: "Mục thông báo này là bắt buộc, không tắt được.",
   MSG57: "Hồ sơ cũ tạm ẩn cho tới khi hoàn tất xác minh danh tính.",
   MSG69: "Bạn đã thử quá số lần cho phép. Vui lòng thử lại sau 15 phút.",
   UNEXPECTED: "Đã có lỗi không mong muốn. Vui lòng thử lại sau.",

@@ -65,7 +65,7 @@ Its acceptance criteria must be re-mapped to Zalo Mini App equivalents before it
 - Zalo Mini App with React 18, TypeScript, Vite, ZaUI, ZMP SDK, Tailwind CSS and Jotai.
 - Launch splash, bottom navigation and a role-based dashboard for all seven SRS actors, with legacy sample role data in `src/constants/roles.ts`; API-backed owner/trader behavior is described above.
 - Traceability lookup by lot code or QR scan, with a sample lot; Account page with cooperative info and privacy policy required by Zalo.
-- Account module (ACS-01…07, 28/10/2026): API client with token refresh, session in memory + `nativeStorage`, permission-based dashboard, `MSG07` offline banner, account linking by Zalo phone number (`/link`) as the only way in: no password form, password recovery or change, verification codes, post-login gates, contact changes or self-created trader accounts (passwords are Web-only; 28/10/2026 decision), personal profile with read-only contacts, notification preferences (push waits for the OMTS-215 channel decision), online/offline logout with a queued server revoke. The role switcher was removed.
+- Account module (ACS-01…07, 28/10/2026): API client with token refresh, session in memory + `nativeStorage`, permission-based dashboard, `MSG07` offline banner, account linking by Zalo phone number (`/link`) as the only way in: no password form, password recovery or change, verification codes, post-login gates, contact changes or self-created trader accounts (passwords are Web-only; 28/10/2026 decision), personal profile with read-only contacts, online/offline logout with a queued server revoke. The role switcher was removed.
 - The local backend source implements Zalo linking, silent re-entry, unlinking and trader approval requests. Deployment availability must be checked separately; the contract is in `docs/zalo-account-linking.md`.
 
 ### Account linking and API authentication
@@ -87,7 +87,6 @@ Its acceptance criteria must be re-mapped to Zalo Mini App equivalents before it
 - QA API base URL and current OpenAPI/response contracts.
 - Confirm that the QA deployment includes the locally implemented Zalo endpoints and CORS for `https://h5.zdn.vn`.
 - Canonical Vietnamese/English message catalog: Mobile currently displays Vietnamese messages from `src/constants/messages.ts`, with backend error translation in `src/utils/errorText.ts`.
-- Push channel (Zalo OA/ZNS vs Mini App notifications): `PUSH_PROVIDER` in `src/constants/env.ts`.
 - Required offline behavior beyond showing `MSG07`; no mutation queue or conflict policy is assumed.
 - Which screens are Mobile-native versus Web-only when Jira has not assigned a channel.
 

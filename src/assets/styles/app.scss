@@ -2384,53 +2384,6 @@ body[zaui-theme="dark"] {
   margin: 0;
 }
 
-/* Tùy chọn thông báo */
-.pref__title {
-  font-size: 1.125rem;
-  line-height: 1.625rem;
-  font-weight: 700;
-}
-
-.pref__note {
-  margin-top: 4px;
-  font-size: 1rem;
-  line-height: 1.5rem;
-  color: var(--ink-2);
-}
-
-.pref__rows {
-  margin-top: 8px;
-}
-
-.pref__row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  min-height: 56px;
-  padding: 8px 0;
-  border-top: 1.5px solid var(--line-soft);
-}
-
-.pref__text {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.pref__label {
-  font-size: 1.0625rem;
-  line-height: 1.5rem;
-  font-weight: 500;
-}
-
-.pref__reason {
-  font-size: 1rem;
-  line-height: 1.5rem;
-  color: var(--ink-2);
-}
-
 /* Màn quản lý của Chủ HTX (src/components/manage) */
 .info.card {
   padding: 4px 16px;
