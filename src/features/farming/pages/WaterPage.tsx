@@ -21,9 +21,9 @@ import { date, dateTime, num } from "@/utils/format";
 import { violatedText, WATER_ALERT, waterStatusLabel } from "@/utils/labels";
 import { evidencePhoto } from "@/utils/imageFile";
 import { newOperationId } from "@/utils/operationId";
-import { DisplayFrameSheet } from "@/features/farming/components/DisplayFrameSheet/DisplayFrameSheet";
+import { DisplayFrame } from "@/features/farming/components/DisplayFrame/DisplayFrame";
 import { WaterChart } from "@/features/farming/components/WaterChart/WaterChart";
-import { WaterValuesSheet } from "@/features/farming/components/WaterValuesSheet/WaterValuesSheet";
+import { WaterValuesForm } from "@/features/farming/components/WaterValuesForm/WaterValuesForm";
 import { listWater, recognizeWater, recordWater, waterOverview, zoneLookup, zoneThresholds } from "@/features/farming/services/farmService";
 import { ocrNotice, outsideText, rangeText } from "@/features/farming/utils/waterText";
 
@@ -40,10 +40,20 @@ const VIEWS: [WaterView, string][] = [
   ["chart", "Biểu đồ"],
 ];
 
+/** Tiêu đề khối ghi số đo theo từng bước sau khi chụp. */
+const CAPTURE_TITLES = {
+  frame: "Bước 1. Chọn màn hình số",
+  reading: "Bước 2. Đọc số trên ảnh",
+  retry: "Bước 2. Gửi lại ảnh",
+  values: "Bước 3. Kiểm tra và lưu số đo",
+} as const;
+
 /**
- * Chỉ số nước theo vùng (`/manage/water?zone=<id>`), WATER-01 và WATER-03. Chủ HTX và Quản lý vùng thấy thêm tổng quan các
- * vùng (lần đo mới nhất, cảnh báo). Lần đo mới: chụp máy đo (ảnh bắt buộc), app đọc số gợi ý, người đo chọn bè, kiểm tra và
- * sửa số rồi lưu; đọc ảnh không được thì nhập tay cả ba số.
+ * Chỉ số nước theo vùng (`/manage/water?zone=<id>`), WATER-01 và WATER-03. Đầu trang là ô chọn vùng nuôi; Chủ HTX và Quản lý
+ * vùng thấy thêm lần đo mới nhất và cảnh báo (tổng quan WATER-03) ngay trong tên vùng và dưới ô chọn. Lần đo mới: chụp máy đo
+ * (ảnh bắt buộc), kéo khung vào màn hình số, app đọc số gợi ý, người đo chọn bè, kiểm tra và sửa số rồi lưu; đọc ảnh không
+ * được thì nhập tay cả ba số. Các bước sau khi chụp hiện thành một khối ngay trong trang, dưới ngưỡng của vùng, không mở sheet
+ * đè lên màn: sheet có ô nhập dễ bị bàn phím đẩy lệch và lỡ tay vuốt đóng mất số đang nhập.
  */
 function WaterPage() {
   const navigate = useNavigate();
@@ -60,8 +70,6 @@ function WaterPage() {
   // Tổng số đo của bộ lọc, giữ lại trong lúc tải trang sau để nút "Xem thêm" không biến mất.
   const [total, setTotal] = useState(0);
   const [view, setView] = useState<WaterView>("list");
-  // Ô chọn vùng: chọn một vùng ở "Các vùng nuôi" thì cuộn tới đây để thấy ngay số đo của vùng đó.
-  const zoneField = useRef<HTMLDivElement>(null);
   const [reading, setReading] = useState(false);
   const [attempt, setAttempt] = useState<WaterPhotoAttempt | null>(null);
   // Ảnh vừa chụp, đang chờ người đo kéo khung vào màn hình số.
@@ -69,10 +77,20 @@ function WaterPage() {
   const [draft, setDraft] = useState<WaterDraft | null>(null);
   // Một mã cho một lần ghi: gửi lại sau lỗi mạng không ghi trùng.
   const [operationId, setOperationId] = useState(newOperationId);
+  const captureRef = useRef<HTMLDivElement>(null);
 
+  // Người đo tự chọn vùng; chỉ có một vùng thì chọn sẵn vùng đó.
   useEffect(() => {
-    if (!zoneId && zones.data?.length) setZoneId(zones.data[0].id);
+    if (!zoneId && zones.data?.length === 1) setZoneId(zones.data[0].id);
   }, [zoneId, zones.data]);
+
+  // Bước hiện tại của lần đo đang ghi, null khi chưa chụp.
+  const step = draft ? "values" : attempt ? "retry" : reading ? "reading" : framing ? "frame" : null;
+
+  // Mỗi khi sang bước mới, cuộn tới khối ghi số đo để người đo thấy ngay, không phải tự tìm bên dưới.
+  useEffect(() => {
+    if (step) captureRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [step]);
 
   const thresholds = useLoad(() => (zoneId ? zoneThresholds(zoneId) : Promise.resolve(null)), [zoneId]);
   const list = useLoad(() => (zoneId ? listWater(zoneId, filter, page, range) : Promise.resolve(null)), [zoneId, filter, page, range]);
@@ -118,15 +136,16 @@ function WaterPage() {
     if (photo) void send({ zoneId, photo, crop });
   };
 
-  const changeZone = (id: string) => {
+  // Bỏ lần đo đang ghi (ảnh, khung, số đang nhập), trang về như trước khi chụp.
+  const cancelCapture = () => {
+    setFraming(null);
     setAttempt(null);
-    setPage(1);
-    setZoneId(id);
+    setDraft(null);
   };
 
-  const viewZone = (id: string) => {
-    changeZone(id);
-    zoneField.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  const changeZone = (id: string) => {
+    setPage(1);
+    setZoneId(id);
   };
 
   const changeFilter = (f: WaterFilter) => {
@@ -141,57 +160,66 @@ function WaterPage() {
 
   const t = thresholds.data?.thresholds;
   const ocr = draft?.recognition.ocr;
+  // Lần đo mới nhất và cảnh báo của vùng đang chọn; chỉ Chủ HTX và Quản lý vùng có.
+  const status = overview.data?.find((z) => z.zoneId === zoneId);
+  const alertZones = new Set(overview.data?.filter((z) => z.hasWaterAlert).map((z) => z.zoneId));
 
   return (
     <ManagePage
       title="Chỉ số nước"
       footer={
-        <div className="sheet-actions">
-          <Button fullWidth size="large" prefixIcon={<Icon icon="zi-camera" />} disabled={!zoneId || reading} loading={reading} onClick={() => void (attempt ? send(attempt) : takePhoto())}>
-            {reading ? "Đang đọc ảnh" : attempt ? "Gửi lại ảnh" : "Chụp máy đo để ghi số đo"}
-          </Button>
-          {!attempt && <Button fullWidth variant="tertiary" disabled={!zoneId || reading} onClick={() => void takePhoto("album")}>Chọn ảnh có sẵn</Button>}
-        </div>
+        step ? undefined : (
+          <div className="sheet-actions">
+            <Button fullWidth size="large" prefixIcon={<Icon icon="zi-camera" />} disabled={!zoneId} onClick={() => void takePhoto()}>
+              Chụp máy đo để ghi số đo
+            </Button>
+            <Button fullWidth variant="tertiary" disabled={!zoneId} onClick={() => void takePhoto("album")}>
+              Chọn ảnh có sẵn
+            </Button>
+          </div>
+        )
       }
     >
-      {overview.data && overview.data.length > 0 && (
-        <Section title="Các vùng nuôi">
-          <Rows>
-            {overview.data.map((z) => (
-              <Row
-                key={z.zoneId}
-                title={`${z.zoneCode} · ${z.zoneName}`}
-                meta={z.latestMeasuredAt ? `Đo gần nhất ${dateTime(z.latestMeasuredAt)}` : "Chưa có lần đo nào"}
-                badge={
-                  z.zoneId === zoneId || z.hasWaterAlert ? (
-                    <>
-                      {z.zoneId === zoneId && <Badge text="Đang xem" tone="neutral" />}
-                      {z.hasWaterAlert && <Badge text={z.valuesOutside.map(outsideText).join("; ") || "Vượt ngưỡng"} tone="danger" />}
-                    </>
-                  ) : undefined
-                }
-                onClick={() => viewZone(z.zoneId)}
-              />
-            ))}
-          </Rows>
-        </Section>
-      )}
-
       <Loadable data={zones.data} error={zones.error} reload={() => void zones.reload()}>
         {(list) =>
           list.length === 0 ? (
             <Empty icon="zi-location" title="Chưa có vùng nuôi nào" />
           ) : (
-            <div className="form water-field water-field--zone" ref={zoneField}>
-              <Select label="Vùng nuôi" value={zoneId} onChange={(v) => changeZone(String(v))} closeOnSelect>
-                {list.map((z) => (
-                  <Select.Option key={z.id} value={z.id} title={z.name ?? z.code ?? ""} />
-                ))}
+            <div className="form water-field">
+              <Select
+                label="Vùng nuôi"
+                placeholder="Chọn vùng nuôi"
+                value={zoneId || undefined}
+                onChange={(v) => changeZone(String(v))}
+                closeOnSelect
+                disabled={!!step}
+                helperText={step ? "Đang ghi số đo cho vùng này. Lưu hoặc hủy lần đo để đổi vùng." : undefined}
+              >
+                {list.map((z) => {
+                  const name = z.name ?? z.code ?? "";
+                  return <Select.Option key={z.id} value={z.id} title={alertZones.has(z.id) ? `${name} · Vượt ngưỡng` : name} />;
+                })}
               </Select>
             </div>
           )
         }
       </Loadable>
+
+      {zones.data && zones.data.length > 0 && !zoneId && (
+        <Empty icon="zi-location" title="Chọn vùng nuôi" text="Chọn vùng ở ô phía trên để xem số đo và chụp máy đo ghi lần đo mới." />
+      )}
+
+      {status && (
+        <div className="water-field">
+          <Rows>
+            <Row
+              title="Lần đo gần nhất"
+              meta={status.latestMeasuredAt ? dateTime(status.latestMeasuredAt) : "Chưa có lần đo nào"}
+              badge={status.hasWaterAlert ? <Badge text={status.valuesOutside.map(outsideText).join("; ") || "Vượt ngưỡng"} tone="danger" /> : undefined}
+            />
+          </Rows>
+        </div>
+      )}
 
       {t && (
         <div className="summary water-thresholds">
@@ -207,6 +235,63 @@ function WaterPage() {
             <span className="summary__label">Ngưỡng nhiệt độ</span>
             <span className="summary__value">{rangeText(t.temperatureMin, t.temperatureMax, "°C")}</span>
           </div>
+        </div>
+      )}
+
+      {step && (
+        <div className="water-capture" ref={captureRef}>
+          <Section title={CAPTURE_TITLES[step]}>
+            <div className="card">
+              {step === "frame" && framing && <DisplayFrame photo={framing} onRead={readFramed} onRetake={() => void takePhoto()} onCancel={cancelCapture} />}
+
+              {step === "reading" && (
+                <div className="form" role="status">
+                  <p className="form__intro">App đang đọc số trên ảnh máy đo, vui lòng chờ trong giây lát.</p>
+                  <Button fullWidth size="large" loading disabled>
+                    Đang đọc ảnh
+                  </Button>
+                </div>
+              )}
+
+              {step === "retry" && attempt && (
+                <div className="form">
+                  <p className="form__intro">Chưa gửi được ảnh lên máy chủ. Ảnh vẫn còn trên máy, kiểm tra kết nối mạng rồi gửi lại.</p>
+                  <div className="sheet-actions">
+                    <Button fullWidth size="large" onClick={() => void send(attempt)}>
+                      Gửi lại ảnh
+                    </Button>
+                    <Button fullWidth variant="tertiary" size="large" onClick={cancelCapture}>
+                      Hủy lần đo này
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {step === "values" && draft && ocr && (
+                <WaterValuesForm
+                  key={draft.recognition.photoKey}
+                  zoneId={draft.zoneId}
+                  initial={{
+                    measuredAt: ocr.measuredAt?.value ?? draft.recognition.measuredAt,
+                    ph: ocr.ph?.value,
+                    salinity: ocr.salinity?.value,
+                    temperature: ocr.temperature?.value,
+                  }}
+                  notice={ocrNotice(ocr)}
+                  thresholds={t}
+                  saveText="Lưu số đo"
+                  cancelText="Hủy lần đo này"
+                  onCancel={cancelCapture}
+                  onSave={async (values) => {
+                    const saved = await recordWater(draft.zoneId, { ...values, photoKey: draft.recognition.photoKey, clientOperationId: operationId });
+                    setDraft(null);
+                    openSnackbar({ text: saved.alertState === "Active" ? "Đã lưu số đo. Số đo vượt ngưỡng, app đã gửi cảnh báo." : "Đã lưu số đo.", type: "success", duration: 5000 });
+                    navigate(`/manage/water/${saved.id}`);
+                  }}
+                />
+              )}
+            </div>
+          </Section>
         </div>
       )}
 
@@ -280,33 +365,6 @@ function WaterPage() {
             )
           }
         </Loadable>
-      )}
-
-      <DisplayFrameSheet photo={framing} onRead={readFramed} onCancel={() => setFraming(null)} />
-
-      {draft && ocr && (
-        <WaterValuesSheet
-          key={draft.recognition.photoKey}
-          visible
-          title="Ghi số đo nước"
-          zoneId={draft.zoneId}
-          initial={{
-            measuredAt: ocr.measuredAt?.value ?? draft.recognition.measuredAt,
-            ph: ocr.ph?.value,
-            salinity: ocr.salinity?.value,
-            temperature: ocr.temperature?.value,
-          }}
-          notice={ocrNotice(ocr)}
-          thresholds={t}
-          saveText="Lưu số đo"
-          onClose={() => setDraft(null)}
-          onSave={async (values) => {
-            const saved = await recordWater(draft.zoneId, { ...values, photoKey: draft.recognition.photoKey, clientOperationId: operationId });
-            setDraft(null);
-            openSnackbar({ text: saved.alertState === "Active" ? "Đã lưu số đo. Số đo vượt ngưỡng, app đã gửi cảnh báo." : "Đã lưu số đo.", type: "success", duration: 5000 });
-            navigate(`/manage/water/${saved.id}`);
-          }}
-        />
       )}
     </ManagePage>
   );
