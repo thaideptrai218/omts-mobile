@@ -108,6 +108,9 @@ function HomePage() {
             {EMPLOYEE_WORK_ENABLED && role.key !== "accountant" && (
               <AreaCard area="people" title="Công việc của tôi" hint="Phân công, chấm công" onClick={() => navigate("/account/work")} />
             )}
+            {permissions.subjectType === "Staff" && role.key !== "accountant" && (
+              <AreaCard area="people" title="Ca được mời" hint="Đồng ý hoặc từ chối ca làm" onClick={() => navigate("/account/shifts")} />
+            )}
             <HomeMenu role={role} permissions={permissions} exclude={role.key !== "accountant" ? "myWork" : undefined} />
             {role.note && <p className="screen__note">{role.note}</p>}
           </>

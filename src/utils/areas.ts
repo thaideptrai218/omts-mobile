@@ -24,7 +24,7 @@ const PATH_AREAS: [string, AreaKey][] = [
   ["/manage/customers", "sell"], ["/manage/customer-debts", "sell"], ["/manage/customer-payments", "sell"], ["/manage/bank-account", "sell"],
   ["/manage/quality-claims", "sell"], ["/account/claims", "sell"],
   ["/manage/work-plans", "people"], ["/manage/workforce", "people"], ["/manage/leave-requests", "people"],
-  ["/manage/attendance-settings", "people"], ["/account/work", "people"],
+  ["/manage/attendance-settings", "people"], ["/account/work", "people"], ["/account/shifts", "people"],
   ["/manage/payrolls", "people"], ["/manage/payroll-payments", "people"], ["/manage/payroll-slips", "people"],
   ["/manage/payroll-employees", "people"], ["/manage/pay-rates", "people"],
   ["/manage/employees", "org"], ["/manage/accounts", "org"], ["/manage/roles", "org"], ["/manage/cooperative", "org"],

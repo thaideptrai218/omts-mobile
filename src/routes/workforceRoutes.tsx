@@ -6,6 +6,8 @@ import { lazyPage } from "@/routes/lazyPage";
 export const ROUTES: ManageRoute[] = [
   { path: "/manage/work-plans", element: lazyPage(() => import("@/features/workforce/pages/WorkDayPlansPage")) },
   ...(EMPLOYEE_WORK_ENABLED ? [{ path: "/account/work", element: lazyPage(() => import("@/features/workforce/pages/MyWorkPage")) }] : []),
+  // Lời mời ca của đơn đặt mua: dùng phiên tài khoản nên không phụ thuộc EMPLOYEE_WORK_ENABLED.
+  { path: "/account/shifts", element: lazyPage(() => import("@/features/workforce/pages/MyShiftsPage")) },
   { path: "/manage/workforce", element: lazyPage(() => import("@/features/workforce/pages/WorkforcePage")) },
   { path: "/manage/leave-requests", element: lazyPage(() => import("@/features/workforce/pages/LeaveRequestsPage")) },
   { path: "/manage/attendance-settings", element: lazyPage(() => import("@/features/workforce/pages/AttendanceSettingsPage")) },
