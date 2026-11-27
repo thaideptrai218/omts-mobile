@@ -99,7 +99,7 @@ export type WaterDetail = {
   voidReason: string | null;
 };
 
-/** Giá trị gửi lên khi ghi hoặc sửa: mọi số đều bắt buộc. */
+/** Giá trị gửi lên khi ghi: mọi số đều bắt buộc. */
 export type WaterValues = {
   raftId: string;
   measuredAt: string;
@@ -112,11 +112,6 @@ export type WaterValues = {
 export type RecordWater = WaterValues & {
   photoKey: string;
   clientOperationId: string;
-};
-
-/** Sửa tại chỗ một lần đo đang hiệu lực, kèm lý do (WATER-02). */
-export type CorrectWater = WaterValues & {
-  reason: string;
 };
 
 export type WaterFilter = "All" | "Active" | "Voided";

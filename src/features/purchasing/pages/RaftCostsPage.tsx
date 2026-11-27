@@ -11,6 +11,7 @@ import { useLoad } from "@/hooks/useLoad";
 import { date, money, num } from "@/utils/format";
 import { MetaLines } from "@/features/purchasing/components/MetaLines/MetaLines";
 import { listRaftMaterialCosts } from "@/features/purchasing/services/purchasingService";
+import "@/features/purchasing/styles/purchasing.scss";
 
 /**
  * Chi phí vật tư bè (phao, dây, lồng…) theo từng bè trong kỳ, tính từ các lần dùng vật tư sửa bè (BR-FARM-05) theo giá mua
@@ -32,17 +33,19 @@ function RaftCostsPage() {
           const zones = [...new Map(rows.map((r) => [r.zone.id, r.zone])).values()];
           return (
             <>
-              <p className="form__hint">
-                Từ {date(result.from)} đến {date(result.to)}
-              </p>
-              <div className="summary">
-                <div className="summary__cell">
-                  <span className="summary__label">Tổng chi phí</span>
-                  <span className="summary__value">{money(result.materialCost)}</span>
-                </div>
-                <div className="summary__cell">
-                  <span className="summary__label">Số bè</span>
-                  <span className="summary__value">{rows.length}</span>
+              <div className="form">
+                <p className="form__hint">
+                  Từ {date(result.from)} đến {date(result.to)}
+                </p>
+                <div className="summary summary--money">
+                  <div className="summary__cell">
+                    <span className="summary__label">Tổng chi phí</span>
+                    <span className="summary__value">{money(result.materialCost)}</span>
+                  </div>
+                  <div className="summary__cell">
+                    <span className="summary__label">Số bè</span>
+                    <span className="summary__value">{rows.length}</span>
+                  </div>
                 </div>
               </div>
               {zones.map((z) => (

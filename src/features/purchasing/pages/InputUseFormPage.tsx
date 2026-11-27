@@ -24,6 +24,12 @@ import { issueErrorText } from "@/features/purchasing/utils/inputIssueText";
 let lineKey = 0;
 const emptyLine = (): Line => ({ key: ++lineKey, itemId: "", itemUnitId: null, quantity: "", seedLotLineId: "" });
 
+/**
+ * Giá trị của lựa chọn "không" (chưa gắn lô, chưa chọn người nhận). Select của ZaUI coi chuỗi rỗng là chưa có giá trị và hiện
+ * lại lựa chọn trước đó, nên dùng một giá trị khác rỗng; trạng thái của form vẫn giữ chuỗi rỗng.
+ */
+const NONE = "none";
+
 /** Số lượng hợp lệ: lớn hơn 0, tối đa 2 chữ số thập phân (như bản web). */
 function quantityOf(text: string) {
   const n = parseNumber(text);
@@ -40,10 +46,12 @@ function InputUseFormPage() {
   const allowed = useBusinessPermission();
   const { data, error, reload } = useLoad<Choices>(async () => {
     const [zones, items, types] = await Promise.all([zoneLookup(), listInputItems({ statusId: STATUS_IN_USE }), listIssueTypes()]);
-    return { zones: zones.filter((z) => z.statusId === USAGE.inUse && allowed("INPUT_ISSUES", "Create", z.id)), items, types };
+    return { zones: zones.filter((z) => z.statusId === USAGE.inUse), items, types };
   }, []);
+  // Lọc vùng theo quyền mỗi lần vẽ, không lúc tải: quyền của phiên có thể về sau danh sách vùng.
+  const choices = data && { ...data, zones: data.zones.filter((z) => allowed("INPUT_ISSUES", "Create", z.id)) };
 
-  if (data && data.zones.length > 0) return <IssueForm choices={data} />;
+  if (choices && choices.zones.length > 0) return <IssueForm choices={choices} />;
 
   return (
     <ManagePage title="Lập phiếu xuất dùng">
@@ -64,6 +72,8 @@ function IssueForm({ choices }: { choices: Choices }) {
   const [lines, setLines] = useState<Line[]>([emptyLine()]);
   const [notes, setNotes] = useState("");
   const [lots, setLots] = useState<Record<string, InputSeedLots>>({});
+  // Lỗi tải lô giống theo vật tư, hiện ngay ở dòng hàng kèm nút tải lại.
+  const [lotErrors, setLotErrors] = useState<Record<string, string>>({});
   const requested = useRef(new Set<string>());
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -102,13 +112,14 @@ function IssueForm({ choices }: { choices: Choices }) {
   const loadLots = async (itemId: string) => {
     if (requested.current.has(itemId)) return;
     requested.current.add(itemId);
+    setLotErrors((m) => ({ ...m, [itemId]: "" }));
     try {
       const result = await getSeedLots(itemId);
       setLots((m) => ({ ...m, [itemId]: result }));
       setLines((ls) => ls.map((l) => (l.itemId === itemId && l.seedLotLineId === null ? { ...l, seedLotLineId: result.suggestedLotId ?? "" } : l)));
     } catch (err) {
       requested.current.delete(itemId);
-      setError(errorText(err));
+      setLotErrors((m) => ({ ...m, [itemId]: errorText(err) }));
     }
   };
 
@@ -205,7 +216,9 @@ function IssueForm({ choices }: { choices: Choices }) {
             </Select>
             {zoneId && place.error && <FormError text={place.error} />}
             {zoneId && place.data && rafts.length === 0 && <p className="form__hint">Vùng này chưa có bè đang dùng.</p>}
+            {/* key theo vùng: đổi vùng thì dựng lại ô chọn, không còn hiện bè hay người nhận của vùng trước. */}
             <Select
+              key={`raft-${zoneId}`}
               label="Bè nhận vật tư (bắt buộc)"
               placeholder={zoneId ? "Chọn bè" : "Chọn vùng trước"}
               value={raftId || undefined}
@@ -223,14 +236,15 @@ function IssueForm({ choices }: { choices: Choices }) {
               ))}
             </Select>
             <Select
+              key={`receiver-${zoneId}`}
               label="Người nhận (không bắt buộc)"
               placeholder={zoneId ? "Chưa chọn" : "Chọn vùng trước"}
-              value={receiverId}
-              onChange={(v) => setReceiverId(String(v ?? ""))}
+              value={zoneId ? receiverId || NONE : undefined}
+              onChange={(v) => setReceiverId(v === NONE ? "" : String(v ?? ""))}
               closeOnSelect
               disabled={busy || !zoneId}
             >
-              <Select.Option value="" title="Chưa chọn" />
+              <Select.Option value={NONE} title="Chưa chọn" />
               {receivers.map((p) => (
                 <Select.Option key={p.id} value={p.id} title={p.fullName} />
               ))}
@@ -246,6 +260,7 @@ function IssueForm({ choices }: { choices: Choices }) {
               const factor = factorOf(l);
               const seed = item?.group === "Seed";
               const itemLots = item ? lots[item.id] : undefined;
+              const lotError = item ? lotErrors[item.id] : "";
               const lot = itemLots?.lots.find((x) => x.seedLotLineId === l.seedLotLineId);
               // Còn trong kho theo đơn vị đang chọn: của lô đã chọn, của phần chưa gắn lô, hoặc của cả vật tư.
               const onHand = !item ? null : seed && itemLots ? (lot ? lot.onHand : itemLots.unlottedQuantity) : seed ? null : item.onHand;
@@ -273,10 +288,25 @@ function IssueForm({ choices }: { choices: Choices }) {
                       ))}
                     </Select>
                   )}
-                  {seed && !itemLots && <p className="form__hint">Đang tải lô giống…</p>}
+                  {seed && item && !itemLots && (lotError ? (
+                    <>
+                      <FormError text={lotError} />
+                      <Button fullWidth variant="secondary" size="large" disabled={busy} onClick={() => void loadLots(item.id)}>
+                        Tải lại lô giống
+                      </Button>
+                    </>
+                  ) : (
+                    <p className="form__hint" role="status">Đang tải lô giống…</p>
+                  ))}
                   {seed && itemLots && (
-                    <Select label="Lô giống" value={l.seedLotLineId ?? ""} onChange={(v) => updateLine(l.key, { seedLotLineId: String(v ?? "") })} closeOnSelect disabled={busy}>
-                      <Select.Option value="" title={`Chưa gắn lô · còn ${num(itemLots.unlottedQuantity, itemLots.unit)}`} />
+                    <Select
+                      label="Lô giống"
+                      value={l.seedLotLineId || NONE}
+                      onChange={(v) => updateLine(l.key, { seedLotLineId: v === NONE ? "" : String(v ?? "") })}
+                      closeOnSelect
+                      disabled={busy}
+                    >
+                      <Select.Option value={NONE} title={`Chưa gắn lô · còn ${num(itemLots.unlottedQuantity, itemLots.unit)}`} />
                       {itemLots.lots.map((x) => (
                         <Select.Option key={x.seedLotLineId} value={x.seedLotLineId} title={`${x.code} · còn ${num(x.onHand, itemLots.unit)}`} />
                       ))}

@@ -84,9 +84,9 @@ function EmployeeDetailPage() {
                 </p>
               </div>
               {followUp && FOLLOW_UP[followUp.action] && (
-                <div className="card notice">
+                <div className="card form">
                   <p className="form__intro">{FOLLOW_UP[followUp.action]}</p>
-                  <Button size="large" variant="secondary" onClick={() => navigate(`/manage/accounts/${followUp.accountId}`)}>
+                  <Button fullWidth size="large" variant="secondary" onClick={() => navigate(`/manage/accounts/${followUp.accountId}`)}>
                     Mở tài khoản
                   </Button>
                 </div>
@@ -132,17 +132,19 @@ function EmployeeDetailPage() {
                   <p className="form__hint">Chưa có tài khoản. Tạo tài khoản cho nhân viên trên bản web của OMTS.</p>
                 )}
               </Section>
-              <Actions>
-                {left ? (
-                  <Button size="large" variant="secondary" onClick={() => navigate(`/manage/employees/${id}/edit`)}>
-                    Sửa hồ sơ
-                  </Button>
-                ) : (
-                  <Button size="large" variant="secondary" type="danger" onClick={() => setEnding(true)}>
-                    Cho nghỉ việc
-                  </Button>
-                )}
-              </Actions>
+              {e.canMaintain && (
+                <Actions>
+                  {left ? (
+                    <Button size="large" variant="secondary" onClick={() => navigate(`/manage/employees/${id}/edit`)}>
+                      Sửa hồ sơ
+                    </Button>
+                  ) : (
+                    <Button size="large" variant="secondary" type="danger" onClick={() => setEnding(true)}>
+                      Cho nghỉ việc
+                    </Button>
+                  )}
+                </Actions>
+              )}
             </>
           );
         }}

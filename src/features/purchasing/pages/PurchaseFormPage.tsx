@@ -1,6 +1,6 @@
 import type { PurchaseFormChoices as Choices, PurchaseFormLine as Line } from "@/features/purchasing/models/PurchaseForm";
-import type { SaveReceipt } from "@/features/purchasing/models/PurchaseReceipt";
-import { useEffect, useState } from "react";
+import type { ReceiptView, SaveReceipt } from "@/features/purchasing/models/PurchaseReceipt";
+import { useState } from "react";
 import { Button, Icon, Input, Select, useNavigate, useParams } from "zmp-ui";
 
 import { Actions } from "@/components/Actions/Actions";
@@ -38,6 +38,20 @@ const emptyLine = (): Line => ({
   supplierLotCode: null,
 });
 
+/** Các dòng của phiếu nháp thành dòng form; phiếu chưa có dòng nào thì để một dòng trống. */
+const draftLines = (receipt: ReceiptView | null): Line[] =>
+  receipt && receipt.lines.length > 0
+    ? receipt.lines.map((l) => ({
+        key: ++lineKey,
+        itemId: l.itemId ?? "",
+        quantity: l.quantity !== null ? String(l.quantity) : "",
+        unitPrice: l.unitPrice !== null ? String(l.unitPrice) : "",
+        discount: l.discount,
+        itemUnitId: l.itemUnitId,
+        supplierLotCode: l.supplierLotCode,
+      }))
+    : [emptyLine()];
+
 /**
  * Lập phiếu nhập mới hoặc sửa phiếu nháp (`/manage/purchases/new`, `/manage/purchases/:id/edit`). Lưu nháp chỉ cần nhà
  * cung cấp; "Lưu và hoàn tất" thì backend kiểm tra đủ (mỗi dòng có vật tư, số lượng, đơn giá; ngày không sau hôm nay) và phiếu
@@ -71,42 +85,34 @@ function PurchaseFormPage() {
 function ReceiptForm({ title, choices }: { title: string; choices: Choices }) {
   const navigate = useNavigate();
   const receipt = choices.receipt;
-  const [supplierId, setSupplierId] = useState("");
-  const [receiptDate, setReceiptDate] = useState(todayIso());
-  const [lines, setLines] = useState<Line[]>([emptyLine()]);
-  const [discount, setDiscount] = useState("");
-  const [notes, setNotes] = useState("");
+  // Form chỉ dựng sau khi đã tải xong phiếu (xem PurchaseFormPage), nên lấy giá trị phiếu nháp ngay lúc khởi tạo. Đặt lại
+  // sau khi hiện thì ô ngày vẫn hiện hôm nay: DatePicker của ZaUI chỉ chép giá trị vào trạng thái riêng lúc dựng.
+  const [supplierId, setSupplierId] = useState(receipt?.supplier.id ?? "");
+  const [receiptDate, setReceiptDate] = useState(receipt?.receiptDate ?? todayIso());
+  const [lines, setLines] = useState<Line[]>(() => draftLines(receipt));
+  const [discount, setDiscount] = useState(receipt?.discount ? String(receipt.discount) : "");
+  const [notes, setNotes] = useState(receipt?.notes ?? "");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [confirming, setConfirming] = useState(false);
 
-  useEffect(() => {
-    if (!receipt) return;
-    setSupplierId(receipt.supplier.id);
-    setReceiptDate(receipt.receiptDate ?? todayIso());
-    setLines(
-      receipt.lines.length > 0
-        ? receipt.lines.map((l) => ({
-            key: ++lineKey,
-            itemId: l.itemId ?? "",
-            quantity: l.quantity !== null ? String(l.quantity) : "",
-            unitPrice: l.unitPrice !== null ? String(l.unitPrice) : "",
-            discount: l.discount,
-            itemUnitId: l.itemUnitId,
-            supplierLotCode: l.supplierLotCode,
-          }))
-        : [emptyLine()],
-    );
-    setDiscount(receipt.discount ? String(receipt.discount) : "");
-    setNotes(receipt.notes ?? "");
-  }, [receipt]);
-
   const updateLine = (key: number, patch: Partial<Line>) => setLines((ls) => ls.map((l) => (l.key === key ? { ...l, ...patch } : l)));
 
+  // Danh sách chọn chỉ có nhà cung cấp và vật tư đang dùng. Phiếu nháp có thể mang cái đã ngừng dùng: thêm lựa chọn riêng
+  // cho nó để ô chọn không trống, và lấy nhóm, đơn vị từ dòng nháp.
+  const draftSupplier = receipt && !choices.suppliers.some((s) => s.id === receipt.supplier.id) ? receipt.supplier : null;
+  const draftItems = (receipt?.lines ?? []).filter(
+    (x, i, all) => x.itemId && !choices.items.some((it) => it.id === x.itemId) && all.findIndex((y) => y.itemId === x.itemId) === i,
+  );
+  const draftLineOf = (l: Line) =>
+    receipt?.lines.find((x) => x.itemId === l.itemId && x.itemUnitId === l.itemUnitId) ?? receipt?.lines.find((x) => x.itemId === l.itemId);
+
   const itemOf = (l: Line) => choices.items.find((x) => x.id === l.itemId);
+  const groupOf = (l: Line) => itemOf(l)?.group ?? draftLineOf(l)?.group ?? null;
   const unitOf = (l: Line) => {
     const item = itemOf(l);
-    return (l.itemUnitId && item?.units.find((u) => u.id === l.itemUnitId)?.name) || item?.unit || "";
+    if (!item) return draftLineOf(l)?.unit ?? "";
+    return (l.itemUnitId && item.units.find((u) => u.id === l.itemUnitId)?.name) || item.unit;
   };
   const lineAmount = (l: Line) => (parseNumber(l.quantity) ?? 0) * Math.max(0, (parseNumber(l.unitPrice) ?? 0) - l.discount);
   const total = lines.reduce((t, l) => t + lineAmount(l), 0);
@@ -136,8 +142,8 @@ function ReceiptForm({ title, choices }: { title: string; choices: Choices }) {
         unitPrice: parseNumber(l.unitPrice),
         discount: l.discount,
         itemUnitId: l.itemUnitId,
-        // Mã lô giống chỉ có nghĩa với dòng giống.
-        supplierLotCode: itemOf(l)?.group === "Seed" ? l.supplierLotCode : null,
+        // Mã lô giống chỉ có nghĩa với dòng giống (kể cả giống đã ngừng dùng của phiếu nháp).
+        supplierLotCode: groupOf(l) === "Seed" ? l.supplierLotCode : null,
       })),
       complete,
       rowVersion: receipt?.rowVersion,
@@ -162,7 +168,6 @@ function ReceiptForm({ title, choices }: { title: string; choices: Choices }) {
     setConfirming(true);
   };
 
-  // Phiếu nháp có thể mang nhà cung cấp đã ngừng dùng, tên đó không còn trong danh sách chọn.
   const supplierName = choices.suppliers.find((s) => s.id === supplierId)?.name ?? receipt?.supplier.name;
 
   return (
@@ -178,6 +183,7 @@ function ReceiptForm({ title, choices }: { title: string; choices: Choices }) {
         <Section step={1} title="Thông tin chung">
           <div className="form card">
             <Select label="Nhà cung cấp (bắt buộc)" placeholder="Chọn nhà cung cấp" value={supplierId || undefined} onChange={(v) => setSupplierId(String(v))} closeOnSelect disabled={busy}>
+              {draftSupplier && <Select.Option value={draftSupplier.id} title={`${draftSupplier.name ?? "Nhà cung cấp"} (ngừng dùng)`} />}
               {choices.suppliers.map((s) => (
                 <Select.Option key={s.id} value={s.id} title={s.name} />
               ))}
@@ -205,6 +211,9 @@ function ReceiptForm({ title, choices }: { title: string; choices: Choices }) {
                     closeOnSelect
                     disabled={busy}
                   >
+                    {draftItems.map((x) => (
+                      <Select.Option key={x.itemId} value={x.itemId ?? ""} title={`${x.itemName ?? x.itemCode ?? "Vật tư"} (ngừng dùng)`} />
+                    ))}
                     {choices.items.map((x) => (
                       <Select.Option key={x.id} value={x.id} title={`${x.name} (${INPUT_GROUP[x.group] ?? x.group})`} />
                     ))}

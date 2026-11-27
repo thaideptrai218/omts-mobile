@@ -1,5 +1,5 @@
 import type { InvoiceLotOrigin, SalesInvoice } from "@/features/sales/models/SalesInvoice";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Button, Sheet, useNavigate, useParams } from "zmp-ui";
 
 import { Badge } from "@/components/Badge/Badge";
@@ -8,6 +8,7 @@ import FormError from "@/components/FormError/FormError";
 import { Loadable } from "@/components/Loadable/Loadable";
 import { ManagePage } from "@/components/ManagePage/ManagePage";
 import { Section } from "@/components/Section/Section";
+import { useQrImage } from "@/features/sales/hooks/useQrImage";
 import { finishInvoice, getInvoice, publishCheck } from "@/features/sales/services/invoiceService";
 import { useLoad } from "@/hooks/useLoad";
 import { errorText } from "@/utils/errorText";
@@ -69,14 +70,18 @@ export default function InvoiceDetailPage() {
 
   return (
     <ManagePage title={row ? `Hóa đơn ${row.code}` : "Hóa đơn"} footer={footer}>
-      <FormError text={error} />
       <Loadable data={row} error={invoice.error} reload={() => void invoice.reload()}>
         {(value) => (
           <>
-            {value.qrUrl && <QrBlock url={value.qrUrl} />}
-            {value.qrDecidedAt && !value.qrUrl && <p className="card form sales-notice">Đã kết thúc bán, không tạo mã QR.</p>}
-            {lots && value.qrDecidedAt && <div className="card form">{lots.map((lot) => <p key={lot.harvestLotId}>{lotNote(lot)}</p>)}</div>}
-            <InvoiceFacts row={value} />
+            <div className="form">
+              {/* Lỗi lúc kết thúc bán hiện trong sheet; dòng này chỉ cho lỗi khi chưa mở sheet (ví dụ kiểm tra nguồn gốc lỗi). */}
+              {!asking && <FormError text={error} />}
+              {value.qrUrl && <QrBlock url={value.qrUrl} />}
+              {value.qrDecidedAt && !value.qrUrl && <p className="card form">Đã kết thúc bán, không tạo mã QR.</p>}
+              {lots && value.qrDecidedAt && <div className="card form">{lots.map((lot) => <p key={lot.harvestLotId}>{lotNote(lot)}</p>)}</div>}
+              <InvoiceFacts row={value} />
+            </div>
+            <InvoiceLines row={value} />
           </>
         )}
       </Loadable>
@@ -84,6 +89,7 @@ export default function InvoiceDetailPage() {
         <div className="sheet-form form">
           <p className="form__intro">Có mã QR thì người mua quét để xem hàu nuôi ở đâu, thu hoạch khi nào. Tên thương lái và giá không hiện trên trang truy xuất.</p>
           {lots?.map((lot) => <p key={lot.harvestLotId} className="form__hint">{lotNote(lot)}</p>)}
+          <FormError text={asking ? error : ""} />
           <div className="sheet-actions">
             <Button fullWidth size="large" loading={busy} disabled={busy} onClick={() => void finish(true)}>Có, tạo mã QR</Button>
             <Button fullWidth size="large" variant="secondary" disabled={busy} onClick={() => void finish(false)}>Không tạo mã QR</Button>
@@ -98,44 +104,50 @@ export default function InvoiceDetailPage() {
 function InvoiceFacts({ row }: { row: SalesInvoice }) {
   const paid = row.debtEffect.isPaid;
   return (
-    <>
-      <Facts items={[
-        ["Thương lái", row.customer?.name ?? "Khách lẻ"],
-        ["Lập lúc", dateTime(row.invoicedAt)],
-        ["Vùng", row.zone.name],
-        ["Tổng khối lượng", num(row.totalKg, "kg")],
-        ["Tổng tiền", money(row.total)],
-        ["Đã trả", money(row.debtEffect.covered)],
-        ["Còn nợ", money(row.debtEffect.unpaid)],
-        ["Thanh toán", <Badge key="paid" text={paid ? "Đã trả đủ" : row.paymentTerm === "PayLater" ? "Trả sau" : "Chưa trả đủ"} tone={paid ? "success" : "warning"} />],
-      ]} />
-      <Section title="Các dòng hàng">
+    <Facts items={[
+      ["Thương lái", row.customer?.name ?? "Khách lẻ"],
+      ["Lập lúc", dateTime(row.invoicedAt)],
+      ["Vùng", row.zone.name],
+      ["Tổng khối lượng", num(row.totalKg, "kg")],
+      ["Tổng tiền", money(row.total)],
+      ["Đã trả", money(row.debtEffect.covered)],
+      ["Còn nợ", money(row.debtEffect.unpaid)],
+      ["Thanh toán", <Badge key="paid" text={paid ? "Đã trả đủ" : row.paymentTerm === "PayLater" ? "Trả sau" : "Chưa trả đủ"} tone={paid ? "success" : "warning"} />],
+    ]} />
+  );
+}
+
+function InvoiceLines({ row }: { row: SalesInvoice }) {
+  return (
+    <Section title="Các dòng hàng">
+      <div className="form">
         {row.lines.map((line) => (
           <div key={line.id} className="card form">
             <p className="weighing-lot__title">{line.productName} · lô {line.lotCode}</p>
             <p>{num(line.kg, "kg")} × {money(line.unitPrice)} = {money(line.amount)}</p>
           </div>
         ))}
-      </Section>
-    </>
+      </div>
+    </Section>
   );
 }
 
-/** Ảnh mã QR của hóa đơn, vẽ ngay trong app, kèm đường link để chép. */
+/** Ảnh mã QR của hóa đơn, vẽ ngay trong app, kèm đường link để chép. Vẽ lỗi thì nhắc chép đường link và cho vẽ lại. */
 function QrBlock({ url }: { url: string }) {
-  const [image, setImage] = useState("");
-  useEffect(() => {
-    let alive = true;
-    void import("qrcode")
-      .then((QRCode) => QRCode.toDataURL(url, { width: 320, margin: 4 }))
-      .then((data) => { if (alive) setImage(data); })
-      .catch(() => { if (alive) setImage(""); });
-    return () => { alive = false; };
-  }, [url]);
+  const qr = useQrImage(url);
   return (
     <div className="card form invoice-qr">
       <p className="weighing-lot__title">Mã QR truy xuất của hóa đơn</p>
-      {image ? <img className="invoice-qr__image" src={image} alt="Mã QR truy xuất nguồn gốc" /> : <p className="form__hint">Đang vẽ mã QR...</p>}
+      {qr.image ? (
+        <img className="invoice-qr__image" src={qr.image} alt="Mã QR truy xuất nguồn gốc" />
+      ) : qr.failed ? (
+        <>
+          <p className="form__hint" role="alert">Chưa vẽ được mã QR. Bạn vẫn chép được đường link bên dưới để gửi cho người mua.</p>
+          <Button fullWidth variant="secondary" size="large" onClick={qr.redraw}>Vẽ lại mã QR</Button>
+        </>
+      ) : (
+        <p className="form__hint" role="status">Đang vẽ mã QR...</p>
+      )}
       <p className="invoice-qr__link">{url}</p>
     </div>
   );

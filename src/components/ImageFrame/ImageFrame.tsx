@@ -53,14 +53,19 @@ export function ImageFrame({ src, alt, frame, onChange }: { src: string; alt: st
   };
 
   const percent = (value: number) => `${(value * 100).toFixed(2)}%`;
+  const place = { left: percent(frame.left), top: percent(frame.top), width: percent(frame.right - frame.left), height: percent(frame.bottom - frame.top) };
 
   return (
     <div className="image-frame__stage">
       <div className="image-frame__box" ref={box}>
         {src && <img className="image-frame__photo" src={src} alt={alt} draggable={false} />}
+        {/* Lớp làm tối phần ngoài khung, cắt theo mép ảnh; tách riêng để nút kéo ở góc không bị cắt theo. */}
+        <div className="image-frame__shade" aria-hidden>
+          <div className="image-frame__hole" style={place} />
+        </div>
         <div
           className="image-frame__frame"
-          style={{ left: percent(frame.left), top: percent(frame.top), width: percent(frame.right - frame.left), height: percent(frame.bottom - frame.top) }}
+          style={place}
           onPointerDown={grab("frame")}
           onPointerMove={follow}
           onPointerUp={release}

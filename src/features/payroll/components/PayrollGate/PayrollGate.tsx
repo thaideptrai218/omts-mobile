@@ -2,6 +2,7 @@ import { useAtomValue } from "jotai";
 import { Fragment, type ReactNode } from "react";
 import { Empty } from "@/components/Empty/Empty";
 import { ManagePage } from "@/components/ManagePage/ManagePage";
+import { PermissionsPending } from "@/features/auth/components/PermissionsPending/PermissionsPending";
 import { permissionsAtom, sessionAtom } from "@/features/auth/state/authAtoms";
 
 /**
@@ -16,10 +17,7 @@ export default function PayrollGate({ mode, title, children }: { mode: "owner" |
   if (!permissions || permissions.accountId !== session.accountId) {
     return (
       <ManagePage title={title}>
-        <div className="loading" role="status" aria-busy>
-          <p className="loading__text">Đang tải...</p>
-          <div className="skeleton skeleton--form" aria-hidden />
-        </div>
+        <PermissionsPending />
       </ManagePage>
     );
   }

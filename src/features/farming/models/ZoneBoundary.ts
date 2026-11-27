@@ -40,7 +40,8 @@ export type CornerReading = {
 export type AreaReading = {
   name: string;
   corners: CornerReading[];
-  writtenAreaHa: number | null;
+  /** Diện tích (ha) ghi ở tiêu đề bảng, khi máy chủ đọc được. */
+  writtenAreaHa?: number | null;
 };
 
 /** Kết quả đọc ảnh bảng tọa độ góc, đã đổi về dạng màn hình dùng. */
@@ -80,6 +81,14 @@ export type AreaCheck = {
   gridHa: number | null;
   writtenHa: number | null;
   matches: boolean | null;
+};
+
+/** Kết quả đọc ảnh sơ đồ cấp phép trên máy chủ: các khu và kinh tuyến trục như `CornerTableReading`, cộng hai dòng của bảng thông tin. */
+export type LicenseMapReading = Pick<CornerTableReading, "areas" | "centralMeridian"> & {
+  /** Dòng "Địa điểm", chỉ để gợi ý cho ô Vị trí; null khi không đọc được. */
+  location: string | null;
+  /** Dòng "Diện tích đề nghị" (ha), chỉ để gợi ý cho ô Diện tích; null khi không đọc được. */
+  writtenTotalAreaHa: number | null;
 };
 
 /** Điểm góc đang sửa trên màn hình: giữ nguyên chữ người dùng gõ. */

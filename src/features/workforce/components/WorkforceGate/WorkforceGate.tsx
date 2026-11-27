@@ -2,6 +2,7 @@ import { useAtomValue } from "jotai";
 import { Fragment, type ReactNode } from "react";
 import { Empty } from "@/components/Empty/Empty";
 import { ManagePage } from "@/components/ManagePage/ManagePage";
+import { PermissionsPending } from "@/features/auth/components/PermissionsPending/PermissionsPending";
 import { hasFunction } from "@/features/auth/services/permissionsService";
 import { permissionsAtom, sessionAtom } from "@/features/auth/state/authAtoms";
 
@@ -13,7 +14,7 @@ export default function WorkforceGate({ mode, children }: { mode: "personal" | "
   const session = useAtomValue(sessionAtom);
   const permissions = useAtomValue(permissionsAtom);
   if (!session) return <ManagePage title="Công việc"><Empty title="Vui lòng liên kết tài khoản" /></ManagePage>;
-  if (!permissions || permissions.accountId !== session.accountId) return <ManagePage title="Công việc"><div className="loading" role="status" aria-busy><p className="loading__text">Đang tải...</p><div className="skeleton skeleton--form" aria-hidden /></div></ManagePage>;
+  if (!permissions || permissions.accountId !== session.accountId) return <ManagePage title="Công việc"><PermissionsPending /></ManagePage>;
   const allowed = mode === "owner" ? permissions.isCooperativeOwner
     : mode === "personal" ? permissions.subjectType === "Staff" || permissions.isCooperativeOwner
     : mode === "requests" ? permissions.isCooperativeOwner || permissions.functions.some(f => f.function === "WORK_ASSIGNMENTS" && f.actions.includes("View"))

@@ -56,6 +56,9 @@ export default function LocationMap({ initial, center, boundary = null, onConfir
       });
       map.on("click", (event) => choose({ latitude: event.lngLat.lat, longitude: event.lngLat.lng }));
       map.on("error", (event) => {
+        // Bản đồ đã tải xong mà một ô (tile) hoặc nguồn dữ liệu lỗi thì vẫn chọn điểm được: không báo lỗi, không khóa nút.
+        const source = event as { sourceId?: string; tile?: unknown };
+        if (loaded && (source.sourceId || source.tile)) return;
         failed = true;
         const status = (event.error as Error & { status?: number }).status;
         if (!disposed) setError(status === 423 || status === 429 ? "Bản đồ đang bị giới hạn lượt tải. Bạn vẫn có thể nhập tọa độ bằng tay hoặc lấy vị trí điện thoại." : "Không tải được bản đồ. Vui lòng kiểm tra kết nối và cấu hình dịch vụ.");
@@ -72,6 +75,8 @@ export default function LocationMap({ initial, center, boundary = null, onConfir
     {error && <div role="alert"><p>{error}</p><Button variant="secondary" onClick={() => setAttempt((value) => value + 1)}>Thử lại bản đồ</Button></div>}
     {selected && <p>Vĩ độ: {coordinateText(selected.latitude)} · Kinh độ: {coordinateText(selected.longitude)}</p>}
     {selected && placementOf(area, selected)?.inside === false && <p className="form-error form-warning" role="alert"><span>Điểm này nằm ngoài vùng tô xanh (ranh giới vùng theo sơ đồ cấp phép).</span></p>}
-    <Button fullWidth size="large" disabled={!ready || !selected || !!error} onClick={() => selected && onConfirm(selected)}>Dùng tọa độ này</Button>
+    <div className="location-map__actions">
+      <Button fullWidth size="large" disabled={!ready || !selected || !!error} onClick={() => selected && onConfirm(selected)}>Dùng tọa độ này</Button>
+    </div>
   </>;
 }

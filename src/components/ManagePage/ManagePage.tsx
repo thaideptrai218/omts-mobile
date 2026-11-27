@@ -1,5 +1,5 @@
 import type { AreaKey } from "@/models/Navigation";
-import { ReactNode, useState } from "react";
+import { ReactNode, useEffect, useRef, useState } from "react";
 import { Icon, Page, useLocation, useNavigate } from "zmp-ui";
 
 import { AreaArt } from "@/components/AreaArt/AreaArt";
@@ -29,6 +29,18 @@ export function ManagePage({
   // Chốt màu lúc mở màn: khi chuyển trang, màn cũ còn trên màn hình thêm một nhịp và không được đổi màu theo đường dẫn mới.
   const [pathArea] = useState(() => areaForPath(location.pathname));
   const current = area ?? pathArea;
+  const footerRef = useRef<HTMLDivElement>(null);
+  const hasFooter = !!footer;
+  // Chiều cao thật của chân trang (một hay nhiều nút, nút chữ dài xuống dòng) để snackbar nổi ngay trên, không che nút.
+  useEffect(() => {
+    const el = footerRef.current;
+    if (!el) return;
+    const update = () => document.documentElement.style.setProperty("--page-footer-height", `${el.offsetHeight}px`);
+    update();
+    const observer = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(update);
+    observer?.observe(el);
+    return () => observer?.disconnect();
+  }, [hasFooter]);
   return (
     <Page className="screen screen--manage" hideScrollbar data-area={current}>
       <div className="manage-bar">
@@ -47,7 +59,11 @@ export function ManagePage({
         <Waves />
       </div>
       <div className="screen__body">{children}</div>
-      {footer && <div className="page-footer">{footer}</div>}
+      {footer && (
+        <div className="page-footer" ref={footerRef}>
+          {footer}
+        </div>
+      )}
     </Page>
   );
 }

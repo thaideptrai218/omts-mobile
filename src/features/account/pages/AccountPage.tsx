@@ -151,36 +151,39 @@ function AccountPage() {
       </div>
 
       <Sheet visible={infoOpen} onClose={() => setInfoOpen(false)} autoHeight mask handler swipeToClose title="Thông tin HTX">
-        <dl className="info">
-          <div>
-            <dt>Đơn vị</dt>
-            <dd>{COOPERATIVE.name}</dd>
-          </div>
-          <div>
-            <dt>Đăng ký</dt>
-            <dd>{COOPERATIVE.registrationNo}</dd>
-          </div>
-          <div>
-            <dt>Địa chỉ</dt>
-            <dd>{COOPERATIVE.address}</dd>
-          </div>
-          <div>
-            <dt>Điện thoại</dt>
-            <dd>{COOPERATIVE.phone}</dd>
-          </div>
-          <div>
-            <dt>Dịch vụ</dt>
-            <dd>{COOPERATIVE.service}</dd>
-          </div>
-          <div>
-            <dt>Hỗ trợ và khiếu nại</dt>
-            <dd>{COOPERATIVE.support}</dd>
-          </div>
-          <div>
-            <dt>Phiên bản</dt>
-            <dd>{COOPERATIVE.appVersion}</dd>
-          </div>
-        </dl>
+        {/* Nội dung sheet của ZaUI không tự cuộn: bọc trong .sheet-form để thấy được tới dòng "Phiên bản" Zalo bắt buộc hiện. */}
+        <div className="sheet-form">
+          <dl className="info info--flat">
+            <div>
+              <dt>Đơn vị</dt>
+              <dd>{COOPERATIVE.name}</dd>
+            </div>
+            <div>
+              <dt>Đăng ký</dt>
+              <dd>{COOPERATIVE.registrationNo}</dd>
+            </div>
+            <div>
+              <dt>Địa chỉ</dt>
+              <dd>{COOPERATIVE.address}</dd>
+            </div>
+            <div>
+              <dt>Điện thoại</dt>
+              <dd>{COOPERATIVE.phone}</dd>
+            </div>
+            <div>
+              <dt>Dịch vụ</dt>
+              <dd>{COOPERATIVE.service}</dd>
+            </div>
+            <div>
+              <dt>Hỗ trợ và khiếu nại</dt>
+              <dd>{COOPERATIVE.support}</dd>
+            </div>
+            <div>
+              <dt>Phiên bản</dt>
+              <dd>{COOPERATIVE.appVersion}</dd>
+            </div>
+          </dl>
+        </div>
       </Sheet>
 
       <Modal

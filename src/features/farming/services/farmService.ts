@@ -1,6 +1,5 @@
 import type { RaftListItem, RaftSaved, RaftView, SaveRaft } from "@/features/farming/models/Raft";
 import type {
-  CorrectWater,
   RecordWater,
   WaterChartData,
   WaterChartResponse,
@@ -31,8 +30,9 @@ export function listZones(params: ZoneSearchParams) {
   return api<Paged<ZoneListItem>>(`/api/zones${query(params)}`);
 }
 
-export function zoneLookup(includeDiscontinued = false) {
-  return api<ZoneLookupItem[]>(`/api/zones/lookup${includeDiscontinued ? "?includeDiscontinued=true" : ""}`);
+/** Vùng đang dùng, để chọn ở mọi màn ngoài danh sách vùng: vùng ngừng dùng chỉ hiện ở màn Vùng nuôi. */
+export function zoneLookup() {
+  return api<ZoneLookupItem[]>("/api/zones/lookup");
 }
 
 export function getZone(id: string) {
@@ -172,11 +172,6 @@ export function recognizeWater(zoneId: string, photo: Blob, crop: WaterCrop | nu
 /** Ghi lần đo người đo đã kiểm tra. Gửi lại cùng `clientOperationId` thì backend trả bản đã lưu, không ghi trùng. */
 export function recordWater(zoneId: string, body: RecordWater) {
   return api<WaterDetail>(`/api/zones/${zoneId}/water-measurements`, { method: "POST", body });
-}
-
-/** Sửa tại chỗ một lần đo đang hiệu lực, kèm lý do; ngưỡng đã lưu theo lần đo không đổi. */
-export function correctWater(id: string, body: CorrectWater) {
-  return api<WaterDetail>(`/api/water-measurements/${id}/corrections`, { method: "POST", body });
 }
 
 /** Hủy một lần đo đang hiệu lực, kèm lý do. Không hoàn tác được. */

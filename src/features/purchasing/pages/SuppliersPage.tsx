@@ -59,29 +59,29 @@ function SuppliersPage() {
             <Select.Option value="inUse" title="Đang dùng" />
             <Select.Option value="discontinued" title="Ngừng dùng" />
           </Select>
+          <Loadable data={data} error={error} reload={() => void reload()}>
+            {(page) =>
+              page.items.length === 0 ? (
+                <Empty icon="zi-user-circle" title="Không có nhà cung cấp nào" text="Thử đổi bộ lọc hoặc từ khóa tìm kiếm." />
+              ) : (
+                <Rows>
+                  {page.items.map((s) => {
+                    const st = statusLabel(s.status);
+                    return (
+                      <Row
+                        key={s.id}
+                        title={s.name}
+                        meta={`${SUPPLIER_TYPE[s.supplierType] ?? s.supplierType}${s.phoneNumber ? ` · ${s.phoneNumber}` : ""}`}
+                        badge={s.statusId !== STATUS_IN_USE ? <Badge text={st.text} tone={st.tone} /> : undefined}
+                        onClick={() => navigate(`/manage/suppliers/${s.id}`)}
+                      />
+                    );
+                  })}
+                </Rows>
+              )
+            }
+          </Loadable>
         </div>
-        <Loadable data={data} error={error} reload={() => void reload()}>
-          {(page) =>
-            page.items.length === 0 ? (
-              <Empty icon="zi-user-circle" title="Không có nhà cung cấp nào" text="Thử đổi bộ lọc hoặc từ khóa tìm kiếm." />
-            ) : (
-              <Rows>
-                {page.items.map((s) => {
-                  const st = statusLabel(s.status);
-                  return (
-                    <Row
-                      key={s.id}
-                      title={s.name}
-                      meta={`${SUPPLIER_TYPE[s.supplierType] ?? s.supplierType}${s.phoneNumber ? ` · ${s.phoneNumber}` : ""}`}
-                      badge={s.statusId !== STATUS_IN_USE ? <Badge text={st.text} tone={st.tone} /> : undefined}
-                      onClick={() => navigate(`/manage/suppliers/${s.id}`)}
-                    />
-                  );
-                })}
-              </Rows>
-            )
-          }
-        </Loadable>
       </div>
     </ManagePage>
   );

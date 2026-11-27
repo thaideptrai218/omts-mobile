@@ -64,13 +64,14 @@ export function areaCheck(area: AreaDraft): AreaCheck {
  * Đưa các khu vừa đọc vào danh sách đang sửa: khu trùng tên (không phân biệt hoa thường) bị thay điểm góc và diện tích giấy ghi,
  * khu mới được thêm vào cuối. Khu không đọc được điểm nào thì bỏ qua.
  */
-export function mergeReading(current: AreaDraft[], reading: CornerTableReading): AreaDraft[] {
+export function mergeReading(current: AreaDraft[], reading: Pick<CornerTableReading, "areas">): AreaDraft[] {
   const next = [...current];
   for (const area of reading.areas.filter((item) => item.corners.length > 0)) {
     const corners = area.corners.map(cornerDraft);
     const same = next.findIndex((existing) => existing.name.trim().toLowerCase() === area.name.toLowerCase());
-    if (same >= 0) next[same] = { ...next[same], corners, writtenAreaHa: area.writtenAreaHa };
-    else next.push(areaDraft(area.name, corners, area.writtenAreaHa));
+    const writtenAreaHa = area.writtenAreaHa ?? null;
+    if (same >= 0) next[same] = { ...next[same], corners, writtenAreaHa };
+    else next.push(areaDraft(area.name, corners, writtenAreaHa));
   }
   return next;
 }

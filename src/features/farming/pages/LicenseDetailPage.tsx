@@ -2,6 +2,7 @@ import { Button, useNavigate, useParams } from "zmp-ui";
 
 import { Actions } from "@/components/Actions/Actions";
 import { Badge } from "@/components/Badge/Badge";
+import { Empty } from "@/components/Empty/Empty";
 import { Facts } from "@/components/Facts/Facts";
 import { Loadable } from "@/components/Loadable/Loadable";
 import { ManagePage } from "@/components/ManagePage/ManagePage";
@@ -62,11 +63,15 @@ function LicenseDetailPage() {
                 </Actions>
               )}
               <Section title="Áp dụng cho vùng">
-                <Rows>
-                  {l.zones.map((z) => (
-                    <Row key={z.id} title={z.name} meta={z.code} onClick={() => navigate(`/manage/zones/${z.id}`)} />
-                  ))}
-                </Rows>
+                {l.zones.length === 0 ? (
+                  <Empty icon="zi-location" title="Giấy tờ chưa gắn với vùng nuôi nào" />
+                ) : (
+                  <Rows>
+                    {l.zones.map((z) => (
+                      <Row key={z.id} title={z.name} meta={z.code} onClick={() => navigate(`/manage/zones/${z.id}`)} />
+                    ))}
+                  </Rows>
+                )}
               </Section>
             </>
           );

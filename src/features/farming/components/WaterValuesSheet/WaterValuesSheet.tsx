@@ -12,8 +12,6 @@ import { listRafts, USAGE } from "@/features/farming/services/farmService";
 import { valuesOutside } from "@/features/farming/utils/waterText";
 
 export type WaterInitial = {
-  raftId?: string | null;
-  raftCode?: string | null;
   measuredAt: string;
   ph?: number | null;
   salinity?: number | null;
@@ -23,8 +21,8 @@ export type WaterInitial = {
 const text = (n: number | null | undefined) => (n === null || n === undefined ? "" : String(n).replace(".", ","));
 
 /**
- * Nhập hoặc sửa số đo nước của một vùng: bè, thời điểm đo, pH, độ mặn, nhiệt độ (đều bắt buộc). `withReason` thì thêm ô lý
- * do (sửa số đo, WATER-02). Số nằm ngoài ngưỡng của vùng thì báo trước khi lưu, vẫn cho lưu (backend gửi cảnh báo).
+ * Ghi số đo nước của một vùng: bè, thời điểm đo, pH, độ mặn, nhiệt độ (đều bắt buộc). Số nằm ngoài ngưỡng của vùng thì
+ * báo trước khi lưu, vẫn cho lưu (backend gửi cảnh báo).
  */
 export function WaterValuesSheet({
   visible,
@@ -33,7 +31,6 @@ export function WaterValuesSheet({
   initial,
   notice,
   thresholds,
-  withReason = false,
   saveText,
   onClose,
   onSave,
@@ -44,18 +41,16 @@ export function WaterValuesSheet({
   initial: WaterInitial;
   notice?: string;
   thresholds?: WaterThresholds | null;
-  withReason?: boolean;
   saveText: string;
   onClose: () => void;
-  onSave: (values: WaterValues, reason: string) => Promise<void>;
+  onSave: (values: WaterValues) => Promise<void>;
 }) {
   const rafts = useLoad(() => listRafts(zoneId, USAGE.inUse), [zoneId]);
-  const [raftId, setRaftId] = useState(initial.raftId ?? "");
+  const [raftId, setRaftId] = useState("");
   const [measuredAt, setMeasuredAt] = useState(toLocalInput(initial.measuredAt));
   const [ph, setPh] = useState(text(initial.ph));
   const [salinity, setSalinity] = useState(text(initial.salinity));
   const [temperature, setTemperature] = useState(text(initial.temperature));
-  const [reason, setReason] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -66,11 +61,7 @@ export function WaterValuesSheet({
 
   const values = { ph: parseNumber(ph), salinity: parseNumber(salinity), temperature: parseNumber(temperature) };
   const outside = valuesOutside(thresholds, values);
-  // Khi sửa, bè cũ có thể đã ngừng dùng: vẫn giữ trong danh sách để chọn lại.
-  const options = [
-    ...(initial.raftId && !rafts.data?.some((r) => r.id === initial.raftId) ? [{ id: initial.raftId, code: initial.raftCode ?? "Bè hiện tại" }] : []),
-    ...(rafts.data ?? []).map((r) => ({ id: r.id, code: r.code ?? "" })),
-  ];
+  const options = (rafts.data ?? []).map((r) => ({ id: r.id, code: r.code ?? "" }));
 
   const save = async () => {
     if (!raftId) return setError(MESSAGES.MSG01("Bè"));
@@ -78,11 +69,10 @@ export function WaterValuesSheet({
     if (values.ph === null) return setError(MESSAGES.MSG01("Độ pH"));
     if (values.salinity === null) return setError(MESSAGES.MSG01("Độ mặn"));
     if (values.temperature === null) return setError(MESSAGES.MSG01("Nhiệt độ"));
-    if (withReason && !reason.trim()) return setError(MESSAGES.MSG01("Lý do sửa"));
     setError("");
     setBusy(true);
     try {
-      await onSave({ raftId, measuredAt: fromLocalInput(measuredAt), ph: values.ph, salinity: values.salinity, temperature: values.temperature }, reason.trim());
+      await onSave({ raftId, measuredAt: fromLocalInput(measuredAt), ph: values.ph, salinity: values.salinity, temperature: values.temperature });
     } catch (err) {
       setError(errorText(err));
     } finally {
@@ -104,7 +94,6 @@ export function WaterValuesSheet({
         <NumberInput decimal label="Độ pH (bắt buộc)" value={ph} onChange={setPh} disabled={busy} />
         <NumberInput decimal label="Độ mặn ‰ (bắt buộc)" value={salinity} onChange={setSalinity} disabled={busy} />
         <NumberInput decimal label="Nhiệt độ °C (bắt buộc)" value={temperature} onChange={setTemperature} disabled={busy} />
-        {withReason && <Input.TextArea label="Lý do sửa (bắt buộc)" value={reason} onChange={(e) => setReason(e.target.value)} maxLength={500} showCount disabled={busy} />}
         {outside.length > 0 && (
           <p className="form__hint" role="status">
             Ngoài ngưỡng của vùng: {outside.join(", ")}. Lưu xong app sẽ gửi cảnh báo.

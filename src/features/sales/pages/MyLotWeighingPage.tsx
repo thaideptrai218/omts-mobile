@@ -14,6 +14,7 @@ import { kgGap, WeighingCompare } from "@/features/sales/components/WeighingComp
 import {
   addMyCage, agreeWeighing, cageKg, myWeighingSheet, newOperationId, removeMyCage, updateMyCage,
 } from "@/features/sales/services/lotWeighingService";
+import { lotStatusLabel } from "@/features/sales/utils/lotStatus";
 import { useAction } from "@/hooks/useAction";
 import { useLoad } from "@/hooks/useLoad";
 import { dateTime, num } from "@/utils/format";
@@ -115,7 +116,7 @@ export default function MyLotWeighingPage() {
                 ["Lô", data.lotCode],
                 ["Đơn", data.orderCodes.length ? data.orderCodes.join(", ") : null],
                 ["Loại hàu", product?.productName],
-                ["Trạng thái", data.status],
+                ["Trạng thái", lotStatusLabel(data.statusId, data.status).text],
                 ["HTX đã chốt", data.weighedKg !== null ? `${num(data.weighedKg, "kg")} (lúc ${dateTime(data.weighedAt)})` : null],
               ]} />
 
@@ -134,11 +135,13 @@ export default function MyLotWeighingPage() {
 
               {data.canEdit ? (
                 <Section title={`Cân lồng ${next}`}>
-                  <NumberInput label={`Số kg bạn cân được ở lồng ${next}`} value={kg} onChange={setKg} decimal disabled={busy} />
-                  <FormError text={error} />
-                  <Button fullWidth size="large" loading={busy} disabled={busy || !kg.trim()} onClick={() => void saveCage()}>
-                    Lưu lồng {next}
-                  </Button>
+                  <div className="form">
+                    <NumberInput label={`Số kg bạn cân được ở lồng ${next}`} value={kg} onChange={setKg} decimal disabled={busy} />
+                    <FormError text={error} />
+                    <Button fullWidth size="large" loading={busy} disabled={busy || !kg.trim()} onClick={() => void saveCage()}>
+                      Lưu lồng {next}
+                    </Button>
+                  </div>
                 </Section>
               ) : (
                 <p className="form__intro">Lô đã đóng nên không cân thêm hay sửa lồng được nữa.</p>

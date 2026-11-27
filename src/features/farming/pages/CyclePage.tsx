@@ -112,7 +112,7 @@ export default function CyclePage() {
       <Button fullWidth size="large" variant="secondary" disabled={busy} onClick={back}>Không, quay lại</Button>
     </div>
   ) : (
-    <div className="button-stack">
+    <div className="sheet-actions">
       <Button fullWidth size="large" onClick={() => navigate(`/manage/cycles/${cycleId}/seeding`)}>Thả giống</Button>
       <Button fullWidth size="large" variant="secondary" onClick={() => navigate(`/manage/cycles/${cycleId}/logs`)}>Nhật ký nuôi</Button>
     </div>
