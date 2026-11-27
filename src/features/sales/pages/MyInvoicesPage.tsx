@@ -33,18 +33,20 @@ export default function MyInvoicesPage() {
   const [page, setPage] = useState(1);
   const list = useLoad(() => myInvoices(page), [page]);
   const [opened, setOpened] = useState<MyInvoice | null>(null);
-  const [busy, setBusy] = useState(false);
+  // Hóa đơn đang mở: hàng đó hiện "Đang mở…", các hàng vẫn là nút bấm nhưng bấm thêm thì bỏ qua cho tới khi mở xong.
+  const [openingId, setOpeningId] = useState<string | null>(null);
+  const busy = openingId !== null;
   const [error, setError] = useState("");
 
   const open = async (id: string) => {
-    setBusy(true);
+    setOpeningId(id);
     setError("");
     try {
       setOpened(await myInvoice(id));
     } catch (err) {
       setError(errorText(err));
     } finally {
-      setBusy(false);
+      setOpeningId(null);
     }
   };
 
@@ -79,12 +81,14 @@ export default function MyInvoicesPage() {
           </Section>
         )}
         <Section title="Hàng đã mua">
-          {opened.lines.map((line) => (
-            <div key={line.lineNumber} className="card form">
-              <p className="weighing-lot__title">{line.productName} · lô {line.lotCode}</p>
-              <p>{num(line.kg, "kg")} × {money(line.unitPrice)} = {money(line.amount)}</p>
-            </div>
-          ))}
+          <div className="form">
+            {opened.lines.map((line) => (
+              <div key={line.lineNumber} className="card form">
+                <p className="weighing-lot__title">{line.productName} · lô {line.lotCode}</p>
+                <p>{num(line.kg, "kg")} × {money(line.unitPrice)} = {money(line.amount)}</p>
+              </div>
+            ))}
+          </div>
         </Section>
         {/* CLAIM-01: hóa đơn đã hủy không khiếu nại được; trường hợp đã trả hàng hay đang có khiếu nại chờ thì server báo. */}
         {opened.isPaid !== null && (
@@ -112,7 +116,9 @@ export default function MyInvoicesPage() {
                 {data.page.items.map((row) => (
                   <Row key={row.id} title={`${row.code} · ${money(row.total)}`}
                     meta={`${date(row.invoiceDate)} · ${num(row.totalKg, "kg")}`}
-                    badge={paidBadge(row.isPaid)} onClick={busy ? undefined : () => void open(row.id)} />
+                    badge={paidBadge(row.isPaid)}
+                    value={openingId === row.id ? <span role="status">Đang mở…</span> : undefined}
+                    onClick={() => { if (!busy) void open(row.id); }} />
                 ))}
               </Rows>
             ) : (

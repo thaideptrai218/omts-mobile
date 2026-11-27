@@ -1,0 +1,21 @@
+/*
+ * Sheet kéo khung trên ảnh (màn hình số của máy đo, bảng tọa độ trên sơ đồ). Ảnh chặn thao tác vuốt để còn kéo khung
+ * (touch-action: none), nên trong sheet ảnh được giữ thấp và các nút dính ở đáy sheet: màn hình thấp vẫn bấm được nút.
+ */
+.frame-sheet .image-frame__photo {
+  max-height: 30vh;
+}
+
+.frame-sheet__actions {
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
+  margin: 0 -16px;
+  padding: 12px 16px;
+  border-top: 2px solid var(--line);
+  background: var(--zaui-light-sheet-container, #ffffff);
+}
+
+body[zaui-theme="dark"] .frame-sheet__actions {
+  background: var(--zaui-dark-sheet-container, #252627);
+}

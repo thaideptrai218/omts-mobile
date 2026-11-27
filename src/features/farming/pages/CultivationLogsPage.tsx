@@ -73,12 +73,9 @@ export default function CultivationLogsPage() {
 
   const loaded = data.data;
   const photos = draft.keepPhotos.length + draft.newPhotos.length;
+  // Chân trang dính chỉ giữ nút chính; nút xóa và nút quay lại nằm cuối phiếu để không che nội dung.
   const footer = !loaded ? undefined : editing ? (
-    <div className="sheet-actions">
-      <Button fullWidth size="large" loading={busy} disabled={busy} onClick={() => void review()}>{editing === "new" ? "Lưu nhật ký" : "Lưu thay đổi"}</Button>
-      {editing !== "new" && <Button fullWidth size="large" variant="tertiary" type="danger" disabled={busy} onClick={() => setReasonFor("remove")}>Xóa nhật ký này</Button>}
-      <Button fullWidth size="large" variant="secondary" disabled={busy} onClick={close}>Không, quay lại</Button>
-    </div>
+    <Button fullWidth size="large" loading={busy} disabled={busy} onClick={() => void review()}>{editing === "new" ? "Lưu nhật ký" : "Lưu thay đổi"}</Button>
   ) : loaded.cycle.canEdit ? (
     <Button fullWidth size="large" onClick={() => open(null)}>Ghi nhật ký đi bè</Button>
   ) : undefined;
@@ -88,26 +85,32 @@ export default function CultivationLogsPage() {
       <Loadable data={loaded} error={data.error} reload={() => void data.reload()}>
         {({ logs, cycle }) =>
           editing ? (
-            <div className="card form">
-              <DateField label="1. Ngày đi bè" value={draft.visitDate || null} onChange={(visitDate) => { setDraft((d) => ({ ...d, visitDate })); setError(""); }} disabled={busy} />
-              <Input.TextArea label="2. Ghi chú (không bắt buộc)" value={draft.notes} maxLength={CULTIVATION_LIMITS.notes} showCount disabled={busy}
-                onChange={(e) => { const notes = e.target.value; setDraft((d) => ({ ...d, notes })); setError(""); }} />
-              <p className="form__intro">3. Ảnh bè (bắt buộc, từ 1 đến {CULTIVATION_LIMITS.photos} ảnh). Đã có {num(photos, "ảnh")}.</p>
-              <div className="log-photos">
-                {draft.keepPhotos.map((photo) => (
-                  <PhotoTile key={photo.key} src={photo.url} disabled={busy}
-                    onRemove={() => setDraft((d) => ({ ...d, keepPhotos: d.keepPhotos.filter((p) => p.key !== photo.key) }))} />
-                ))}
-                {draft.newPhotos.map((photo, i) => (
-                  <NewPhotoTile key={`new-${i}`} photo={photo} disabled={busy}
-                    onRemove={() => setDraft((d) => ({ ...d, newPhotos: d.newPhotos.filter((_, j) => j !== i) }))} />
-                ))}
+            <>
+              <div className="card form">
+                <DateField label="1. Ngày đi bè" value={draft.visitDate || null} onChange={(visitDate) => { setDraft((d) => ({ ...d, visitDate })); setError(""); }} disabled={busy} />
+                <Input.TextArea label="2. Ghi chú (không bắt buộc)" value={draft.notes} maxLength={CULTIVATION_LIMITS.notes} showCount disabled={busy}
+                  onChange={(e) => { const notes = e.target.value; setDraft((d) => ({ ...d, notes })); setError(""); }} />
+                <p className="form__intro">3. Ảnh bè (bắt buộc, từ 1 đến {CULTIVATION_LIMITS.photos} ảnh). Đã có {num(photos, "ảnh")}.</p>
+                <div className="log-photos">
+                  {draft.keepPhotos.map((photo) => (
+                    <PhotoTile key={photo.key} src={photo.url} disabled={busy}
+                      onRemove={() => setDraft((d) => ({ ...d, keepPhotos: d.keepPhotos.filter((p) => p.key !== photo.key) }))} />
+                  ))}
+                  {draft.newPhotos.map((photo, i) => (
+                    <NewPhotoTile key={`new-${i}`} photo={photo} disabled={busy}
+                      onRemove={() => setDraft((d) => ({ ...d, newPhotos: d.newPhotos.filter((_, j) => j !== i) }))} />
+                  ))}
+                </div>
+                {photos < CULTIVATION_LIMITS.photos && (
+                  <Button fullWidth size="large" variant="secondary" disabled={busy} onClick={() => void addPhoto()}>Chụp hoặc chọn ảnh</Button>
+                )}
+                <FormError text={error} />
               </div>
-              {photos < CULTIVATION_LIMITS.photos && (
-                <Button fullWidth size="large" variant="secondary" disabled={busy} onClick={() => void addPhoto()}>Chụp hoặc chọn ảnh</Button>
-              )}
-              <FormError text={error} />
-            </div>
+              <div className="button-stack">
+                {editing !== "new" && <Button fullWidth size="large" variant="tertiary" type="danger" disabled={busy} onClick={() => setReasonFor("remove")}>Xóa nhật ký này</Button>}
+                <Button fullWidth size="large" variant="secondary" disabled={busy} onClick={close}>Không, quay lại</Button>
+              </div>
+            </>
           ) : (
             <>
               <Facts items={[

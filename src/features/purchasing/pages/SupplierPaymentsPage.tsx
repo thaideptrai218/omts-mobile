@@ -12,6 +12,7 @@ import { PAYMENT_METHOD, statusLabel } from "@/utils/labels";
 import { MetaLines } from "@/features/purchasing/components/MetaLines/MetaLines";
 import { listSupplierPayments } from "@/features/purchasing/services/purchasingService";
 import { PAYMENT_KIND_TEXT } from "@/features/purchasing/utils/paymentText";
+import "@/features/purchasing/styles/purchasing.scss";
 
 const PAYMENT_RECORDED = 1801;
 
@@ -35,7 +36,7 @@ function SupplierPaymentsPage() {
         Xem công nợ từng nhà cung cấp
       </Button>
       {totals && (
-        <div className="summary more">
+        <div className="summary summary--money more">
           <div className="summary__cell">
             <span className="summary__label">HTX đã trả</span>
             <span className="summary__value">{money(totals.totalPaid)}</span>

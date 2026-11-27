@@ -1,7 +1,9 @@
 /* Khung chọn một phần ảnh. Khung bọc sát ảnh nên tọa độ phần trăm của khung là tỉ lệ của ảnh. */
+/* Chừa 24px quanh ảnh (cùng lề 16px của sheet) để nút kéo 48px nằm ở mép ảnh vẫn thấy và bấm được trọn vẹn. */
 .image-frame__stage {
   display: flex;
   justify-content: center;
+  padding: 24px 8px;
   margin-bottom: 16px;
 }
 
@@ -9,8 +11,6 @@
   position: relative;
   display: inline-block;
   max-width: 100%;
-  overflow: hidden;
-  border-radius: var(--radius-sm);
   line-height: 0;
   /* Không cuộn hay phóng trang khi kéo khung. */
   touch-action: none;
@@ -21,6 +21,24 @@
   display: block;
   max-width: 100%;
   max-height: 52vh;
+  border-radius: var(--radius-sm);
+}
+
+/* Lớp tối cắt đúng mép ảnh; phần khoét là vị trí khung, bóng 9999px phủ tối phần còn lại. Không nhận chạm. */
+.image-frame__shade {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  overflow: hidden;
+  border-radius: var(--radius-sm);
+  pointer-events: none;
+}
+
+.image-frame__hole {
+  position: absolute;
+  box-shadow: 0 0 0 9999px rgba(16, 42, 56, 0.55);
 }
 
 .image-frame__frame {
@@ -28,8 +46,6 @@
   box-sizing: border-box;
   border: 3px solid #ffffff;
   outline: 2px solid var(--brand);
-  /* Làm tối phần ảnh ngoài khung để thấy rõ vùng sẽ đọc. */
-  box-shadow: 0 0 0 9999px rgba(16, 42, 56, 0.55);
   cursor: move;
   touch-action: none;
 }

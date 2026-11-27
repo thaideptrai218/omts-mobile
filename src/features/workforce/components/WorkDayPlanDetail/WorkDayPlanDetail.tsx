@@ -51,10 +51,15 @@ export default function WorkDayPlanDetail({ plan, onUpdated }: { plan: WorkDayPl
     {plan.canAssign && <>
       <h3 className="block__title">{plan.purchaseRequestId ? "Mời nhân viên xác nhận ca" : "Phân công nhân viên"}</h3>
       {plan.purchaseRequestId && <p className="form__hint">Khi đủ người đồng ý, Chủ HTX mới quyết định nhận đơn. Phân công sẽ được chốt khi nhận đơn.</p>}
-      <Loadable data={employees.data} error={employees.error} reload={() => void employees.reload()}>{items => <div className="crew-list">{items.filter(e => !invited.has(e.id)).map(e => <label className="crew-choice" key={e.id}>
-        <input type="checkbox" checked={ids.includes(e.id)} disabled={busy || !e.available} onChange={event => setIds(current => event.target.checked ? [...current, e.id] : current.filter(id => id !== e.id))} />
-        <span>{e.name}{e.unavailableReason ? ` · ${e.unavailableReason}` : ""}</span>
-      </label>)}</div>}</Loadable>
+      <Loadable data={employees.data} error={employees.error} reload={() => void employees.reload()}>{items => {
+        const open = items.filter(e => !invited.has(e.id));
+        // Danh sách rỗng thì nói rõ vì sao nút bên dưới không bấm được.
+        if (!open.length) return <p className="form__hint">{items.length ? "Đã mời hết nhân viên có thể mời." : "Chưa có nhân viên nào để chọn."}</p>;
+        return <div className="crew-list">{open.map(e => <label className="crew-choice" key={e.id}>
+          <input type="checkbox" checked={ids.includes(e.id)} disabled={busy || !e.available} onChange={event => setIds(current => event.target.checked ? [...current, e.id] : current.filter(id => id !== e.id))} />
+          <span>{e.name}{e.unavailableReason ? ` · ${e.unavailableReason}` : ""}</span>
+        </label>)}</div>;
+      }}</Loadable>
       <Button fullWidth size="large" disabled={busy || !ids.length || !!employees.error || !!invitations.error} loading={busy} onClick={() => void run(() => assignWorkPlan(plan.id, { employeeIds: ids, rowVersion: plan.rowVersion }), plan.purchaseRequestId ? "Đã gửi lời mời ca cho nhân viên." : "Đã phân công và thông báo cho nhân viên.")}>{plan.purchaseRequestId ? "Gửi lời mời ca" : "Xác nhận phân công"}</Button>
     </>}
     <FormError text={error} />

@@ -104,14 +104,11 @@ export default function SeedingPage() {
   };
 
   const loaded = data.data;
+  // Chân trang dính chỉ giữ nút chính; nút xóa và nút quay lại nằm cuối phiếu để không che nội dung.
   const footer = !loaded ? undefined : editing ? (
-    <div className="sheet-actions">
-      <Button fullWidth size="large" loading={busy} disabled={busy} onClick={() => void review()}>{editing === "new" ? "Lưu phiên thả giống" : "Lưu thay đổi"}</Button>
-      {editing !== "new" && <Button fullWidth size="large" variant="tertiary" type="danger" disabled={busy} onClick={() => setReasonFor("remove")}>Xóa phiên này</Button>}
-      <Button fullWidth size="large" variant="secondary" disabled={busy} onClick={close}>Không, quay lại</Button>
-    </div>
+    <Button fullWidth size="large" loading={busy} disabled={busy} onClick={() => void review()}>{editing === "new" ? "Lưu phiên thả giống" : "Lưu thay đổi"}</Button>
   ) : loaded.list.canRecord || loaded.list.canMarkComplete ? (
-    <div className="button-stack">
+    <div className="sheet-actions">
       {loaded.list.canRecord && <Button fullWidth size="large" loading={busy} disabled={busy} onClick={() => void openForm(loaded.list, null)}>Ghi phiên thả giống</Button>}
       {loaded.list.canMarkComplete && <Button fullWidth size="large" variant="secondary" disabled={busy} onClick={() => void askCompletion()}>Đánh dấu thả giống xong</Button>}
     </div>
@@ -122,8 +119,14 @@ export default function SeedingPage() {
       <Loadable data={loaded} error={data.error} reload={() => void data.reload()}>
         {({ list, cycle }) =>
           editing ? (
-            <SeedingForm list={list} lots={lots} draft={draft} editing={editing === "new" ? null : editing} busy={busy} error={error}
-              cycleStart={cycle.startDate} onChange={(d) => { setDraft(d); setError(""); }} />
+            <>
+              <SeedingForm list={list} lots={lots} draft={draft} editing={editing === "new" ? null : editing} busy={busy} error={error}
+                cycleStart={cycle.startDate} onChange={(d) => { setDraft(d); setError(""); }} />
+              <div className="button-stack">
+                {editing !== "new" && <Button fullWidth size="large" variant="tertiary" type="danger" disabled={busy} onClick={() => setReasonFor("remove")}>Xóa phiên này</Button>}
+                <Button fullWidth size="large" variant="secondary" disabled={busy} onClick={close}>Không, quay lại</Button>
+              </div>
+            </>
           ) : (
             <>
               <Facts items={[

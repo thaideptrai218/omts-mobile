@@ -1,0 +1,18 @@
+/*
+ * Ô tổng tiền của các màn mua hàng. Số tiền đầy đủ "125.000.000 đ" ở chữ đậm 1,25rem rộng khoảng 9,5rem, không vừa hai cột
+ * trên máy 375-393px (mỗi ô chỉ còn khoảng 8rem), nên ô cần tối thiểu 11,25rem; không đủ chỗ thì mỗi ô một hàng. Giữ số tiền
+ * đầy đủ thay vì "125 triệu" vì người dùng đối chiếu công nợ theo từng nghìn đồng. Số chỉ xuống dòng ở khoảng trắng trước "đ",
+ * không bẻ giữa các chữ số.
+ */
+.summary.summary--money {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 11.25rem), 1fr));
+}
+
+.summary--money .summary__value {
+  overflow-wrap: normal;
+}
+
+/* Đặt trong cột .form thì khoảng cách lấy theo gap của cột, không cộng thêm lề dưới của .summary. */
+.form > .summary.summary--money {
+  margin-bottom: 0;
+}

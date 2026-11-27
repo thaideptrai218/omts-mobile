@@ -25,20 +25,16 @@
   box-sizing: border-box;
 }
 
-/* Một lô trong lần cân: tên lô và tổng, rồi kg của từng lồng xuống dòng thoải mái. */
-.weighing-lot {
-  margin-bottom: 12px;
-}
-
+/* Tiêu đề đậm của một thẻ: dòng hàng của hóa đơn, mã QR. */
 .weighing-lot__title {
   font-size: 1.0625rem;
   line-height: 1.5rem;
   font-weight: 700;
 }
 
-/* Mã QR của hóa đơn: ảnh vuông ở giữa, nền trắng để máy quét đọc được cả ở chế độ tối. */
+/* Mã QR của hóa đơn: ảnh vuông ở giữa, nền trắng để máy quét đọc được cả ở chế độ tối. Khoảng cách với thẻ bên cạnh lấy
+   theo cột .form của trang. */
 .invoice-qr {
-  margin-bottom: 12px;
   text-align: center;
 }
 
@@ -64,10 +60,15 @@
   width: 100%;
   max-width: 320px;
   aspect-ratio: 1;
-  margin: 0 auto 12px;
+  margin: 12px auto;
   border: 1.5px solid var(--line);
   border-radius: var(--radius-sm);
   background: #fff;
+}
+
+/* Không vẽ được mã QR chuyển khoản: lời nhắc chép thông tin và nút vẽ lại nằm đúng chỗ của ảnh. */
+.checkout-qr-failed {
+  margin: 12px 0;
 }
 
 /* Phiếu cân: tổng kg các lồng đã cân, chữ lớn để đọc ngoài nắng. */
@@ -91,7 +92,11 @@
   color: var(--ink-2);
 }
 
-/* Đối chiếu số cân HTX và thương lái: ba cột, dòng lệch có nền vàng nhạt kèm nhãn chữ "lệch … kg" ở dòng dưới. */
+/*
+ * Đối chiếu số cân HTX và thương lái: ba cột, dòng lệch có nền vàng nhạt kèm nhãn chữ "lệch … kg" ở dòng dưới. Mỗi dòng là một
+ * lưới riêng nên cột lồng phải có bề rộng cố định (3rem vừa chữ "Lồng") để các dòng thẳng cột; hai cột số minmax(0, 1fr) chia đều
+ * phần còn lại. Đơn vị nằm ở tiêu đề cột nên ô chỉ có con số; số không bao giờ bị bẻ giữa chừng.
+ */
 .weighing-compare {
   margin-bottom: 12px;
   border: 1.5px solid var(--line);
@@ -102,7 +107,7 @@
 
 .weighing-compare__row {
   display: grid;
-  grid-template-columns: 4rem 1fr 1fr;
+  grid-template-columns: 3rem minmax(0, 1fr) minmax(0, 1fr);
   gap: 4px 8px;
   align-items: center;
   width: 100%;
@@ -145,6 +150,19 @@ button.weighing-compare__row:active {
 
 .weighing-compare__cage {
   font-weight: 700;
+}
+
+/* Số kg của một lồng: chữ số cùng bề rộng để các dòng thẳng cột, không xuống dòng giữa con số. */
+.weighing-compare__kg {
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: normal;
+  white-space: nowrap;
+}
+
+/* Hai số tổng, mỗi số một dòng trọn chiều ngang: chỉ xuống dòng sau nhãn, số và "kg" luôn đi liền nhau. */
+.weighing-compare__total {
+  grid-column: 1 / -1;
+  font-variant-numeric: tabular-nums;
 }
 
 .weighing-compare__note {

@@ -9,6 +9,7 @@ import FormError from "@/components/FormError/FormError";
 import { ConfirmSheet } from "@/components/ConfirmSheet/ConfirmSheet";
 import LocationInput from "@/features/farming/components/LocationInput/LocationInput";
 import RaftFormImport from "@/features/farming/components/RaftFormImport/RaftFormImport";
+import { Loadable } from "@/components/Loadable/Loadable";
 import { ManagePage } from "@/components/ManagePage/ManagePage";
 import { NumberInput } from "@/components/NumberInput/NumberInput";
 import { Section } from "@/components/Section/Section";
@@ -43,6 +44,9 @@ function RaftFormPage() {
   const [boundary, setBoundary] = useState<ZoneBoundary | null>(null);
   const [confirmOutside, setConfirmOutside] = useState(false);
   const [error, setError] = useState("");
+  // Lỗi tải bè đang sửa (thay cả form, có nút Thử lại); `error` là lỗi nhập và lưu.
+  const [loadError, setLoadError] = useState("");
+  const [attempt, setAttempt] = useState(0);
   const [saveTries, setSaveTries] = useState(0);
   const [busy, setBusy] = useState(false);
   const [importing, setImporting] = useState(false);
@@ -70,8 +74,8 @@ function RaftFormPage() {
         setLng(text(r.longitude));
         setLaneCount(String(r.laneCount));
       })
-      .catch((err) => setError(errorText(err)));
-  }, [raftId]);
+      .catch((err) => setLoadError(errorText(err)));
+  }, [raftId, attempt]);
 
   // Tọa độ vùng chỉ dùng căn giữa bản đồ, không gán nhầm thành vị trí của mọi bè mới. Ranh giới vùng (nếu có) dùng để báo
   // ngay khi ghim bè nằm ngoài vùng, cả lúc thêm lẫn lúc sửa bè.
@@ -137,7 +141,8 @@ function RaftFormPage() {
     }
   };
 
-  const loading = editing && !raft && !error;
+  // Sửa bè mà chưa tải xong bè thì chưa hiện form: đang tải là khung chờ, lỗi thì có nút Thử lại.
+  const loading = editing && !raft;
 
   return (
     <ManagePage
@@ -158,7 +163,7 @@ function RaftFormPage() {
       }
     >
       {loading ? (
-        <div className="skeleton skeleton--form" aria-busy />
+        <Loadable data={null} error={loadError} reload={() => { setLoadError(""); setAttempt((n) => n + 1); }}>{() => null}</Loadable>
       ) : (
         <>
           <Section step={1} title="Điền nhanh từ ảnh (không bắt buộc)">

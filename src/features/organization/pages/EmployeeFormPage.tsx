@@ -50,7 +50,7 @@ function EmployeeFormPage() {
   const editing = Boolean(id);
   const navigate = useNavigate();
   const { data, error, reload } = useLoad(async () => {
-    const [employee, zones] = await Promise.all([id ? getEmployee(id) : Promise.resolve(null), lookupZones()]);
+    const [employee, zones] = await Promise.all([id ? getEmployee(id) : Promise.resolve(null), lookupZones(true)]);
     return { employee, zones };
   }, [id]);
   const title = editing ? "Sửa nhân viên" : "Thêm nhân viên";
@@ -88,7 +88,7 @@ function EmployeeForm({ title, employee, zones, onSaved }: { title: string; empl
   const set = <K extends keyof Form>(key: K) => (value: Form[K]) => setForm((f) => ({ ...f, [key]: value }));
   const text = (key: keyof Form) => (e: { target: { value: string } }) => set(key)(e.target.value as never);
 
-  // Vùng đang dùng, cộng các vùng đã ngừng nhưng nhân viên vẫn được gán (để không mất khi lưu).
+  // Vùng đang dùng, cộng các vùng đã ngừng nhưng nhân viên vẫn được gán, để bỏ được vùng đó khỏi nhân viên.
   const zoneOptions = zones.filter((z) => z.statusId === 101 || form.workingZoneIds.includes(z.id));
 
   const save = async (ownerApproved = false) => {
@@ -179,7 +179,7 @@ function EmployeeForm({ title, employee, zones, onSaved }: { title: string; empl
             disabled={busy}
           >
             {zoneOptions.map((z) => (
-              <Select.Option key={z.id} value={z.id} title={`${z.name ?? z.code}${z.statusId === 101 ? "" : " (ngừng dùng)"}`} />
+              <Select.Option key={z.id} value={z.id} title={z.name ?? z.code ?? ""} />
             ))}
           </Select>
         </div>

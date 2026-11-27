@@ -38,6 +38,8 @@ function LicenseFormPage() {
   const [preview, setPreview] = useState<string | null>(null);
   // `error` là lỗi tải giấy tờ (thay cả form); `formError` là lỗi nhập, chọn ảnh, lưu (form vẫn còn để sửa).
   const [error, setError] = useState("");
+  // Tăng lên khi bấm "Thử lại" để tải lại giấy tờ.
+  const [attempt, setAttempt] = useState(0);
   const [formError, setFormError] = useState("");
   const [saveTries, setSaveTries] = useState(0);
   const [busy, setBusy] = useState(false);
@@ -61,7 +63,7 @@ function LicenseFormPage() {
         setLoaded(true);
       })
       .catch((err) => setError(errorText(err)));
-  }, [id, replacing]);
+  }, [id, replacing, attempt]);
 
   useEffect(() => () => { if (preview) URL.revokeObjectURL(preview); }, [preview]);
 
@@ -134,10 +136,9 @@ function LicenseFormPage() {
         </Button>
       }
     >
-      {error ? (
-        <FormError text={error} />
-      ) : !loaded ? (
-        <div className="skeleton skeleton--form" aria-busy />
+      {/* Chưa tải xong giấy tờ thì chưa hiện form: đang tải là khung chờ, lỗi thì có nút Thử lại. */}
+      {!loaded ? (
+        <Loadable data={null} error={error} reload={() => { setError(""); setAttempt((n) => n + 1); }}>{() => null}</Loadable>
       ) : (
         <>
           <Section step={1} title="Loại và số giấy tờ">
