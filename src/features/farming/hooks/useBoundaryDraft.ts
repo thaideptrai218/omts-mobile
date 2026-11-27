@@ -1,8 +1,9 @@
 import type { AreaDraft, CornerDraft, CornerTableReading } from "@/features/farming/models/ZoneBoundary";
 import { useMemo, useState } from "react";
 
+import { areaCheck, mergeReading } from "@/features/farming/utils/boundaryScan";
 import { DEFAULT_CENTRAL_MERIDIAN, dmsText, parseDms } from "@/features/farming/utils/vn2000";
-import { areaDraft, areaPositions, boundaryOf, checkCorner, cornerDraft, emptyCorner, ringAreaHa, selfIntersects, strayCorners } from "@/features/farming/utils/zoneBoundary";
+import { areaDraft, areaPositions, boundaryOf, checkCorner, emptyCorner, ringAreaHa, selfIntersects, strayCorners } from "@/features/farming/utils/zoneBoundary";
 
 /** Kinh tuyến trục hiển thị "107°45'". */
 const meridianText = (value: number) => dmsText(value).replace(/'00\.00"$/, "'");
@@ -35,7 +36,7 @@ function blockingProblem(areas: AreaDraft[], meridian: number): string {
 /**
  * Các khu và điểm góc đang đối chiếu của một ranh giới vùng, dùng chung cho màn ranh giới của vùng đã có và bước sơ đồ khi
  * thêm vùng: kinh tuyến trục, nhập tay, nhận kết quả đọc ảnh, rồi kiểm tra trước khi lưu. Chưa lưu hay gọi gì lên máy chủ.
- * Lệch X, Y, chưa đối chiếu và đường tự cắt chỉ hỏi lại (`concerns`); lỗi chặn lưu nằm ở `blocking`.
+ * Lệch X, Y, chưa đối chiếu, lệch diện tích giấy ghi và đường tự cắt chỉ hỏi lại (`concerns`); lỗi chặn lưu nằm ở `blocking`.
  */
 export function useBoundaryDraft(initial: () => AreaDraft[]) {
   const [meridian, setMeridian] = useState(DEFAULT_CENTRAL_MERIDIAN);
@@ -54,6 +55,7 @@ export function useBoundaryDraft(initial: () => AreaDraft[]) {
       doubts: count(["mismatch"]),
       unchecked: count(["dmsOnly", "gridOnly"]),
       strays: areas.reduce((sum, area) => sum + strayCorners(area, meridian).size, 0),
+      areaOff: areas.filter((area) => areaCheck(area).matches === false).map((area) => area.name.trim() || "Khu chưa đặt tên"),
       crossing: areas.filter((area) => selfIntersects(areaPositions(area, meridian).map(({ position }) => position))).map((area) => area.name.trim() || "Khu chưa đặt tên"),
     };
   }, [areas, meridian]);
@@ -61,8 +63,8 @@ export function useBoundaryDraft(initial: () => AreaDraft[]) {
   const updateArea = (key: string, change: (area: AreaDraft) => AreaDraft) => setAreas((current) => current.map((area) => (area.key === key ? change(area) : area)));
 
   /**
-   * Đưa các khu đọc được vào danh sách: khu trùng tên thì thay điểm góc, khu mới thì thêm vào. Trả tên các khu và số điểm vừa
-   * nhận, hoặc null khi ảnh không có dòng tọa độ nào (danh sách giữ nguyên, trừ kinh tuyến trục).
+   * Đưa các khu đọc được vào danh sách: khu trùng tên thì thay điểm góc và diện tích giấy ghi, khu mới thì thêm vào. Trả tên
+   * các khu và số điểm vừa nhận, hoặc null khi ảnh không có dòng tọa độ nào (danh sách giữ nguyên, trừ kinh tuyến trục).
    */
   const applyReading = (result: Pick<CornerTableReading, "areas" | "centralMeridian">) => {
     if (result.centralMeridian !== null) {
@@ -71,16 +73,7 @@ export function useBoundaryDraft(initial: () => AreaDraft[]) {
     }
     const found = result.areas.filter((area) => area.corners.length > 0);
     if (found.length === 0) return null;
-    setAreas((current) => {
-      const next = [...current];
-      for (const area of found) {
-        const corners = area.corners.map(cornerDraft);
-        const same = next.findIndex((existing) => existing.name.trim().toLowerCase() === area.name.toLowerCase());
-        if (same >= 0) next[same] = { ...next[same], corners };
-        else next.push(areaDraft(area.name, corners));
-      }
-      return next;
-    });
+    setAreas((current) => mergeReading(current, result));
     return { names: found.map((area) => area.name), corners: found.reduce((sum, area) => sum + area.corners.length, 0) };
   };
 

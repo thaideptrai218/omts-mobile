@@ -24,6 +24,14 @@ export class NetworkError extends Error {
   }
 }
 
+/** Request quá `timeoutMs` mà server chưa trả lời. */
+export class TimeoutError extends Error {
+  constructor() {
+    super("Máy chủ phản hồi quá lâu. Vui lòng thử lại sau hoặc nhập bằng tay.");
+    this.name = "TimeoutError";
+  }
+}
+
 export function isApiError(error: unknown, code?: string): error is ApiError {
   return error instanceof ApiError && (code === undefined || error.code === code);
 }

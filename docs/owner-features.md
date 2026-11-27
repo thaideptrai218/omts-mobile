@@ -52,6 +52,16 @@ Bổ sung 04/11/2026 (không sửa backend, chi tiết ở `docs/learning/14-fie
 
 Backend mới có OCR giả (`Ocr:Provider = Fake`): bản Development trả số mẫu, môi trường khác báo không đọc được để người đo nhập tay.
 
+Bổ sung 26/11/2026 (đọc ảnh bằng Google Gemini trên máy chủ, thay Tesseract trên điện thoại; chạm một lần mở camera sau, ảnh được đọc ngay):
+
+| Nhóm | Màn | Đường dẫn | API |
+|---|---|---|---|
+| Vùng nuôi | Chụp bản đồ giấy phép: đọc các bảng tọa độ điểm góc, đối chiếu rồi lưu ranh giới; diện tích tính từ tọa độ so với diện tích giấy ghi (chỉ cảnh báo) | `/manage/zones/:id/boundary` | `POST/GET api/zones/{id}/boundary-scans`, `PUT api/zones/{id}/boundary` |
+| | Chụp giấy tờ của bè trong form thêm/sửa bè: máy chủ đọc, người dùng xem rồi mới áp dụng | `/manage/zones/:id/rafts/new`, `/manage/rafts/:raftId/edit` | `POST/GET api/rafts/form-scans` |
+| Chỉ số nước | Cùng màn chụp máy đo; ảnh gửi lên máy chủ và đọc bằng Gemini (API không đổi). "Chọn ảnh có sẵn" là đường dự phòng khi camera không mở | `/manage/water` | `POST api/zones/{id}/water-measurements/recognize` |
+
+Bản đồ và giấy tờ bè dùng chung mẫu "gửi ảnh nhận `scanId`, hỏi lại mỗi 2 giây, tối đa 120 giây" (`hooks/useScanJob.ts`); có nút hủy, lỗi máy bận (503 `OCR_BUSY`) hoặc quá giới hạn (429) luôn để nhập tay được. Ảnh được thu về cạnh dài 3072 px, tối đa 4 MB trước khi gửi (`utils/imageFile.ts`); ảnh chỉ số nước giữ nguyên bản gốc trừ khi quá 10 MB.
+
 ## 2. Backend đã có API nhưng để bản web (không làm trên mobile)
 
 | Chức năng | Lý do |

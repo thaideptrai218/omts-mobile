@@ -41,9 +41,9 @@ export function ocrNotice(ocr: OcrOutcome): string {
   const unread = ocr.unread.map((u) => INDICATOR_NAME[u] ?? u);
   const uncertain = [ocr.ph?.uncertain && "độ pH", ocr.salinity?.uncertain && "độ mặn", ocr.temperature?.uncertain && "nhiệt độ"].filter(Boolean);
   return [
-    "Đây là số app đọc từ ảnh, hãy đối chiếu với máy đo trước khi lưu.",
+    "Đây là số máy chủ đọc từ ảnh (bằng Google Gemini), hãy đối chiếu với máy đo trước khi lưu.",
     unread.length > 0 && `Chưa đọc được ${unread.join(", ")}: nhập tay.`,
-    uncertain.length > 0 && `Kiểm tra kỹ ${uncertain.join(", ")}: app đọc chưa chắc chắn.`,
+    uncertain.length > 0 && `Kiểm tra kỹ ${uncertain.join(", ")}: đọc chưa chắc chắn.`,
   ]
     .filter(Boolean)
     .join(" ");

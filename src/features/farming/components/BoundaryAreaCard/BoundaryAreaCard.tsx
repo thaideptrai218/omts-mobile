@@ -7,6 +7,7 @@ import { Actions } from "@/components/Actions/Actions";
 import { Badge } from "@/components/Badge/Badge";
 import { Row } from "@/components/Row/Row";
 import { Rows } from "@/components/Rows/Rows";
+import { areaCheck } from "@/features/farming/utils/boundaryScan";
 import { areaPositions, checkCorner, ringAreaHa, selfIntersects, strayCorners } from "@/features/farming/utils/zoneBoundary";
 import { num } from "@/utils/format";
 
@@ -40,6 +41,7 @@ export function BoundaryAreaCard({ area, centralMeridian, disabled, onRename, on
   const checks = area.corners.map((corner) => checkCorner(corner, centralMeridian));
   const matched = checks.filter((check) => check.state === "match").length;
   const stray = strayCorners(area, centralMeridian);
+  const check = areaCheck(area);
   return (
     <div className="card form">
       <Input label="Tên khu" value={area.name} onChange={(event) => onRename(event.target.value)} maxLength={100} disabled={disabled} />
@@ -47,6 +49,13 @@ export function BoundaryAreaCard({ area, centralMeridian, disabled, onRename, on
         {area.corners.length} điểm góc · {matched} điểm khớp X, Y
         {positions.length >= 3 ? ` · diện tích khoảng ${num(Math.round(ringAreaHa(positions) * 100) / 100, "ha")}` : ""}
       </p>
+      {check.writtenHa !== null && (
+        <p className="form__hint">
+          Tính từ tọa độ: {check.gridHa === null ? "chưa đủ điểm" : num(Math.round(check.gridHa * 100) / 100, "ha")} · Giấy ghi: {num(check.writtenHa, "ha")}{" "}
+          {check.matches === true && <Badge text="Khớp diện tích" tone="success" />}
+          {check.matches === false && <Badge text="Lệch diện tích, kiểm tra lại tọa độ" tone="warning" />}
+        </p>
+      )}
       {positions.length < 3 && <p className="form-error form-warning" role="alert"><span>Cần ít nhất 3 điểm có tọa độ để khoanh khu này.</span></p>}
       {selfIntersects(positions) && <p className="form-error form-warning" role="alert"><span>Đường ranh giới tự cắt nhau: có điểm sai thứ tự hoặc đọc sai số. Đối chiếu lại với giấy.</span></p>}
       <Rows>

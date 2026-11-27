@@ -1,5 +1,5 @@
 import type { ProblemDetails } from "@/models/ProblemDetails";
-import { ApiError, isNetworkError } from "@/services/errors";
+import { ApiError, isNetworkError, TimeoutError } from "@/services/errors";
 import { FIELD, LINK, MESSAGES } from "@/constants/messages";
 import { date, money } from "@/utils/format";
 
@@ -367,5 +367,6 @@ export function errorText(error: unknown): string {
     return error.status === 401 ? MESSAGES.MSG19 : error.status === 403 ? MESSAGES.MSG02 : MESSAGES.UNEXPECTED;
   }
   if (isNetworkError(error)) return MESSAGES.MSG07;
+  if (error instanceof TimeoutError) return error.message;
   return MESSAGES.UNEXPECTED;
 }

@@ -5,7 +5,7 @@ import { lazy, Suspense, useMemo, useState } from "react";
 import { Button, Sheet, useNavigate, useParams, useSnackbar } from "zmp-ui";
 
 import FormError from "@/components/FormError/FormError";
-import CornerTableScan from "@/features/farming/components/CornerTableScan/CornerTableScan";
+import ZoneMapScan from "@/features/farming/components/ZoneMapScan/ZoneMapScan";
 import { BoundaryAreas, BoundaryConcerns, hasConcerns, MeridianInput } from "@/features/farming/components/BoundaryEditor/BoundaryEditor";
 import { ConfirmSheet } from "@/components/ConfirmSheet/ConfirmSheet";
 import { Loadable } from "@/components/Loadable/Loadable";
@@ -48,7 +48,6 @@ function BoundaryEditor({ zone, rafts }: { zone: ZoneView; rafts: RaftListItem[]
   const { busy, run } = useAction();
   const draft = useBoundaryDraft(() => draftsOf(zone.boundary, DEFAULT_CENTRAL_MERIDIAN));
   const { areas, boundary, totalHa } = draft;
-  const [reading, setReading] = useState<CornerTableReading | null>(null);
   const [scanning, setScanning] = useState(false);
   const [mapOpen, setMapOpen] = useState(false);
   const [confirm, setConfirm] = useState<"save" | "remove" | null>(null);
@@ -62,10 +61,9 @@ function BoundaryEditor({ zone, rafts }: { zone: ZoneView; rafts: RaftListItem[]
   const locked = busy || scanning;
 
   const applyReading = (result: CornerTableReading) => {
-    setReading(result);
     const applied = draft.applyReading(result);
     if (!applied) {
-      setError("Chưa nhận ra dòng tọa độ nào trong khung. Thử chụp thẳng, đủ sáng, kéo khung sát bảng hơn, hoặc nhập điểm góc bằng tay.");
+      setError("Chưa nhận ra bảng tọa độ nào trong ảnh. Thử chụp thẳng, đủ sáng, gần bảng hơn, hoặc nhập điểm góc bằng tay.");
       return;
     }
     setError("");
@@ -88,7 +86,7 @@ function BoundaryEditor({ zone, rafts }: { zone: ZoneView; rafts: RaftListItem[]
 
   const trySave = () => {
     setSaveTries((count) => count + 1);
-    if (areas.length === 0) { setError("Chưa có khu nào. Đọc ảnh sơ đồ hoặc nhập điểm góc bằng tay."); return; }
+    if (areas.length === 0) { setError("Chưa có khu nào. Chụp bản đồ giấy phép hoặc nhập điểm góc bằng tay."); return; }
     const problem = draft.blocking();
     if (problem) { setError(problem); return; }
     setError("");
@@ -101,21 +99,15 @@ function BoundaryEditor({ zone, rafts }: { zone: ZoneView; rafts: RaftListItem[]
       title={`Ranh giới ${zone.name ?? zone.code ?? "vùng"}`}
       footer={<Button fullWidth size="large" loading={busy} disabled={locked} onClick={trySave}>Lưu ranh giới</Button>}
     >
-      <Section step={1} title="Đọc từ ảnh sơ đồ cấp phép">
+      <Section step={1} title="Đọc từ ảnh bản đồ giấy phép">
         <div className="form">
-          <CornerTableScan disabled={busy} onRead={applyReading} onBusyChange={setScanning} />
-          {reading && (
-            <>
-              {reading.confidence < 70 && <p className="form-error form-warning" role="alert"><span>Ảnh khó đọc. Vui lòng đối chiếu từng điểm với giấy gốc.</span></p>}
-              <details><summary style={{ minHeight: 48, padding: "12px 0" }}>Chữ đọc được từ ảnh</summary><pre style={{ whiteSpace: "pre-wrap", overflowWrap: "anywhere", fontSize: "1rem" }}>{reading.text || "Không đọc được chữ."}</pre></details>
-            </>
-          )}
+          <ZoneMapScan zoneId={zone.id} disabled={busy} onRead={applyReading} onBusyChange={setScanning} />
           <MeridianInput draft={draft} disabled={locked} />
         </div>
       </Section>
 
       <Section step={2} title="Các khu và điểm góc">
-        <BoundaryAreas draft={draft} disabled={locked} emptyText="Đọc ảnh sơ đồ ở bước 1, hoặc nhập bằng tay." />
+        <BoundaryAreas draft={draft} disabled={locked} emptyText="Đọc ảnh bản đồ giấy phép ở bước 1, hoặc nhập bằng tay." />
       </Section>
 
       <Section step={3} title="Kiểm tra trên bản đồ">

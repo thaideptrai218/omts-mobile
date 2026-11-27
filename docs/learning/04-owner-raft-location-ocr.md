@@ -6,7 +6,7 @@
 - [SRS Part II v2 cập nhật 27/10](https://drive.google.com/file/d/1y0OwcL3Yilx6dAzbyLk2xuSKR9uoWIcz/view), FARM-02 và FARM-04: Owner quản lý vùng và bè, vị trí map. Luồng và mã trạng thái hiện có không đổi. SRS nhắc map pin tùy chọn nhưng backend local yêu cầu tọa độ; giữ nguyên hợp đồng hiện tại, không tự giải quyết khác biệt đó.
 - [Zalo getLocation](https://docs.zaloplatforms.com/docs/MA/api/location/getLocation): trả token một lần, khoảng 2 phút; server gọi `graph.zalo.me/v2.0/me/info` với access_token, code và secret_key ở header.
 - [Zalo chooseImage](https://docs.zaloplatforms.com/docs/MA/api/media/file/chooseImage): chọn/chụp ảnh qua SDK.
-- [Tesseract.js API](https://github.com/naptha/tesseract.js/blob/master/docs/api.md): OCR trong worker, model tiếng Việt, terminate sau khi dùng.
+- ~~Tesseract.js trên thiết bị~~ (đã gỡ 26/11/2026): nay máy chủ đọc ảnh bằng Google Gemini, xem mục OCR giấy/biểu mẫu.
 
 ## Cách dùng
 
@@ -24,21 +24,29 @@ Trong form vùng hoặc bè:
 
 `shared/lib/coordinates.ts` nhận dấu chấm hoặc phẩy thập phân, kiểm tra phạm vi ±90/±180, không loại dấu chấm như phân cách hàng nghìn. Giá trị `21.123` trước đây có thể bị đọc sai bởi `parseNumber` của tiền/số lượng; tọa độ giờ dùng parser riêng.
 
-### OCR giấy/biểu mẫu
+### Đọc giấy/biểu mẫu từ ảnh
 
-Chọn **Đọc biểu mẫu bằng OCR** trong form bè, chọn/chụp ảnh (trình duyệt dùng file input; Zalo dùng chooseImage). Ảnh không được gửi lên server/nhà cung cấp OCR. Worker chạy trên thiết bị; mã lõi và model được tải từ CDN, cacheMethod none không yêu cầu IndexedDB. Worker JS nằm trong asset của app.
+**Cập nhật 26/11/2026:** ảnh không còn đọc trên điện thoại. Chọn **Chụp giấy tờ của bè** trong form bè: camera sau mở ngay (Zalo dùng
+`chooseImage` chỉ với camera; trình duyệt dùng ô chọn tệp có `capture`), "Chọn ảnh có sẵn" mở thư viện. Ảnh được thu về cạnh dài 3072 px,
+tối đa 4 MB rồi **gửi lên máy chủ OMTS và đọc bằng Google Gemini** (`POST api/rafts/form-scans`, hỏi `GET api/rafts/form-scans/{scanId}`
+mỗi 2 giây, tối đa 120 giây). Dòng chữ ngay dưới nút nói rõ điều này; ảnh giấy tờ thật của HTX cần khóa Gemini có thanh toán.
 
-Nhận nhãn trên từng dòng, có dấu hai chấm hoặc bằng: `Mã bè`, `Kích thước`, `Số hàng`, `Dài mỗi hàng`/`Chiều dài mỗi hàng`, `Vị trí`, `Ghi chú`/`Tình trạng`, `Vĩ độ`, `Kinh độ`; có hỗ trợ nhãn không dấu và chữ hoa. Tọa độ từ OCR chỉ nhận dạng thập phân, không tự suy đoán DMS hoặc các con số không có nhãn.
+Máy chủ trả các trường chép nguyên như trên giấy: mã bè, kích thước, số hàng, vị trí, ghi chú, vĩ độ, kinh độ (trường nào giấy không
+ghi thì rỗng). Màn kiểm tra giữ nguyên: các trường có thể sửa, **Dùng các thông tin này** chỉ thay các ô không rỗng, số hàng phải là
+số nguyên 1 đến 50 khi thêm bè, vĩ/kinh độ phải đọc được dạng thập phân (độ-phút-giây thì sửa tay), khi sửa bè không đổi bố trí/số
+hàng hiện có. Cảnh báo "độ tin cậy thấp" và phần "chữ đọc được" đã bỏ vì máy chủ không trả hai thứ đó. Có nút "Hủy đọc ảnh"; máy chủ bận
+hoặc quá giới hạn thì báo bằng tiếng Việt và vẫn nhập tay được. Rời màn hình thì dừng hỏi kết quả.
 
-Màn kiểm tra hiển thị các trường có thể sửa và chữ đọc được; độ tin cậy thấp được cảnh báo. **Áp dụng vào form** chỉ thay các ô không rỗng; có thể sửa tiếp trước khi Lưu. Khi sửa bè, OCR không thay bố trí/số hàng hiện có. Có nút hủy, thời gian chờ giới hạn, dọn worker khi hủy/rời màn. Chữ in rõ là trường hợp thử nghiệm; chữ viết tay cần kiểm tra thủ công.
+Mã: `RaftFormImport.tsx`, `components/PhotoCapture`, `hooks/useScanJob.ts`, `features/farming/services/scanService.ts`. Đã gỡ
+`raftFormOcrService.ts` (đọc nhãn từng dòng từ chữ Tesseract), `ocrService.ts` và `tesseract.js`.
 
 ## Kiểm chứng
 
 - Backend build: 0 warning, 0 error. Toàn bộ suite cuối: Domain 2 passed; Application 129 passed; API Integration 728 passed, 104 skipped do thiếu môi trường SQL Server/Azurite; không có failure.
 - Riêng nhóm Zalo liên quan: 35 passed, gồm Owner/anonymous/Trader, Zalo ID khác tài khoản, token thiếu/hết hạn, tọa độ ngoài phạm vi, Graph headers và secret không nằm trên query.
-- Mobile: lint, typecheck và production build đạt; worker khoảng 111 KB, tách khỏi mã map. Map và OCR engine tải theo nhu cầu.
+- Mobile: lint, typecheck và production build đạt. (Lịch sử 30/10: OCR trên thiết bị, worker khoảng 111 KB; đã gỡ 26/11/2026.)
 - Chrome 390×844: GPS giả đi qua endpoint giả và yêu cầu xác nhận; map SDK thật dùng basemap stub để kiểm tra chạm và xác nhận (không khẳng định VIETMAP tile thật hoạt động); ảnh PNG chữ in được OCR thật qua Tesseract.js, đọc mã, kích thước, 8 hàng và tọa độ; form không đổi trước xác nhận; API tạo bè nhận đúng decimal 21.123/107.456.
-- Chưa xác nhận trực tiếp trên Zalo điện thoại: quyền vị trí/camera, WebAssembly/worker và tile VIETMAP thật. Không giả nhận thành công khi quyền/provider bị từ chối.
+- Chưa xác nhận trực tiếp trên Zalo điện thoại: quyền vị trí/camera, đọc ảnh qua máy chủ Gemini và tile VIETMAP thật. Không giả nhận thành công khi quyền/provider bị từ chối.
 
 ## Lỗi và cách xử lý
 
@@ -52,5 +60,5 @@ Màn kiểm tra hiển thị các trường có thể sửa và chữ đọc đ�
 
 - Zalo không biết vị trí của bè từ mã bè: API cho vị trí điện thoại, Owner phải đứng đúng chỗ và xác nhận.
 - App secret nằm trên backend; mobile chỉ gửi token SDK cho endpoint có xác thực và giới hạn Owner.
-- Chọn map không gọi GPS và không xin quyền vị trí; OCR giấy không tự sinh tọa độ nếu giấy không ghi.
+- Chọn map không gọi GPS và không xin quyền vị trí; đọc ảnh giấy không tự sinh tọa độ nếu giấy không ghi.
 - Nhận dạng và lưu là hai bước khác nhau: OCR/GPS/map chỉ nhập dữ liệu, API tạo/sửa hiện hữu mới lưu nghiệp vụ.

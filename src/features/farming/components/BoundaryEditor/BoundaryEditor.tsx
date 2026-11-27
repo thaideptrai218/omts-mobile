@@ -60,16 +60,17 @@ export function BoundaryAreas({ draft, disabled, emptyText }: { draft: BoundaryD
 
 /** Các điều chưa chắc của ranh giới, hỏi lại trước khi lưu; không có gì thì không hiện gì. */
 export function BoundaryConcerns({ draft }: { draft: BoundaryDraft }) {
-  const { doubts, unchecked, strays, crossing } = draft.concerns;
+  const { doubts, unchecked, strays, areaOff, crossing } = draft.concerns;
   return (
     <>
       {doubts > 0 && <p>{doubts} điểm có vĩ/kinh độ chưa khớp X, Y.</p>}
       {unchecked > 0 && <p>{unchecked} điểm chưa đối chiếu được giữa vĩ/kinh độ và X, Y.</p>}
       {strays > 0 && <p>{strays} điểm nằm xa bất thường so với các điểm khác cùng khu.</p>}
+      {areaOff.length > 0 && <p>Diện tích tính từ tọa độ của {areaOff.join(", ")} lệch so với diện tích ghi trên giấy.</p>}
       {crossing.length > 0 && <p>Đường ranh giới của {crossing.join(", ")} tự cắt nhau.</p>}
     </>
   );
 }
 
 /** Có điều nào của {@link BoundaryConcerns} để hỏi lại không. */
-export const hasConcerns = ({ concerns }: BoundaryDraft) => concerns.doubts > 0 || concerns.unchecked > 0 || concerns.strays > 0 || concerns.crossing.length > 0;
+export const hasConcerns = ({ concerns }: BoundaryDraft) => concerns.doubts > 0 || concerns.unchecked > 0 || concerns.strays > 0 || concerns.areaOff.length > 0 || concerns.crossing.length > 0;

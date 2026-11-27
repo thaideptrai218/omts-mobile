@@ -1,6 +1,6 @@
 import type { WaterThresholds, WaterValues } from "@/features/farming/models/WaterMeasurement";
 import { useEffect, useState } from "react";
-import { Button, Input, Select, Sheet } from "zmp-ui";
+import { Button, Input, Select } from "zmp-ui";
 
 import FormError from "@/components/FormError/FormError";
 import { NumberInput } from "@/components/NumberInput/NumberInput";
@@ -22,27 +22,26 @@ const text = (n: number | null | undefined) => (n === null || n === undefined ? 
 
 /**
  * Ghi số đo nước của một vùng: bè, thời điểm đo, pH, độ mặn, nhiệt độ (đều bắt buộc). Số nằm ngoài ngưỡng của vùng thì
- * báo trước khi lưu, vẫn cho lưu (backend gửi cảnh báo).
+ * báo trước khi lưu, vẫn cho lưu (backend gửi cảnh báo). Form nằm ngay trong trang, không mở sheet đè lên: ô nhập trong sheet
+ * dễ bị bàn phím đẩy lệch và lỡ tay vuốt đóng là mất số đang nhập.
  */
-export function WaterValuesSheet({
-  visible,
-  title,
+export function WaterValuesForm({
   zoneId,
   initial,
   notice,
   thresholds,
   saveText,
-  onClose,
+  cancelText,
+  onCancel,
   onSave,
 }: {
-  visible: boolean;
-  title: string;
   zoneId: string;
   initial: WaterInitial;
   notice?: string;
   thresholds?: WaterThresholds | null;
   saveText: string;
-  onClose: () => void;
+  cancelText: string;
+  onCancel: () => void;
   onSave: (values: WaterValues) => Promise<void>;
 }) {
   const rafts = useLoad(() => listRafts(zoneId, USAGE.inUse), [zoneId]);
@@ -81,34 +80,32 @@ export function WaterValuesSheet({
   };
 
   return (
-    <Sheet visible={visible} onClose={onClose} autoHeight mask handler swipeToClose={!busy} maskClosable={!busy} title={title}>
-      <div className="sheet-form form">
-        {notice && <p className="form__intro">{notice}</p>}
-        <Select label="Bè (bắt buộc)" placeholder={rafts.data ? "Chọn bè" : "Đang tải bè..."} value={raftId || undefined} onChange={(v) => setRaftId(String(v))} closeOnSelect disabled={busy}>
-          {options.map((r) => (
-            <Select.Option key={r.id} value={r.id} title={r.code} />
-          ))}
-        </Select>
-        {rafts.error && <FormError text={rafts.error} />}
-        <Input label="Thời điểm đo (bắt buộc)" type={"datetime-local" as never} value={measuredAt} onChange={(e) => setMeasuredAt(e.target.value)} disabled={busy} />
-        <NumberInput decimal label="Độ pH (bắt buộc)" value={ph} onChange={setPh} disabled={busy} />
-        <NumberInput decimal label="Độ mặn ‰ (bắt buộc)" value={salinity} onChange={setSalinity} disabled={busy} />
-        <NumberInput decimal label="Nhiệt độ °C (bắt buộc)" value={temperature} onChange={setTemperature} disabled={busy} />
-        {outside.length > 0 && (
-          <p className="form__hint" role="status">
-            Ngoài ngưỡng của vùng: {outside.join(", ")}. Lưu xong app sẽ gửi cảnh báo.
-          </p>
-        )}
-        <FormError text={error} />
-        <div className="sheet-actions">
-          <Button fullWidth size="large" loading={busy} disabled={busy} onClick={() => void save()}>
-            {saveText}
-          </Button>
-          <Button fullWidth variant="secondary" size="large" disabled={busy} onClick={onClose}>
-            Quay lại
-          </Button>
-        </div>
+    <div className="form">
+      {notice && <p className="form__intro">{notice}</p>}
+      <Select label="Bè (bắt buộc)" placeholder={rafts.data ? "Chọn bè" : "Đang tải bè..."} value={raftId || undefined} onChange={(v) => setRaftId(String(v))} closeOnSelect disabled={busy}>
+        {options.map((r) => (
+          <Select.Option key={r.id} value={r.id} title={r.code} />
+        ))}
+      </Select>
+      {rafts.error && <FormError text={rafts.error} />}
+      <Input label="Thời điểm đo (bắt buộc)" type={"datetime-local" as never} value={measuredAt} onChange={(e) => setMeasuredAt(e.target.value)} disabled={busy} />
+      <NumberInput decimal label="Độ pH (bắt buộc)" value={ph} onChange={setPh} disabled={busy} />
+      <NumberInput decimal label="Độ mặn ‰ (bắt buộc)" value={salinity} onChange={setSalinity} disabled={busy} />
+      <NumberInput decimal label="Nhiệt độ °C (bắt buộc)" value={temperature} onChange={setTemperature} disabled={busy} />
+      {outside.length > 0 && (
+        <p className="form__hint" role="status">
+          Ngoài ngưỡng của vùng: {outside.join(", ")}. Lưu xong app sẽ gửi cảnh báo.
+        </p>
+      )}
+      <FormError text={error} />
+      <div className="sheet-actions">
+        <Button fullWidth size="large" loading={busy} disabled={busy} onClick={() => void save()}>
+          {saveText}
+        </Button>
+        <Button fullWidth variant="secondary" size="large" disabled={busy} onClick={onCancel}>
+          {cancelText}
+        </Button>
       </div>
-    </Sheet>
+    </div>
   );
 }

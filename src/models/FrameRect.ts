@@ -5,6 +5,3 @@ export type FrameRect = {
   right: number;
   bottom: number;
 };
-
-/** Số lần xoay ảnh 90° theo chiều kim đồng hồ. */
-export type QuarterTurns = 0 | 1 | 2 | 3;
