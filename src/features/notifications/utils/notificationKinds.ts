@@ -268,6 +268,27 @@ export const KINDS: Record<string, Kind> = {
     icon: "zi-note",
     tone: "neutral",
   },
+  HARVEST_PLAN_ASSIGNED: {
+    title: "Kế hoạch thu hoạch mới",
+    body: (n) => `Bạn được giao kế hoạch thu hoạch ${n.relatedRecordCode ?? ""}. Bấm để nhận kế hoạch rồi ghi nhận thu từng bè.`,
+    icon: "zi-calendar",
+    tone: "warning",
+    to: recordPage("/manage/harvest-plans", "/manage/harvest-plans"),
+  },
+  HARVEST_PLAN_HANDED_OVER: {
+    title: "Kế hoạch thu hoạch đã bàn giao",
+    body: (n) => `Quản lý vùng đã bàn giao kế hoạch ${n.relatedRecordCode ?? ""}. Bấm để kiểm tra và hoàn thành kế hoạch.`,
+    icon: "zi-check-circle",
+    tone: "warning",
+    to: recordPage("/manage/harvest-plans", "/manage/harvest-plans"),
+  },
+  HARVEST_PLAN_LANES_SKIPPED: {
+    title: "Có luống không thu",
+    body: (n) => `Một số luống trong kế hoạch ${n.relatedRecordCode ?? ""} được báo không thu. Bấm để xem lý do.`,
+    icon: "zi-warning",
+    tone: "warning",
+    to: recordPage("/manage/harvest-plans", "/manage/harvest-plans"),
+  },
   HARVEST_LOT_RECORDED: {
     title: "Có lô thu hoạch mới",
     body: (n) => has(n)

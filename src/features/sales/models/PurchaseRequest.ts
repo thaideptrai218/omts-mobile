@@ -60,6 +60,9 @@ export type PurchaseRequest = PurchaseRequestBase & {
   sendings: PurchaseRequestSending[];
   /** Kế hoạch nhân lực Chủ HTX gửi trước khi nhận đơn; null khi chưa gửi. */
   staffing: PurchaseStaffing | null;
+  /** Đơn hàng (DH) tạo ngay khi thương lái gửi yêu cầu; kế hoạch thu hoạch gắn với đơn này. Backend cũ không gửi trường này. */
+  salesOrderId?: string | null;
+  salesOrderCode?: string | null;
 };
 
 /** Yêu cầu mua như chính thương lái thấy (SCR-SALE-01): không có dữ liệu của khách khác hay trường nội bộ. */
