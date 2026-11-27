@@ -25,3 +25,4 @@ Do not record a Jira item as complete until its done criteria and quality checks
 | [13](13-pr-integration.md) | Develop integration, legacy error codes and backend schema conflict | Mobile verified; backend PR remains draft |
 | [16](16-zone-boundary-from-license-map.md) | Zone boundary read from the licensed sea-area map: VN-2000 to WGS84, table OCR, rafts outside the boundary | Verified with synthetic tables; not yet on a real phone photo |
 | [17](17-mobile-layout-review.md) | Layout review of the whole app at phone width: numbers broken mid-digit, squeezed sheet lists, stuck cards, footers, dark mode | Verified in headless Chrome at 360 and 320 px |
+| [18](18-error-boundary-and-status-bar.md) | Error boundary per screen instead of a blank app, and the real Android status bar height via configAppView | Verified in headless Chrome; status bar not yet on a phone |

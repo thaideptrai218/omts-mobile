@@ -817,6 +817,15 @@ html[data-text-size="xlarge"] {
   line-height: 1.5rem;
 }
 
+/* Màn báo lỗi cuối cùng (AppCrash): phủ cả màn hình, nội dung ở giữa, chừa thanh trạng thái và menu Zalo. */
+.app-crash {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 100vh;
+  padding: calc(var(--top-clear) + 16px) 16px calc(var(--bottom-safe) + 24px);
+}
+
 /* Chừa chỗ cho thanh dưới và phần phao nhô lên, để nút cuối trang không nằm dưới nút Quét mã. */
 .screen--with-nav {
   padding-bottom: calc(var(--nav-height) + var(--bottom-safe) + 44px);

@@ -1,5 +1,19 @@
 import type { CheckoutOrderParams, CustomPaymentEvent, CustomPaymentSelection, FakeZalo, FakeZaloWindow } from "@/models/Zalo";
-import { CheckoutSDK, chooseImage, EventName, events, getAccessToken, getLocation, getPhoneNumber, openDocument, openPermissionSetting, saveImageToGallery, scanQRCode } from "zmp-sdk/apis";
+import { CheckoutSDK, chooseImage, configAppView, EventName, events, getAccessToken, getLocation, getPhoneNumber, openDocument, openPermissionSetting, saveImageToGallery, scanQRCode } from "zmp-sdk/apis";
+
+/**
+ * Gọi lại đúng cấu hình khung của `app-config.json` (thanh trạng thái trong suốt, ẩn action bar của Zalo) lúc mở app.
+ * Trên Android, chỉ lời gọi này mới khiến zmp-sdk gán chiều cao thật của thanh trạng thái vào `--zaui-safe-area-inset-top`;
+ * không gọi thì biến đó là `env(safe-area-inset-top)`, thường bằng 0 trong webview Android, và đầu trang chỉ chừa cố định
+ * 28px (`--top-safe`), nên máy có thanh trạng thái cao hơn sẽ che nút "Quay lại". Ngoài Zalo lời gọi bị từ chối: bỏ qua.
+ */
+export function applyAppView(): void {
+  try {
+    configAppView({ statusBarType: "transparent", actionBar: { hide: true } }).catch(() => undefined);
+  } catch {
+    // Ngoài Zalo không có API này.
+  }
+}
 
 /** Chỉ gọi sau khi người dùng bấm nút và đã được giải thích mục đích lấy vị trí. */
 export async function zaloLocationToken(): Promise<string> {
